@@ -24,7 +24,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer
 import za.co.absa.hyperdrive.test.ingestion.SparkIngestor
 import za.co.absa.hyperdrive.test.settings.InfrastructureSettings._
-import za.co.absa.hyperdrive.test.utils.ParquetPrinter
+import za.co.absa.hyperdrive.test.utils.PayloadPrinter
 
 import scala.collection.JavaConverters._
 
@@ -39,7 +39,6 @@ object IngestionTrigger {
     props.put(KafkaSettings.KEY_DESERIALIZER_KEY, KafkaSettings.KEY_DESERIALIZER)
     props.put(KafkaSettings.VALUE_DESERIALIZER_KEY, KafkaSettings.VALUE_DESERIALIZER)
     props.put(KafkaSettings.GROUP_ID_KEY, "something")
-    //props.put(KafkaSettings.STARTING_OFFSETS_KEY, "earliest")
     props.put("enable.auto.commit", "true")
 
     println(s"STARTING notification topic watcher: '${HyperdriveSettings.NOTIFICATION_TOPIC}'")
@@ -47,10 +46,6 @@ object IngestionTrigger {
     val consumer = new KafkaConsumer[String, String](props)
 
     consumer.subscribe(Collections.singletonList(HyperdriveSettings.NOTIFICATION_TOPIC))
-
-    consumer.assignment().asScala.foreach(println)
-
-    consumer.seekToBeginning(consumer.assignment())
 
     while(true){
       val records = consumer.poll(100)
@@ -62,14 +57,14 @@ object IngestionTrigger {
 
         SparkIngestor.ingest(notification.topic, notification.destinationDir)
 
-        ParquetPrinter.showContent(notification.destinationDir)
+        PayloadPrinter.showContent(notification.destinationDir, PayloadPrinter.FORMAT_PARQUET)
       }
     }
   }
 
   private def decode(payload: Array[Byte]): GenericRecord = {
     val reader = new ScalaConfluentKafkaAvroDeserializer(Option(HyperdriveSettings.NOTIFICATION_TOPIC), Option.empty)
-    reader.configureSchemaRegistry(NotificationDispatcher.getSchemaRegistrySettings())
+    reader.configureSchemaRegistry(NotificationDispatcher.getSchemaRegistrySettings)
     reader.deserialize(payload)
   }
 
@@ -77,6 +72,6 @@ object IngestionTrigger {
     val topic = record.get("topic").asInstanceOf[String]
     val destinationDir = record.get("destinationDir").asInstanceOf[String]
 
-    new Notification(topic, destinationDir)
+    Notification(topic, destinationDir)
   }
 }

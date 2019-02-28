@@ -21,7 +21,11 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.test.settings.InfrastructureSettings._
 object NotificationDispatcher {
 
-  def dispatchNotification() = {
+  def main(args: Array[String]): Unit = {
+    dispatchNotification()
+  }
+
+  def dispatchNotification(): Unit = {
 
     val spark = SparkSession.builder().appName("NotificationDispatcher").master("local[*]").getOrCreate()
 
@@ -54,7 +58,7 @@ object NotificationDispatcher {
       .save()
   }
 
-  def getSchemaRegistrySettings(): Map[String,String] = {
+  def getSchemaRegistrySettings: Map[String,String] = {
     SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> HyperdriveSettings.NOTIFICATION_TOPIC)
   }
 }

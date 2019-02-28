@@ -21,25 +21,28 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 object InfrastructureSettings {
 
   object HyperdriveSettings {
+
+    val BASE_PAYLOAD_DESTINATION = "/tmp/HYPERDRIVE_PAYLOAD"
+
     val NOTIFICATION_TOPIC = "notification_topic"
     val PAYLOAD_TOPIC_1    = "payload_topic_1"
     val PAYLOAD_TOPIC_2    = "payload_topic_2"
 
-    var PAYLOAD_TOPIC_IN_USE = PAYLOAD_TOPIC_1
+    var PAYLOAD_TOPIC_IN_USE: String = PAYLOAD_TOPIC_1
 
     // THIS IS HERE FOR QUICK TESTS ONLY, WILL GO AWAY ASAP
-    def getPayloadDestinationDir(): String = {
+    def getPayloadDestinationDir: String = {
       if (PAYLOAD_TOPIC_IN_USE == PAYLOAD_TOPIC_1)
-        "/tmp/dest1"
+        s"$BASE_PAYLOAD_DESTINATION/dest1"
       else if (PAYLOAD_TOPIC_IN_USE == PAYLOAD_TOPIC_2)
-        "/tmp/dest2"
-      else "/tmp/INCORRECT_DESTINATION"
+        s"$BASE_PAYLOAD_DESTINATION/dest2"
+      else s"$BASE_PAYLOAD_DESTINATION/INCORRECT_DESTINATION"
     }
   }
 
   object SparkSettings {
     val CHECKPOINT_LOCATION_KEY  = "checkpointLocation"
-    val CHECKPOINT_BASE_LOCATION = "/tmp/ingestion_checkpoint"
+    val CHECKPOINT_BASE_LOCATION = "/tmp/HYPERDRIVE_CHECKPOINT"
     val FAIL_ON_DATA_LOSS_KEY    = "failOnDataLoss"
   }
 
@@ -51,7 +54,9 @@ object InfrastructureSettings {
 
     val TOPIC_SUBSCRIPTION_KEY    = "subscribe"
     val TOPIC_DISPATCH_KEY        = "topic"
+
     val STARTING_OFFSETS_KEY      = "startingOffsets"
+    val STARTING_OFFSETS_EARLIEST = "earliest"
 
     val KEY_DESERIALIZER_KEY      = "key.deserializer"
     val KEY_DESERIALIZER          = "org.apache.kafka.common.serialization.StringDeserializer"
@@ -64,8 +69,8 @@ object InfrastructureSettings {
 
   object SchemaRegistrySettings {
     val URL                          = "http://localhost:8081"
-    val KEY_SCHEMA_NAMING_STRATEGY   = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
-    val VALUE_SCHEMA_NAMING_STRATEGY = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
+    val KEY_SCHEMA_NAMING_STRATEGY: String   = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
+    val VALUE_SCHEMA_NAMING_STRATEGY: String = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
 
     val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> URL,

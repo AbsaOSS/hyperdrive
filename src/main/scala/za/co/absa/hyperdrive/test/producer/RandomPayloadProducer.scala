@@ -27,7 +27,7 @@ import za.co.absa.hyperdrive.test.settings.InfrastructureSettings.{AvroSettings,
 object RandomPayloadProducer {
 
   private val NUM_RECORDS = 5
-  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
+  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_2
 
   def main(args: Array[String]): Unit = {
 
@@ -54,6 +54,7 @@ object RandomPayloadProducer {
       .option(KafkaSettings.TOPIC_DISPATCH_KEY, HyperdriveSettings.PAYLOAD_TOPIC_IN_USE)
       .save()
 
+    spark.close()
     println("PAYLOAD SENT. GOING to notify ingestors")
     NotificationDispatcher.dispatchNotification()
   }
