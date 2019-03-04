@@ -21,7 +21,11 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.test.settings.InfrastructureSettings._
 object NotificationDispatcher {
 
-  def dispatchNotification() = {
+  def main(args: Array[String]): Unit = {
+    dispatchNotification()
+  }
+
+  def dispatchNotification(): Unit = {
 
     val spark = SparkSession.builder().appName("NotificationDispatcher").master("local[*]").getOrCreate()
 
@@ -38,7 +42,7 @@ object NotificationDispatcher {
 
   private def createNotification(spark: SparkSession): DataFrame = {
     import spark.implicits._
-    spark.sparkContext.parallelize(Seq(Notification(HyperdriveSettings.PAYLOAD_TOPIC_IN_USE, HyperdriveSettings.getPayloadDestinationDir()))).toDF()
+    spark.sparkContext.parallelize(Seq(Notification(HyperdriveSettings.PAYLOAD_TOPIC_IN_USE, HyperdriveSettings.getPayloadDestinationDir))).toDF()
   }
 
   private def dispatch(notificationDf: DataFrame, sparkSession: SparkSession): Unit = {
@@ -46,7 +50,7 @@ object NotificationDispatcher {
     import za.co.absa.abris.avro.AvroSerDe._
 
     notificationDf
-      .toConfluentAvro(HyperdriveSettings.NOTIFICATION_TOPIC, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(getSchemaRegistrySettings())
+      .toConfluentAvro(HyperdriveSettings.NOTIFICATION_TOPIC, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(getSchemaRegistrySettings)
       .write
       .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
       .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, KafkaSettings.BROKERS)
@@ -54,7 +58,7 @@ object NotificationDispatcher {
       .save()
   }
 
-  def getSchemaRegistrySettings(): Map[String,String] = {
+  def getSchemaRegistrySettings: Map[String,String] = {
     SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> HyperdriveSettings.NOTIFICATION_TOPIC)
   }
 }

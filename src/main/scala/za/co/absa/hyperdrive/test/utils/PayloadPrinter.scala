@@ -18,11 +18,25 @@ package za.co.absa.hyperdrive.test.utils
 
 import org.apache.spark.sql.SparkSession
 
-object ParquetPrinter {
+object PayloadPrinter {
 
-  def showContent(sourceDir: String) = {
+  val FORMAT_PARQUET = "parquet"
+  val FORMAT_JSON = "json"
+
+  def main(args: Array[String]): Unit = {
+    showContent("/tmp/HYPERDRIVE_PAYLOAD/dest2", FORMAT_JSON)
+  }
+
+  def showContent(sourceDir: String, format: String): Unit = {
     println(s"Going to print Parquet content from '$sourceDir'")
     val spark = SparkSession.builder().appName("ParquetPresenter").master("local[*]").getOrCreate()
-    spark.read.parquet(sourceDir).show(100,false)
+
+    val data = format match {
+      case FORMAT_JSON => spark.read.json(sourceDir)
+      case FORMAT_PARQUET => spark.read.parquet(sourceDir)
+    }
+
+    println(s"TOTAL messages in '$sourceDir': ${data.count()}")
+    data.show(false)
   }
 }
