@@ -54,7 +54,7 @@ object RandomPayloadProducer {
       .option(KafkaSettings.TOPIC_DISPATCH_KEY, HyperdriveSettings.PAYLOAD_TOPIC_IN_USE)
       .save()
 
-    spark.close()
+    //spark.close()
     println("PAYLOAD SENT. GOING to notify ingestors")
     NotificationDispatcher.dispatchNotification()
   }

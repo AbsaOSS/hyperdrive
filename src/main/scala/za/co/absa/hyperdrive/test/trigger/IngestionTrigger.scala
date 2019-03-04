@@ -47,6 +47,10 @@ object IngestionTrigger {
 
     consumer.subscribe(Collections.singletonList(HyperdriveSettings.NOTIFICATION_TOPIC))
 
+    consumer.assignment().asScala.foreach(println)
+
+    consumer.seekToBeginning(consumer.assignment())
+
     while(true){
       val records = consumer.poll(100)
 
