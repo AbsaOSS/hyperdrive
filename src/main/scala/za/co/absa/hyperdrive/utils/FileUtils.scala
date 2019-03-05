@@ -16,7 +16,7 @@
  *
  */
 
-package za.co.absa.hyperdrive.test.utils
+package za.co.absa.hyperdrive.utils
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}

@@ -22,12 +22,12 @@ import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.test.producer.notification.NotificationDispatcher
-import za.co.absa.hyperdrive.test.settings.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
+import za.co.absa.hyperdrive.settings.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 
 object RandomPayloadProducer {
 
   private val NUM_RECORDS = 5
-  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_2
+  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
 
   def main(args: Array[String]): Unit = {
 

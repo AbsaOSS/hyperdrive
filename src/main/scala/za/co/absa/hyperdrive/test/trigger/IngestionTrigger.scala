@@ -22,8 +22,8 @@ import org.apache.avro.generic.GenericRecord
 import za.co.absa.hyperdrive.test.producer.notification.{Notification, NotificationDispatcher}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer
-import za.co.absa.hyperdrive.test.ingestion.SparkIngestor
-import za.co.absa.hyperdrive.test.settings.InfrastructureSettings._
+import za.co.absa.hyperdrive.ingestion.SparkIngestor
+import za.co.absa.hyperdrive.settings.InfrastructureSettings._
 import za.co.absa.hyperdrive.test.utils.PayloadPrinter
 
 import scala.collection.JavaConverters._

@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.test.producer.notification
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.hyperdrive.test.settings.InfrastructureSettings._
+import za.co.absa.hyperdrive.settings.InfrastructureSettings._
 object NotificationDispatcher {
 
   def main(args: Array[String]): Unit = {
