@@ -48,6 +48,7 @@ object IngestionTrigger {
     consumer.subscribe(Collections.singletonList(HyperdriveSettings.NOTIFICATION_TOPIC))
 
     consumer.assignment().asScala.foreach(println)
+    consumer.partitionsFor(HyperdriveSettings.NOTIFICATION_TOPIC).asScala.foreach(println)
 
     consumer.seekToBeginning(consumer.assignment())
 

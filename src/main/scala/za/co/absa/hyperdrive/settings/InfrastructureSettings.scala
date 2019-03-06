@@ -50,8 +50,7 @@ object InfrastructureSettings {
 
   object KafkaSettings {
     val STREAM_FORMAT_KAFKA_NAME  = "kafka"
-    //val BROKERS                   = "PLAINTEXT://localhost:9092"
-    val BROKERS      = "PLAINTEXT://127.0.0.1:46427"
+    val BROKERS                   = "PLAINTEXT://localhost:9092"
     val BROKERS_SETTING_KEY       = "bootstrap.servers"
     val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"
 

@@ -20,10 +20,11 @@ package test
 
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import org.springframework.kafka.test.EmbeddedKafkaBroker
+import za.co.absa.hyperdrive.settings.InfrastructureSettings.HyperdriveSettings
 
 class ATest extends FlatSpec with BeforeAndAfterAll {
 
-  var embeddedKafka = new EmbeddedKafkaBroker(1, true, "topic")
+  var embeddedKafka = new EmbeddedKafkaBroker(1, true, 6, HyperdriveSettings.NOTIFICATION_TOPIC)
 
   override def beforeAll(): Unit = {
     println("Starting Kafka and Zookeeper test brokers")
