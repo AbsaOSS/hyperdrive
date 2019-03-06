@@ -19,20 +19,20 @@
 package test
 
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
-import org.springframework.kafka.test.rule.KafkaEmbedded
+import org.springframework.kafka.test.EmbeddedKafkaBroker
 
 class ATest extends FlatSpec with BeforeAndAfterAll {
 
-  var embeddedKafka = new KafkaEmbedded(1, true, "topic")
+  var embeddedKafka = new EmbeddedKafkaBroker(1, true, "topic")
 
   override def beforeAll(): Unit = {
     println("Starting Kafka and Zookeeper test brokers")
-    embeddedKafka.before()
+    embeddedKafka.afterPropertiesSet()
   }
 
   override def afterAll(): Unit = {
     println("Shutting down Kafka and Zookeeper test brokers")
-    embeddedKafka.after()
+    embeddedKafka.destroy()
   }
 
   behavior of "x"
