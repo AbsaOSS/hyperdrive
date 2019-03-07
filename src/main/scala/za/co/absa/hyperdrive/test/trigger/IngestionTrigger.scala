@@ -1,17 +1,19 @@
 /*
- * Copyright 2018 ABSA Group Limited
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright 2019 ABSA Group Limited
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 
 package za.co.absa.hyperdrive.test.trigger
@@ -19,12 +21,24 @@ package za.co.absa.hyperdrive.test.trigger
 import java.util.Collections
 
 import org.apache.avro.generic.GenericRecord
+import org.apache.hadoop.conf.Configuration
 import za.co.absa.hyperdrive.test.producer.notification.{Notification, NotificationDispatcher}
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer
+import za.co.absa.abris.avro.read.confluent.{ScalaConfluentKafkaAvroDeserializer, SchemaManager}
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.ingestion.SparkIngestor
+import za.co.absa.hyperdrive.offset.OffsetManager
+import za.co.absa.hyperdrive.offset.impl.CheckpointingOffsetManager
+import za.co.absa.hyperdrive.readers.StreamReader
+import za.co.absa.hyperdrive.readers.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.settings.InfrastructureSettings._
 import za.co.absa.hyperdrive.test.utils.PayloadPrinter
+import za.co.absa.hyperdrive.transformations.data.StreamTransformer
+import za.co.absa.hyperdrive.transformations.data.impl.SelectorStreamTransformer
+import za.co.absa.hyperdrive.transformations.encoding.AvroDecoder
+import za.co.absa.hyperdrive.transformations.encoding.schema.impl.SchemaRegistrySchemaPathProvider
+import za.co.absa.hyperdrive.writers.StreamWriter
+import za.co.absa.hyperdrive.writers.impl.ParquetStreamWriter
 
 import scala.collection.JavaConverters._
 
@@ -60,9 +74,18 @@ object IngestionTrigger {
         val notification = toNotification(avroRecord)
         println(s"Received: $notification. Invoking ingestion")
 
-        SparkIngestor.ingest(notification.topic, notification.destinationDir)
+        val payloadTopic = notification.topic
+        val destinationDir = notification.destinationDir
 
-        PayloadPrinter.showContent(notification.destinationDir, PayloadPrinter.FORMAT_PARQUET)
+        val streamReader = createStreamReader(payloadTopic)
+        val offsetManager = createOffsetManager(payloadTopic)
+        val avroDecoder = createAvroDecoder(payloadTopic)
+        val streamTransformer = createStreamTransformer
+        val streamWriter = createStreamWriter(destinationDir)
+
+        SparkIngestor.ingest(payloadTopic)(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
+
+        PayloadPrinter.showContent(destinationDir, PayloadPrinter.FORMAT_PARQUET)
       }
     }
   }
@@ -78,5 +101,30 @@ object IngestionTrigger {
     val destinationDir = record.get("destinationDir").asInstanceOf[String]
 
     Notification(topic, destinationDir)
+  }
+
+  private def createStreamReader(topic: String): StreamReader = {
+    return new KafkaStreamReader(topic, KafkaSettings.BROKERS)
+  }
+
+  private def createOffsetManager(topic: String): OffsetManager = {
+    new CheckpointingOffsetManager(topic, new Configuration())
+  }
+
+  private def createAvroDecoder(topic: String): AvroDecoder = {
+    val schemaRegistrySettings = getSchemaRegistrySettings(topic)
+    val schemaPathProvider = new SchemaRegistrySchemaPathProvider(schemaRegistrySettings)
+    new AvroDecoder(schemaPathProvider, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
+  }
+
+  private def getSchemaRegistrySettings(topic: String): Map[String,String] = {
+    // attaching topic and schema id to general Schema Registry settings
+    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic, SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
+  }
+
+  private def createStreamTransformer: StreamTransformer = new SelectorStreamTransformer
+
+  private def createStreamWriter(destination: String): StreamWriter = {
+    new ParquetStreamWriter(destination)
   }
 }

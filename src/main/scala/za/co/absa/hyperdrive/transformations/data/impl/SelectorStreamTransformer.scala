@@ -15,6 +15,14 @@
  *  limitations under the License.
  *
  */
-package za.co.absa.hyperdrive.test.producer.notification
 
-case class Notification(topic: String, destinationDir: String = "/tmp/dest_default")
+package za.co.absa.hyperdrive.transformations.data.impl
+
+import org.apache.spark.sql.DataFrame
+import za.co.absa.hyperdrive.transformations.data.StreamTransformer
+
+class SelectorStreamTransformer extends StreamTransformer {
+  def transform(streamData: DataFrame): DataFrame = {
+    streamData.select("*")
+  }
+}

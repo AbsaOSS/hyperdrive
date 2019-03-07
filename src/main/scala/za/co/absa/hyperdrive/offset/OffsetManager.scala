@@ -15,6 +15,16 @@
  *  limitations under the License.
  *
  */
-package za.co.absa.hyperdrive.test.producer.notification
 
-case class Notification(topic: String, destinationDir: String = "/tmp/dest_default")
+package za.co.absa.hyperdrive.offset
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
+
+abstract class OffsetManager(topic: String, configuration: Configuration) {
+
+  def configureOffsets(streamReader: DataStreamReader): DataStreamReader
+
+  def configureOffsets(streamWriter: DataStreamWriter[Row]): DataStreamWriter[Row]
+}

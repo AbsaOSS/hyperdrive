@@ -16,18 +16,20 @@
  *
  */
 
-package za.co.absa.hyperdrive.test.data.generation
+package za.co.absa.hyperdrive.readers.impl
 
-import org.apache.avro.generic.GenericFixed
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.streaming.DataStreamReader
+import za.co.absa.hyperdrive.readers.StreamReader
+import za.co.absa.hyperdrive.settings.InfrastructureSettings.KafkaSettings
 
-object FixedString {
-  def getClassName(): String = new FixedString("").getClass.getName
-}
+class KafkaStreamReader(topic: String, brokers: String) extends StreamReader {
 
-/**
-  * Utility class for writing Avro fixed fields.
-  */
-class FixedString(value: String) extends GenericFixed {
-  override def getSchema() = null
-  override def bytes() = value.getBytes
+  override def read(spark: SparkSession): DataStreamReader = {
+    spark
+      .readStream
+      .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
+      .option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, topic)
+      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, brokers)
+  }
 }

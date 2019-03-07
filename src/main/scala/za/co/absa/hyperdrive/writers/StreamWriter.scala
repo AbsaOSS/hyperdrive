@@ -15,6 +15,16 @@
  *  limitations under the License.
  *
  */
-package za.co.absa.hyperdrive.test.producer.notification
 
-case class Notification(topic: String, destinationDir: String = "/tmp/dest_default")
+package za.co.absa.hyperdrive.writers
+
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.streaming.StreamingQuery
+import za.co.absa.hyperdrive.offset.OffsetManager
+
+abstract class StreamWriter(destination: String) {
+
+  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery
+
+  def getDestination = destination
+}

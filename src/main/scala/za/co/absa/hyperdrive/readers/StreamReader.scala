@@ -15,6 +15,13 @@
  *  limitations under the License.
  *
  */
-package za.co.absa.hyperdrive.test.producer.notification
 
-case class Notification(topic: String, destinationDir: String = "/tmp/dest_default")
+package za.co.absa.hyperdrive.readers
+
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.streaming.DataStreamReader
+
+abstract class StreamReader {
+
+  def read(spark: SparkSession): DataStreamReader
+}

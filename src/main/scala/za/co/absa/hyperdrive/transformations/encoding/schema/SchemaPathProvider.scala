@@ -15,6 +15,12 @@
  *  limitations under the License.
  *
  */
-package za.co.absa.hyperdrive.test.producer.notification
 
-case class Notification(topic: String, destinationDir: String = "/tmp/dest_default")
+package za.co.absa.hyperdrive.transformations.encoding.schema
+
+import org.apache.avro.Schema
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+
+abstract class SchemaPathProvider {
+  def get: String
+}

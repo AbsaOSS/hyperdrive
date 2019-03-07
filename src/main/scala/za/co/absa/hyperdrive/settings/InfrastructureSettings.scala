@@ -22,8 +22,18 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 object InfrastructureSettings {
 
+  object SystemSettings {
+
+    val JVM_DEFAULT_TMP_DIR_PROPERTY = "java.io.tmpdir"
+  }
+
   object HyperdriveSettings {
 
+    val BASE_TEMP_DIR = {
+      val jvmTmpDir = System.getProperty(SystemSettings.JVM_DEFAULT_TMP_DIR_PROPERTY)
+      val baseTmpDir = if (jvmTmpDir == null || jvmTmpDir.trim.isEmpty) "/tmp" else jvmTmpDir
+      baseTmpDir + "/HYPERDRIVE_TEMP/"
+    }
     val BASE_PAYLOAD_DESTINATION = "/tmp/HYPERDRIVE_PAYLOAD"
 
     val NOTIFICATION_TOPIC = "notification_topic"
