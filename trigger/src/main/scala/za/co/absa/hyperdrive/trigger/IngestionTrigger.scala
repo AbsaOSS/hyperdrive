@@ -23,6 +23,8 @@ import java.util.Collections
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.logging.log4j.LogManager
+import org.apache.spark.sql.SparkSession
 import za.co.absa.abris.avro.read.confluent.{ScalaConfluentKafkaAvroDeserializer, SchemaManager}
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.ingestor.SparkIngestor
@@ -45,7 +47,11 @@ import scala.collection.JavaConverters._
 
 object IngestionTrigger {
 
+  private val logger = LogManager.getLogger
+
   def main(args: Array[String]): Unit = {
+
+    resolveBrokersAndSchemaRegistry(args)
 
     import java.util.Properties
 
@@ -56,7 +62,7 @@ object IngestionTrigger {
     props.put(KafkaSettings.GROUP_ID_KEY, "SomeGroupId")
     props.put("enable.auto.commit", "true")
 
-    println(s"STARTING notification topic watcher: '${HyperdriveSettings.NOTIFICATION_TOPIC}'")
+    logger.info(s"STARTING notification topic watcher: '${HyperdriveSettings.NOTIFICATION_TOPIC}'")
 
     val consumer = new KafkaConsumer[String, String](props)
 
@@ -86,7 +92,7 @@ object IngestionTrigger {
 
         val runnable = new Runnable {
           override def run(): Unit = {
-            SparkIngestor.ingest(payloadTopic)(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
+            SparkIngestor.ingest(getSparkSession(payloadTopic))(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
             PayloadPrinter.showContent(destinationDir, PayloadPrinter.FORMAT_PARQUET)
           }
         }
@@ -94,6 +100,23 @@ object IngestionTrigger {
         new Thread(runnable).start()
       }
     }
+  }
+
+  private def resolveBrokersAndSchemaRegistry(args: Array[String]): Unit = {
+    if (args.nonEmpty) {
+      KafkaSettings.BROKERS = args(0).trim
+      SchemaRegistrySettings.URL = args(1).trim
+    }
+    logger.info(s"Kaka broker resolved to: ${KafkaSettings.BROKERS}")
+    logger.info(s"Schema Registry broker resolved to: ${SchemaRegistrySettings.URL}")
+  }
+
+  private def getSparkSession(topic: String): SparkSession = {
+    SparkSession
+      .builder()
+      .appName(s"SparkIngestor-$topic")
+      .master("local[*]")
+      .getOrCreate()
   }
 
   private def decode(payload: Array[Byte]): GenericRecord = {

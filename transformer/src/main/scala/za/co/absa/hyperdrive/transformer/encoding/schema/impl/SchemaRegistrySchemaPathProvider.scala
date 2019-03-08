@@ -34,6 +34,8 @@ class SchemaRegistrySchemaPathProvider(settings: Map[String,String]) extends Sch
     schemaFile.toAbsolutePath.toString
   }
 
+  override def getSchemaRegistrySettings: Option[Map[String,String]] = Option(settings)
+
   private def getDestinationFile(name: String): File = {
     val baseDir = new File(HyperdriveSettings.BASE_TEMP_DIR)
     if (!baseDir.exists()) {

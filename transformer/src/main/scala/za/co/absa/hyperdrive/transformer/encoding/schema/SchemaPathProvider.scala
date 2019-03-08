@@ -20,4 +20,5 @@ package za.co.absa.hyperdrive.transformer.encoding.schema
 
 abstract class SchemaPathProvider {
   def get: String
+  def getSchemaRegistrySettings: Option[Map[String,String]]
 }

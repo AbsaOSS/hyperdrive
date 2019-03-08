@@ -32,4 +32,6 @@ class KafkaStreamReader(topic: String, brokers: String) extends StreamReader {
       .option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, topic)
       .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, brokers)
   }
+
+  override def getSourceName: String = s"Kafka topic: $topic"
 }

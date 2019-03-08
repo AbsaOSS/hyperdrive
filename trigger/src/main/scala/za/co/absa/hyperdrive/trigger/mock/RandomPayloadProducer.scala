@@ -28,7 +28,8 @@ import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, Hyperd
 object RandomPayloadProducer {
 
   private val NUM_RECORDS = 5
-  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
+  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_2
+  KafkaSettings.BROKERS = "PLAINTEXT://10.219.158.1:9092"
 
   def main(args: Array[String]): Unit = {
 

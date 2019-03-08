@@ -18,6 +18,7 @@
 
 package za.co.absa.hyperdrive.transformer.encoding
 
+import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
@@ -25,9 +26,15 @@ import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
 class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) {
 
+  private val logger = LogManager.getLogger
+
   def decode(streamReader: DataStreamReader): DataFrame = {
     val schemaPath = schemaPathProvider.get
+    val schemaRegistrySettings = schemaPathProvider.getSchemaRegistrySettings
+    logger.info(s"Schema path: '$schemaPath'.")
+    logger.info(s"SchemaRegistry settings: $schemaRegistrySettings")
+
     import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro("value", Some(schemaPath), None)(retentionPolicy)
+    streamReader.fromConfluentAvro("value", Some(schemaPath), schemaPathProvider.getSchemaRegistrySettings)(retentionPolicy)
   }
 }

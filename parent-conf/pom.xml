@@ -61,6 +61,9 @@
 
         <!--Spring Kafka Test-->
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
+
+        <!--Spark-->
+        <spark.version>2.2.1</spark.version>
     </properties>
 
     <dependencies>
@@ -121,6 +124,13 @@
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka_2.11</artifactId>
                 <version>${kafka.version}</version>
+            </dependency>
+
+            <!--Spark-->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
+                <version>${spark.version}</version>
             </dependency>
 
             <!--Tests-->
