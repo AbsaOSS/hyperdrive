@@ -18,6 +18,7 @@
 
 package za.co.absa.hyperdrive.manager.offset.impl
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
@@ -26,13 +27,29 @@ import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{KafkaSettings, SparkSettings}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
-class CheckpointingOffsetManager(topic: String, configuration: Configuration) extends OffsetManager(topic, configuration) {
+class CheckpointingOffsetManager(topic: String, checkpointBaseLocation: String, configuration: Configuration) extends OffsetManager(topic, configuration) {
+
+  if (StringUtils.isBlank(topic)) {
+    throw new IllegalArgumentException(s"Invalid topic: '$topic'")
+  }
+
+  if (configuration == null) {
+    throw new IllegalArgumentException("Null Configuration instance.")
+  }
+
+  if (isInvalidCheckpointBaseLocation) {
+    throw new IllegalArgumentException(s"Invalid base checkpoint location: '$checkpointBaseLocation'. Does it exists and is a directory?")
+  }
 
   private val logger = LogManager.getLogger
 
   private val checkpointLocation = resolveCheckpointLocation(topic)
 
   override def configureOffsets(streamReader: DataStreamReader): DataStreamReader = {
+    if (streamReader == null) {
+      throw new IllegalArgumentException("Null DataStreamReader instance.")
+    }
+
     val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
 
     if (startingOffsets.isDefined) {
@@ -45,12 +62,16 @@ class CheckpointingOffsetManager(topic: String, configuration: Configuration) ex
   }
 
   override def configureOffsets(streamWriter: DataStreamWriter[Row]): DataStreamWriter[Row] = {
+    if (streamWriter == null) {
+      throw new IllegalArgumentException("Null DataStreamWriter instance.")
+    }
+
     logger.info(s"Checkpoint location resolved to: '$checkpointLocation' for topic '$topic'")
     streamWriter.option(SparkSettings.CHECKPOINT_LOCATION_KEY, checkpointLocation)
   }
 
   private def resolveCheckpointLocation(topic: String): String = {
-    s"${SparkSettings.CHECKPOINT_BASE_LOCATION}/$topic"
+    s"$checkpointBaseLocation/$topic"
   }
 
   private def getStartingOffsets(checkpointLocation: String, configuration: Configuration): Option[String] = {
@@ -60,5 +81,11 @@ class CheckpointingOffsetManager(topic: String, configuration: Configuration) ex
     else {
       Option(KafkaSettings.STARTING_OFFSETS_EARLIEST)
     }
+  }
+
+  private def isInvalidCheckpointBaseLocation: Boolean = {
+    StringUtils.isBlank(checkpointBaseLocation) ||
+      FileUtils.notExists(checkpointBaseLocation, configuration) ||
+      FileUtils.isNotDirectory(checkpointBaseLocation, configuration)
   }
 }

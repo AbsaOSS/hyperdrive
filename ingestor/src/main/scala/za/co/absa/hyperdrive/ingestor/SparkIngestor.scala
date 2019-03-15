@@ -57,6 +57,30 @@ object SparkIngestor {
             (streamTransformer: StreamTransformer)
             (streamWriter: StreamWriter): Unit= {
 
+    if (spark == null) {
+      throw new IllegalArgumentException("Received NULL SparkSession instance.")
+    }
+
+    if (streamReader == null) {
+      throw new IllegalArgumentException("Received NULL StreamReader instance.")
+    }
+
+    if (offsetManager == null) {
+      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
+    }
+
+    if (avroDecoder == null) {
+      throw new IllegalArgumentException("Received NULL AvroDecoder instance.")
+    }
+
+    if (streamTransformer == null) {
+      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
+    }
+
+    if (streamWriter == null) {
+      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
+    }
+
     logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}'")
 
     val inputStream = streamReader.read(spark) // gets the source stream

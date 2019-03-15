@@ -32,7 +32,7 @@ import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.impl.CheckpointingOffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
+import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings, SparkSettings}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 import za.co.absa.hyperdrive.transformer.data.impl.SelectorStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.AvroDecoder
@@ -90,6 +90,9 @@ object IngestionTrigger {
         val streamTransformer = createStreamTransformer
         val streamWriter = createStreamWriter(destinationDir)
 
+        val sparkSession = getSparkSession(payloadTopic)
+        sparkSession.conf.getAll.foreach(println)
+
         val runnable = new Runnable {
           override def run(): Unit = {
             SparkIngestor.ingest(getSparkSession(payloadTopic))(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
@@ -133,11 +136,11 @@ object IngestionTrigger {
   }
 
   private def createStreamReader(topic: String): StreamReader = {
-    new KafkaStreamReader(topic, KafkaSettings.BROKERS)
+    new KafkaStreamReader(topic, KafkaSettings.BROKERS, Map[String,String]())
   }
 
   private def createOffsetManager(topic: String): OffsetManager = {
-    new CheckpointingOffsetManager(topic, new Configuration())
+    new CheckpointingOffsetManager(topic, SparkSettings.CHECKPOINT_BASE_LOCATION, new Configuration())
   }
 
   private def createAvroDecoder(topic: String): AvroDecoder = {

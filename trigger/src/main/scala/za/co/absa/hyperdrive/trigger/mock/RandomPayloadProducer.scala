@@ -18,18 +18,19 @@
 
 package za.co.absa.hyperdrive.trigger.mock
 
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.{Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 
 object RandomPayloadProducer {
 
   private val NUM_RECORDS = 5
-  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_2
-  KafkaSettings.BROKERS = "PLAINTEXT://10.219.158.1:9092"
+  HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
 
   def main(args: Array[String]): Unit = {
 

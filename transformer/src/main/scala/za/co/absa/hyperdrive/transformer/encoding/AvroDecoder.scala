@@ -18,9 +18,11 @@
 
 package za.co.absa.hyperdrive.transformer.encoding
 
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
@@ -33,6 +35,8 @@ class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: Schem
     val schemaRegistrySettings = schemaPathProvider.getSchemaRegistrySettings
     logger.info(s"Schema path: '$schemaPath'.")
     logger.info(s"SchemaRegistry settings: $schemaRegistrySettings")
+
+    SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient)
 
     import za.co.absa.abris.avro.AvroSerDe._
     streamReader.fromConfluentAvro("value", Some(schemaPath), schemaPathProvider.getSchemaRegistrySettings)(retentionPolicy)

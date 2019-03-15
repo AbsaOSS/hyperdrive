@@ -86,6 +86,7 @@ object InfrastructureSettings {
 
   object SchemaRegistrySettings {
     var URL                                  = "http://localhost:8081"
+    //var URL                                  = "http://localhost:7002"
     val KEY_SCHEMA_NAMING_STRATEGY: String   = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
     val VALUE_SCHEMA_NAMING_STRATEGY: String = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
 
