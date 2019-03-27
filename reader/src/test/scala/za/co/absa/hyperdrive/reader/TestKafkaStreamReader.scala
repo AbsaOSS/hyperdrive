@@ -33,7 +33,7 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 
   private val validTopic = "test-topic"
   private val validBrokers = "PLAINTEXT://localhost:9092"
-  private val validExtraConfs = Map("ssl.truststore.location" -> "whatever/path/you/have",
+  private val validExtraConfs = Map("ssl.truststore.location" -> "whatever/path/you/take",
     "ssl.truststore.password" -> "ourlittlesecret",
     "ssl.keystore.location"   -> "just/another/path",
     "ssl.keystore.password"   -> "knock-knock",

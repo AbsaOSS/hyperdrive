@@ -28,15 +28,25 @@ import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
 class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) {
 
+  if (schemaPathProvider == null) {
+    throw new IllegalArgumentException("Null SchemaPathProvider instance received.")
+  }
+
+  if (retentionPolicy == null) {
+    throw new IllegalArgumentException("Null SchemaRetentionPolicy instance received.")
+  }
+
   private val logger = LogManager.getLogger
 
   def decode(streamReader: DataStreamReader): DataFrame = {
+    if (streamReader == null) {
+      throw new IllegalArgumentException("Null DataStreamReader instance received.")
+    }
+
     val schemaPath = schemaPathProvider.get
     val schemaRegistrySettings = schemaPathProvider.getSchemaRegistrySettings
     logger.info(s"Schema path: '$schemaPath'.")
     logger.info(s"SchemaRegistry settings: $schemaRegistrySettings")
-
-    SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient)
 
     import za.co.absa.abris.avro.AvroSerDe._
     streamReader.fromConfluentAvro("value", Some(schemaPath), schemaPathProvider.getSchemaRegistrySettings)(retentionPolicy)

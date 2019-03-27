@@ -34,7 +34,7 @@ import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings, SparkSettings}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.impl.SelectorStreamTransformer
+import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.AvroDecoder
 import za.co.absa.hyperdrive.transformer.encoding.schema.impl.SchemaRegistrySchemaPathProvider
 import za.co.absa.hyperdrive.trigger.mock.NotificationDispatcher
@@ -154,7 +154,7 @@ object IngestionTrigger {
     SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic, SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
-  private def createStreamTransformer: StreamTransformer = new SelectorStreamTransformer
+  private def createStreamTransformer: StreamTransformer = new SelectAllStreamTransformer
 
   private def createStreamWriter(destination: String): StreamWriter = {
     new ParquetStreamWriter(destination)
