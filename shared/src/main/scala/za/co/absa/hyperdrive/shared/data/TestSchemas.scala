@@ -16,7 +16,7 @@
  *
  */
 
-package za.co.absa.hyperdrive.trigger.mock.data
+package za.co.absa.hyperdrive.shared.data
 
 /**
  * Provides several Avro schemas.
@@ -70,8 +70,7 @@ object TestSchemas {
  		     { "name": "double",      "type": ["double", "null"] },
  		     { "name": "float",       "type": ["float",  "null"] },
  		     { "name": "boolean",     "type": ["boolean","null"] }, 		      		     
- 		     { "name": "array", "type": {"type": "array", "items": "string"} }, 		     
- 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
+ 		     { "name": "array", "type": {"type": "array", "items": "string"} },
  		     {"name": "fixed",  "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
   }"""

@@ -52,5 +52,11 @@
             <artifactId>manager</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!--For Kafka tests-->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+        </dependency>
     </dependencies>
 </project>

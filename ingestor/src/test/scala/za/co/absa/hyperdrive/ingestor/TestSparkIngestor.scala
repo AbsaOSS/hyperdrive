@@ -24,10 +24,10 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.encoding.AvroDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
+import za.co.absa.hyperdrive.transformer.encoding.impl.AvroDecoder
 
 class TestSparkIngestor extends FlatSpec with BeforeAndAfterAll with MockitoSugar {
 

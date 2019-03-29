@@ -21,12 +21,13 @@ package za.co.absa.hyperdrive.writer.impl
 import java.io.File
 
 import org.apache.spark.sql.{DataFrame, Row}
-import org.apache.spark.sql.streaming.DataStreamWriter
+import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.shared.utils.TempDir
 import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
 
@@ -61,22 +62,68 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   }
 
   it should "set format as 'parquet'" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
 
+    invokeWriter(dataStreamWriter, offsetManager)
+    verify(dataStreamWriter).format("parquet")
   }
 
   it should "set Trigger.Once" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
 
+    invokeWriter(dataStreamWriter, offsetManager)
+    verify(dataStreamWriter).trigger(Trigger.Once)
   }
 
   it should "set output mode as 'append'" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
 
+    invokeWriter(dataStreamWriter, offsetManager)
+    verify(dataStreamWriter).outputMode(OutputMode.Append())
   }
 
   it should "invoke OffsetManager passing DataStreamWriter" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
 
+    invokeWriter(dataStreamWriter, offsetManager)
+    verify(offsetManager).configureOffsets(dataStreamWriter)
   }
 
   it should "start DataStreamWriter" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
 
+    invokeWriter(dataStreamWriter, offsetManager)
+    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+  }
+
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager): Unit = {
+    val dataFrame = getDataFrame(dataStreamWriter)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath)
+    writer.write(dataFrame, offsetManager)
+  }
+
+  private def getDataStreamWriter: DataStreamWriter[Row] = {
+    val dataStreamWriter = mock[DataStreamWriter[Row]]
+    when(dataStreamWriter.trigger(any(Trigger.Once().getClass))).thenReturn(dataStreamWriter)
+    when(dataStreamWriter.format(anyString())).thenReturn(dataStreamWriter)
+    when(dataStreamWriter.outputMode(any(OutputMode.Append().getClass))).thenReturn(dataStreamWriter)
+    dataStreamWriter
+  }
+
+  private def getDataFrame(dataStreamWriter: DataStreamWriter[Row]): DataFrame = {
+    val dataFrame = mock[DataFrame]
+    when(dataFrame.writeStream).thenReturn(dataStreamWriter)
+    dataFrame
+  }
+
+  private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): OffsetManager = {
+    val offsetManager = mock[OffsetManager]
+    when(offsetManager.configureOffsets(dataStreamWriter)).thenReturn(dataStreamWriter)
+    offsetManager
   }
 }

@@ -16,12 +16,12 @@
  *
  */
 
-package za.co.absa.hyperdrive.transformer.encoding
+package za.co.absa.hyperdrive.transformer.encoding.impl
 
 import org.scalatest.FlatSpec
+import org.scalatest.mockito.MockitoSugar
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
-import org.scalatest.mockito.MockitoSugar
 
 class TestAvroDecoder extends FlatSpec with MockitoSugar {
 

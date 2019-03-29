@@ -16,7 +16,7 @@
  *
  */
 
-package za.co.absa.hyperdrive.trigger.mock.data
+package za.co.absa.hyperdrive.shared.data
 
 import java.io.ByteArrayOutputStream
 

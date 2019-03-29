@@ -59,6 +59,7 @@
 
         <!--Kafka-->
         <kafka.version>2.1.1</kafka.version>
+        <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
 
         <!--Spark-->
         <spark.version>2.2.1</spark.version>
@@ -74,33 +75,6 @@
     </properties>
 
     <dependencies>
-
-<!--        <dependency>
-            <groupId>io.github.embeddedkafka</groupId>
-            <artifactId>embedded-kafka-schema-registry_2.11</artifactId>
-            <version>5.1.2</version>
-        </dependency>-->
-        <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.inject/jersey-hk2 -->
-<!--        <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <version>2.28</version>
-        </dependency>-->
-        <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client -->
-<!--        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>2.28</version>
-        </dependency>-->
-<!--        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <version>2.2.4.RELEASE</version>
-            <scope>test</scope>
-        </dependency>-->
-        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-scala -->
-
-
         <!--ABRiS-->
         <dependency>
             <groupId>za.co.absa</groupId>
@@ -143,14 +117,6 @@
     <dependencyManagement>
 
         <dependencies>
-            <dependency>
-                <groupId>org.glassfish.jersey</groupId>
-                <artifactId>jersey-bom</artifactId>
-                <version>2.28</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
             <!--ABRiS-->
             <dependency>
                 <groupId>za.co.absa</groupId>
@@ -229,6 +195,12 @@
                 <artifactId>curator-test</artifactId>
                 <version>${apache.curator.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.kafka</groupId>
+                <artifactId>spring-kafka-test</artifactId>
+                <version>${spring.kafka.test.version}</version>
+                <scope>compile</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

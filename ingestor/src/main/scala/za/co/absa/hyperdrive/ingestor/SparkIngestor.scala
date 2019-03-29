@@ -23,7 +23,7 @@ import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.encoding.AvroDecoder
+import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
 
 /**
@@ -46,14 +46,14 @@ object SparkIngestor {
     * @param spark [[SparkSession]] instance.
     * @param streamReader [[StreamReader]] implementation responsible for connecting to the source stream.
     * @param offsetManager [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
-    * @param avroDecoder [[AvroDecoder]] implementation responsible for handling Avro payloads. It supports SchemaRegistry and all its naming strategies.
+    * @param decoder [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
   def ingest(spark: SparkSession)
             (streamReader: StreamReader)
             (offsetManager: OffsetManager)
-            (avroDecoder: AvroDecoder)
+            (decoder: StreamDecoder)
             (streamTransformer: StreamTransformer)
             (streamWriter: StreamWriter): Unit= {
 
@@ -69,7 +69,7 @@ object SparkIngestor {
       throw new IllegalArgumentException("Received NULL OffsetManager instance.")
     }
 
-    if (avroDecoder == null) {
+    if (decoder == null) {
       throw new IllegalArgumentException("Received NULL AvroDecoder instance.")
     }
 
@@ -85,10 +85,10 @@ object SparkIngestor {
 
     val inputStream = streamReader.read(spark) // gets the source stream
     val configuredStreamReader = offsetManager.configureOffsets(inputStream) // does offset management if any
-    val decodedAvroDataFrame = avroDecoder.decode(configuredStreamReader) // decodes the payload from Avro
-    val transformedAvroDataFrame = streamTransformer.transform(decodedAvroDataFrame) // applies any transformations to the data
+    val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
+    val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
 
-    val ingestionQuery = streamWriter.write(transformedAvroDataFrame, offsetManager) // sends the stream to the destination
+    val ingestionQuery = streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination
 
     ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
     ingestionQuery.stop()

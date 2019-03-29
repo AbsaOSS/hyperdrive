@@ -16,17 +16,16 @@
  *
  */
 
-package za.co.absa.hyperdrive.transformer.encoding
+package za.co.absa.hyperdrive.transformer.encoding.impl
 
-import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
+import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
-class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) {
+class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
 
   if (schemaPathProvider == null) {
     throw new IllegalArgumentException("Null SchemaPathProvider instance received.")

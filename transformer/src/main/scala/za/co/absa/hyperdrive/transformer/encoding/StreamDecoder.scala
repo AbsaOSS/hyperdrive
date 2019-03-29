@@ -16,19 +16,18 @@
  *
  */
 
-package za.co.absa.hyperdrive.trigger.mock.data
+package za.co.absa.hyperdrive.transformer.encoding
 
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericFixed
-
-object FixedString {
-  def getClassName: String = new FixedString("").getClass.getName
-}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.streaming.DataStreamReader
 
 /**
-  * Utility class for writing Avro fixed fields.
+  * Base class for data decoders. Possible implementations are, for instance, Avro, Protobuffer, Thrift, etc.
   */
-class FixedString(value: String) extends GenericFixed {
-  override def getSchema: Schema = null
-  override def bytes: Array[Byte] = value.getBytes
+abstract class StreamDecoder {
+
+  /**
+    * Decodes the stream into the correct format, depending on the implementation.
+    */
+  def decode(streamReader: DataStreamReader): DataFrame
 }
