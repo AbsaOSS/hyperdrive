@@ -21,9 +21,10 @@ package za.co.absa.hyperdrive.ingestor
 import java.io.File
 
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
+import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
@@ -44,22 +45,18 @@ import za.co.absa.hyperdrive.transformer.encoding.schema.impl.SchemaRegistrySche
 import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.impl.ParquetStreamWriter
 
-class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
 
   private val tempDir = TempDir.getNew
 
   private val configuration = new Configuration
   private val encoder = ComplexRecordsGenerator.getEncoder
-  private val checkpointingLocation = {
-    val checkpointDir = new File(tempDir, "checkpointingBaseDir")
-    checkpointDir.mkdirs()
-    checkpointDir.getAbsolutePath
-  }
+  private var checkpointingLocation: String = _
 
   private var numberOfBrokers: Int = _
   private var numberOfPartitionsPerTopic: Int = _
   private var controlledShutdown: Boolean = _
-  private var topic: String = _
+  private var defaultTopic: String = _
   private var ingestionDestination: String = _
   private var schemaRetentionPolicy: SchemaRetentionPolicy = _
   private var kafkaBroker: EmbeddedKafkaBroker = _
@@ -80,20 +77,30 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
     setupDefaultComponents()
   }
 
+  override def afterEach(): Unit = {
+    FileUtils.deleteDirectory(new File(ingestionDestination))
+    FileUtils.deleteDirectory(new File(checkpointingLocation))
+  }
+
   private def setupDefaultParameters(): Unit = {
     numberOfBrokers = 2
     numberOfPartitionsPerTopic = 2
     controlledShutdown = false
-    topic = "test_topic"
+    defaultTopic = "test_topic"
     ingestionDestination = new File(tempDir, "ingestionDestination").getAbsolutePath
     schemaRetentionPolicy = SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
-    schemaRegistrySettings = getSchemaRegistrySettings(topic)
+    schemaRegistrySettings = getSchemaRegistrySettings(defaultTopic)
+    checkpointingLocation = {
+      val checkpointDir = new File(tempDir, "checkpointingBaseDir")
+      checkpointDir.mkdirs()
+      checkpointDir.getAbsolutePath
+    }
   }
 
   private def setupDefaultComponents(): Unit = {
     spark = getSparkSession
-    reader = getKafkaStreamReader(topic, kafkaBroker.getBrokersAsString)
-    manager = getCheckpointOffsetManager(topic, checkpointingLocation, configuration)
+    reader = getKafkaStreamReader(defaultTopic, kafkaBroker.getBrokersAsString)
+    manager = getCheckpointOffsetManager(defaultTopic, checkpointingLocation, configuration)
     decoder = getAvroDecoder(schemaRetentionPolicy, schemaRegistrySettings)
     transformer = getSelectAllTransformer
     writer = getParquetStreamWriter(ingestionDestination)
@@ -101,7 +108,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private def setupDefaultInfrastructure(): Unit = {
     if (kafkaBroker == null) {
-      kafkaBroker = new EmbeddedKafkaBroker(numberOfBrokers, controlledShutdown, numberOfPartitionsPerTopic, topic)
+      kafkaBroker = new EmbeddedKafkaBroker(numberOfBrokers, controlledShutdown, numberOfPartitionsPerTopic, defaultTopic)
       kafkaBroker.afterPropertiesSet()
     }
     SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient)
@@ -111,40 +118,12 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   it should "ingest from Kafka as Avro and save into Parquet" in {
     val records = produceRandomRecords(howMany = 1)
-    ingest(records)
+    ingest(defaultTopic, records)
     val ingested = readIngestedParquet(ingestionDestination, spark)
     assert(equals(records, ingested)(encoder))
   }
 
-  it should "stop nicely if topic does not exist" in {
-
-  }
-
-  it should "stop nicely if brokers addresses are incorrect" in {
-
-  }
-
-  it should "stop nicely upon source exceptions" in {
-
-  }
-
-  it should "stop nicely upon decoding exceptions" in {
-
-  }
-
-  it should "stop nicely upon transformations exceptions" in {
-
-  }
-
-  it should "stop nicely upon writing exceptions" in {
-
-  }
-
-  it should "stop nicely upon offset management exceptions" in {
-
-  }
-
-  private def ingest(records: List[Row]): Unit = {
+  private def ingest(topic: String, records: List[Row]): Unit = {
     sendRecords(records,
       topic,
       kafkaBroker.getBrokersAsString,
@@ -171,7 +150,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private def sendRecords(rows: List[Row], topic: String, brokers: String, schemaRegistrySettings: Map[String,String], spark: SparkSession)
                          (implicit encoder: Encoder[Row]): Unit = {
     import spark.implicits._
-    val dataframe = spark.sparkContext.parallelize(rows, 2).toDF()
+    val dataframe = spark.sparkContext.parallelize(rows, numSlices = 2).toDF()
 
     import za.co.absa.abris.avro.AvroSerDe._
     dataframe

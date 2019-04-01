@@ -42,7 +42,7 @@ class ParquetStreamWriter(destination: String) extends StreamWriter(destination)
     val outStream = dataFrame
       .writeStream
       .trigger(Trigger.Once())
-      .format("parquet")
+      .format(source = "parquet")
       .outputMode(OutputMode.Append())
 
     offsetManager.configureOffsets(outStream)

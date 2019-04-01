@@ -16,16 +16,15 @@
  *
  */
 
-package za.co.absa.hyperdrive.reader
+package za.co.absa.hyperdrive.reader.impl
 
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers._
-import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.KafkaSettings
 
 
@@ -43,31 +42,31 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 
   it should "throw on blank topic" in {
     assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(null, validBrokers, validExtraConfs)
+      new KafkaStreamReader(topic = null, validBrokers, validExtraConfs)
     )
     assertThrows[IllegalArgumentException]( // empty topic
-      new KafkaStreamReader("  ", validBrokers, validExtraConfs)
+      new KafkaStreamReader(topic = "  ", validBrokers, validExtraConfs)
     )
   }
 
   it should "throw on blank brokers" in {
     assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(validTopic, null, validExtraConfs)
+      new KafkaStreamReader(validTopic, brokers = null, validExtraConfs)
     )
     assertThrows[IllegalArgumentException]( // empty topic
-      new KafkaStreamReader(validTopic, "  ", validExtraConfs)
+      new KafkaStreamReader(validTopic, brokers = "  ", validExtraConfs)
     )
   }
 
   it should "throw on null parameters map" in {
     assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(validTopic, validBrokers, null)
+      new KafkaStreamReader(validTopic, validBrokers, extraConfs = null)
     )
   }
 
   it should "throw on null SparkSession" in {
     val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
-    assertThrows[IllegalArgumentException](reader.read(null))
+    assertThrows[IllegalArgumentException](reader.read(spark = null))
   }
 
   it should "throw if SparkSession is stopped" in {

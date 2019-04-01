@@ -87,7 +87,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterAll with MockitoSuga
       SparkIngestor.ingest(sparkSession)(streamReader)(offsetManager)(null)(streamTransformer)(streamWriter)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("avro"))
     assert(throwable.getMessage.toLowerCase.contains("decoder"))
   }
 
