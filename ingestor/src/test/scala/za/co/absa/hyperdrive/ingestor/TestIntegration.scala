@@ -63,7 +63,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private var spark: SparkSession = _
   private var reader: StreamReader = _
   private var manager: OffsetManager = _
-  private var decoder: StreamDecoder = _
+  private var decoder: AvroDecoder = _
   private var transformer: StreamTransformer = _
   private var writer: StreamWriter = _
 
@@ -128,7 +128,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
       schemaRegistrySettings,
       spark)(encoder)
 
-    SparkIngestor.ingest(spark)(reader)(manager)(decoder)(transformer)(writer)
+    SparkIngestor.ingest(spark, reader, manager, decoder, transformer, writer)
   }
 
   private def getSparkSession: SparkSession = SparkSession.builder().master("local[*]").appName("IntegrationTest").getOrCreate()

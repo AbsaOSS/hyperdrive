@@ -94,7 +94,7 @@ object IngestionTrigger {
 
         val runnable = new Runnable {
           override def run(): Unit = {
-            SparkIngestor.ingest(getSparkSession(payloadTopic))(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
+            SparkIngestor.ingest(getSparkSession(payloadTopic), streamReader, offsetManager, avroDecoder, streamTransformer, streamWriter)
             PayloadPrinter.showContent(destinationDir, PayloadPrinter.FORMAT_PARQUET)
           }
         }

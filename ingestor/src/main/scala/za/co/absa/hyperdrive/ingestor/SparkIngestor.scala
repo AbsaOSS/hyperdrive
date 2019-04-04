@@ -18,6 +18,8 @@
 
 package za.co.absa.hyperdrive.ingestor
 
+import java.util.UUID
+
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
@@ -53,12 +55,12 @@ object SparkIngestor {
     * @param streamWriter [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
   @throws(classOf[Exception])
-  def ingest(spark: SparkSession)
-            (streamReader: StreamReader)
-            (offsetManager: OffsetManager)
-            (decoder: StreamDecoder)
-            (streamTransformer: StreamTransformer)
-            (streamWriter: StreamWriter): Unit= {
+  def ingest(spark: SparkSession,
+            streamReader: StreamReader,
+            offsetManager: OffsetManager,
+            decoder: StreamDecoder,
+            streamTransformer: StreamTransformer,
+            streamWriter: StreamWriter): Unit= {
 
     if (spark == null) {
       throw new IllegalArgumentException("Received NULL SparkSession instance.")
@@ -114,12 +116,5 @@ object SparkIngestor {
     logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
   }
 
-  private def generateIngestionId: String = s"$getRandomLetter$getRandomLetter$getRandomNumber"
-
-  private def getRandomLetter: Character = {
-    val letters = "ABCDEFGHIJKLMOPQRSTUVXYWZ"
-    letters.charAt(new Random().nextInt(letters.length))
-  }
-
-  private def getRandomNumber: Long = System.nanoTime()
+  private def generateIngestionId: String = UUID.randomUUID().toString
 }

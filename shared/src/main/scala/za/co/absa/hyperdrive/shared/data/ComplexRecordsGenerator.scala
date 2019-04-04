@@ -27,10 +27,9 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.AvroToSparkParser
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
-import scala.collection.{Map, Seq, immutable, mutable}
+import scala.collection.JavaConverters.{asScalaBufferConverter, seqAsJavaListConverter}
+import scala.collection.{Seq, immutable, mutable}
 import scala.util.Random
 
 /**
