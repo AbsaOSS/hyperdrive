@@ -20,14 +20,14 @@ package za.co.absa.hyperdrive.transformer.encoding
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
-import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
-class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) {
+/**
+  * Base class for data decoders. Possible implementations are, for instance, Avro, Protobuffer, Thrift, etc.
+  */
+abstract class StreamDecoder {
 
-  def decode(streamReader: DataStreamReader): DataFrame = {
-    val schemaPath = schemaPathProvider.get
-    import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro("value", Some(schemaPath), None)(retentionPolicy)
-  }
+  /**
+    * Decodes the stream into the correct format, depending on the implementation.
+    */
+  def decode(streamReader: DataStreamReader): DataFrame
 }

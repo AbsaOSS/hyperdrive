@@ -18,12 +18,9 @@
 
 package za.co.absa.hyperdrive.trigger.mock
 
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.{Encoder, Row, SparkSession}
-import za.co.absa.abris.avro.format.SparkAvroConversions
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
+import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
 
 object RandomPayloadProducer {
 
@@ -35,9 +32,9 @@ object RandomPayloadProducer {
     val spark = SparkSession.builder().appName("RandomPayloadProducer").master("local[*]").getOrCreate()
     spark.sparkContext.setLogLevel("info")
 
-    implicit val encoder: Encoder[Row] = getEncoder
+    implicit val encoder: Encoder[Row] = ComplexRecordsGenerator.getEncoder
 
-    val rows = createRows(NUM_RECORDS)
+    val rows = ComplexRecordsGenerator.generateUnparsedRows(NUM_RECORDS)
 
     import spark.implicits._
     val dataframe = spark.sparkContext.parallelize(rows, 2).toDF()
@@ -58,16 +55,5 @@ object RandomPayloadProducer {
     //spark.close()
     println("PAYLOAD SENT. GOING to notify ingestors")
     NotificationDispatcher.dispatchNotification()
-  }
-
-  private def createRows(howMany: Int): List[Row] = {
-    ComplexRecordsGenerator.generateUnparsedRows(howMany)
-  }
-
-  private def getEncoder: Encoder[Row] = {
-    val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
-    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    println(sparkSchema)
-    RowEncoder.apply(sparkSchema)
   }
 }

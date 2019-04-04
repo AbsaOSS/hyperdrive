@@ -23,6 +23,8 @@ import java.util.Collections
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.logging.log4j.LogManager
+import org.apache.spark.sql.SparkSession
 import za.co.absa.abris.avro.read.confluent.{ScalaConfluentKafkaAvroDeserializer, SchemaManager}
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.ingestor.SparkIngestor
@@ -30,11 +32,10 @@ import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.impl.CheckpointingOffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
+import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings, SparkSettings}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.impl.SelectorStreamTransformer
-import za.co.absa.hyperdrive.transformer.encoding.AvroDecoder
-import za.co.absa.hyperdrive.transformer.encoding.schema.impl.SchemaRegistrySchemaPathProvider
+import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
+import za.co.absa.hyperdrive.transformer.encoding.impl.AvroDecoder
 import za.co.absa.hyperdrive.trigger.mock.NotificationDispatcher
 import za.co.absa.hyperdrive.trigger.notification.Notification
 import za.co.absa.hyperdrive.trigger.utils.PayloadPrinter
@@ -45,7 +46,11 @@ import scala.collection.JavaConverters._
 
 object IngestionTrigger {
 
+  private val logger = LogManager.getLogger
+
   def main(args: Array[String]): Unit = {
+
+    resolveBrokersAndSchemaRegistry(args)
 
     import java.util.Properties
 
@@ -56,7 +61,7 @@ object IngestionTrigger {
     props.put(KafkaSettings.GROUP_ID_KEY, "SomeGroupId")
     props.put("enable.auto.commit", "true")
 
-    println(s"STARTING notification topic watcher: '${HyperdriveSettings.NOTIFICATION_TOPIC}'")
+    logger.info(s"STARTING notification topic watcher: '${HyperdriveSettings.NOTIFICATION_TOPIC}'")
 
     val consumer = new KafkaConsumer[String, String](props)
 
@@ -84,9 +89,12 @@ object IngestionTrigger {
         val streamTransformer = createStreamTransformer
         val streamWriter = createStreamWriter(destinationDir)
 
+        val sparkSession = getSparkSession(payloadTopic)
+        sparkSession.conf.getAll.foreach(println)
+
         val runnable = new Runnable {
           override def run(): Unit = {
-            SparkIngestor.ingest(payloadTopic)(streamReader)(offsetManager)(avroDecoder)(streamTransformer)(streamWriter)
+            SparkIngestor.ingest(getSparkSession(payloadTopic), streamReader, offsetManager, avroDecoder, streamTransformer, streamWriter)
             PayloadPrinter.showContent(destinationDir, PayloadPrinter.FORMAT_PARQUET)
           }
         }
@@ -94,6 +102,23 @@ object IngestionTrigger {
         new Thread(runnable).start()
       }
     }
+  }
+
+  private def resolveBrokersAndSchemaRegistry(args: Array[String]): Unit = {
+    if (args.nonEmpty) {
+      KafkaSettings.BROKERS = args(0).trim
+      SchemaRegistrySettings.URL = args(1).trim
+    }
+    logger.info(s"Kaka broker resolved to: ${KafkaSettings.BROKERS}")
+    logger.info(s"Schema Registry broker resolved to: ${SchemaRegistrySettings.URL}")
+  }
+
+  private def getSparkSession(topic: String): SparkSession = {
+    SparkSession
+      .builder()
+      .appName(s"SparkIngestor-$topic")
+      .master("local[*]")
+      .getOrCreate()
   }
 
   private def decode(payload: Array[Byte]): GenericRecord = {
@@ -110,17 +135,15 @@ object IngestionTrigger {
   }
 
   private def createStreamReader(topic: String): StreamReader = {
-    new KafkaStreamReader(topic, KafkaSettings.BROKERS)
+    new KafkaStreamReader(topic, KafkaSettings.BROKERS, Map[String,String]())
   }
 
   private def createOffsetManager(topic: String): OffsetManager = {
-    new CheckpointingOffsetManager(topic, new Configuration())
+    new CheckpointingOffsetManager(topic, SparkSettings.CHECKPOINT_BASE_LOCATION, new Configuration())
   }
 
   private def createAvroDecoder(topic: String): AvroDecoder = {
-    val schemaRegistrySettings = getSchemaRegistrySettings(topic)
-    val schemaPathProvider = new SchemaRegistrySchemaPathProvider(schemaRegistrySettings)
-    new AvroDecoder(schemaPathProvider, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
+    new AvroDecoder(getSchemaRegistrySettings(topic), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
   }
 
   private def getSchemaRegistrySettings(topic: String): Map[String,String] = {
@@ -128,7 +151,7 @@ object IngestionTrigger {
     SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic, SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
-  private def createStreamTransformer: StreamTransformer = new SelectorStreamTransformer
+  private def createStreamTransformer: StreamTransformer = new SelectAllStreamTransformer
 
   private def createStreamWriter(destination: String): StreamWriter = {
     new ParquetStreamWriter(destination)

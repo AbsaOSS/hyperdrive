@@ -28,6 +28,15 @@ object FileUtils {
     fileSystem.exists(new Path(file))
   }
 
+  def notExists(file: String, configuration: Configuration): Boolean = !exists(file, configuration)
+
+  def isDirectory(file: String, configuration: Configuration): Boolean = {
+    val fileSystem = getFileSystem(configuration)
+    fileSystem.isDirectory(new Path(file))
+  }
+
+  def isNotDirectory(file: String, configuration: Configuration): Boolean = !isDirectory(file, configuration)
+
   private def getFileSystem(configuration: Configuration): FileSystem = {
     FileSystem.get(configuration)
   }

@@ -16,19 +16,17 @@
  *
  */
 
-package za.co.absa.hyperdrive.trigger.mock.data
+package za.co.absa.hyperdrive.transformer.data.impl
 
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericFixed
+import org.apache.spark.sql.DataFrame
+import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 
-object FixedString {
-  def getClassName: String = new FixedString("").getClass.getName
-}
+class SelectAllStreamTransformer extends StreamTransformer {
+  def transform(streamData: DataFrame): DataFrame = {
+    if (streamData == null) {
+      throw new IllegalArgumentException("Null DataFrame received.")
+    }
 
-/**
-  * Utility class for writing Avro fixed fields.
-  */
-class FixedString(value: String) extends GenericFixed {
-  override def getSchema: Schema = null
-  override def bytes: Array[Byte] = value.getBytes
+    streamData.select(col = "*")
+  }
 }

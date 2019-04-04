@@ -18,6 +18,7 @@
 
 package za.co.absa.hyperdrive.writer.impl
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
@@ -25,11 +26,23 @@ import za.co.absa.hyperdrive.writer.StreamWriter
 
 class ParquetStreamWriter(destination: String) extends StreamWriter(destination) {
 
+  if (StringUtils.isBlank(destination)) {
+    throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
+  }
+
   def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery = {
+    if (dataFrame == null) {
+      throw new IllegalArgumentException("Null DataFrame.")
+    }
+
+    if (offsetManager == null) {
+      throw new IllegalArgumentException("Null OffsetManager instance.")
+    }
+
     val outStream = dataFrame
       .writeStream
       .trigger(Trigger.Once())
-      .format("parquet")
+      .format(source = "parquet")
       .outputMode(OutputMode.Append())
 
     offsetManager.configureOffsets(outStream)

@@ -16,8 +16,19 @@
  *
  */
 
-package za.co.absa.hyperdrive.transformer.encoding.schema
+package za.co.absa.hyperdrive.shared.data
 
-abstract class SchemaPathProvider {
-  def get: String
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericFixed
+
+object FixedString {
+  def getClassName: String = new FixedString("").getClass.getName
+}
+
+/**
+  * Utility class for writing Avro fixed fields.
+  */
+class FixedString(value: String) extends GenericFixed {
+  override def getSchema: Schema = null
+  override def bytes: Array[Byte] = value.getBytes
 }

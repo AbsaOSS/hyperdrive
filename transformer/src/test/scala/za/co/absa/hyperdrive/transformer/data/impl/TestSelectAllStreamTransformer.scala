@@ -19,10 +19,28 @@
 package za.co.absa.hyperdrive.transformer.data.impl
 
 import org.apache.spark.sql.DataFrame
-import za.co.absa.hyperdrive.transformer.data.StreamTransformer
+import org.scalatest.FlatSpec
+import org.scalatest.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 
-class SelectorStreamTransformer extends StreamTransformer {
-  def transform(streamData: DataFrame): DataFrame = {
-    streamData.select("*")
+class TestSelectAllStreamTransformer extends FlatSpec with MockitoSugar {
+
+  private val transformer = new SelectAllStreamTransformer
+
+  behavior of transformer.getClass.getName
+
+  it should "throw on null DataFrame" in {
+    assertThrows[IllegalArgumentException](
+      transformer.transform(streamData = null)
+    )
+  }
+
+  it should "select all columns in DataFrame" in {
+    val streamData = mock[DataFrame]
+    when(streamData.select("*")).thenReturn(streamData)
+
+    assert(streamData == transformer.transform(streamData))
+    verify(streamData.select("*"))
   }
 }

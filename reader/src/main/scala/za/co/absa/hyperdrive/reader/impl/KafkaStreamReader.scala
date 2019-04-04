@@ -18,18 +18,59 @@
 
 package za.co.absa.hyperdrive.reader.impl
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.KafkaSettings
 
-class KafkaStreamReader(topic: String, brokers: String) extends StreamReader {
+/**
+  * Creates a stream reader from Kafka.
+  *
+  * @param topic String containing the topic
+  * @param brokers String containing the brokers
+  * @param extraConfs Extra configurations, e.g. SSL params.
+  */
+class KafkaStreamReader(topic: String, brokers: String, extraConfs: Map[String,String]) extends StreamReader {
 
+  if (StringUtils.isBlank(topic)) {
+    throw new IllegalArgumentException(s"Invalid topic: '$topic'")
+  }
+
+  if (StringUtils.isBlank(brokers)) {
+    throw new IllegalArgumentException(s"Invalid brokers: '$brokers'")
+  }
+
+  if (extraConfs == null) {
+    throw new IllegalArgumentException("Null extra configurations.")
+  }
+
+  /**
+    * Creates a [[DataStreamReader]] instance from a SparkSession
+    *
+    * IMPORTANT: this method does not check against malformed data (e.g. invalid broker protocols or certificate locations),
+    * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
+    */
   override def read(spark: SparkSession): DataStreamReader = {
-    spark
+
+    if (spark == null) {
+      throw new IllegalArgumentException("Null SparkSession instance.")
+    }
+
+    if (spark.sparkContext.isStopped) {
+      throw new IllegalStateException("SparkSession is stopped.")
+    }
+
+    val streamReader = spark
       .readStream
       .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
       .option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, topic)
       .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, brokers)
+
+    extraConfs.foldLeft(streamReader) {
+      case (previousStreamReader, (newConfKey, newConfValue)) => previousStreamReader.option(newConfKey, newConfValue)
+    }
   }
+
+  override def getSourceName: String = s"Kafka topic: $topic"
 }

@@ -21,7 +21,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>parent</artifactId>
+        <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
@@ -47,7 +47,7 @@
 
         <!--Scala-->
         <scala.version>2.11.8</scala.version>
-        <scalatest.version>3.0.0</scalatest.version>
+        <scalatest.version>3.0.5</scalatest.version>
         <scalatest.maven.version>1.0</scalatest.maven.version>
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
         <scala.compat.version>2.11</scala.compat.version>
@@ -55,12 +55,23 @@
 
         <!--Log4J2-->
         <log4j.version>2.11.1</log4j.version>
+        <slf4j.log4j2.version>1.7.26</slf4j.log4j2.version>
 
         <!--Kafka-->
         <kafka.version>2.1.1</kafka.version>
-
-        <!--Spring Kafka Test-->
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
+
+        <!--Spark-->
+        <spark.version>2.2.1</spark.version>
+
+        <!--Mockito-->
+        <mockito.version>2.25.0</mockito.version>
+
+        <!--Junit-->
+        <junit.jupiter.version>5.3.0</junit.jupiter.version>
+
+        <!--Apache Curator-->
+        <apache.curator.version>4.2.0</apache.curator.version>
     </properties>
 
     <dependencies>
@@ -80,12 +91,31 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-jcl</artifactId>
+        </dependency>
+
+        <!--Tests-->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.compat.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-core_${scala.compat.version}</artifactId>
         </dependency>
     </dependencies>
 
     <dependencyManagement>
+
         <dependencies>
             <!--ABRiS-->
             <dependency>
@@ -106,6 +136,11 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.log4j2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-jcl</artifactId>
                 <version>${log4j.version}</version>
@@ -119,8 +154,15 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka_2.11</artifactId>
+                <artifactId>kafka_${scala.compat.version}</artifactId>
                 <version>${kafka.version}</version>
+            </dependency>
+
+            <!--Spark-->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
+                <version>${spark.version}</version>
             </dependency>
 
             <!--Tests-->
@@ -137,10 +179,28 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-test</artifactId>
+                <version>${apache.curator.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.kafka</groupId>
                 <artifactId>spring-kafka-test</artifactId>
                 <version>${spring.kafka.test.version}</version>
-                <scope>test</scope>
+                <scope>compile</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -192,6 +252,7 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
+                <version>${scalatest.maven.version}</version>
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
