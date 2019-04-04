@@ -23,12 +23,15 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
-import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
 
-class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+class AvroDecoder(schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
 
-  if (schemaPathProvider == null) {
-    throw new IllegalArgumentException("Null SchemaPathProvider instance received.")
+  if (schemaRegistrySettings == null) {
+    throw new IllegalArgumentException("Null Schema Registry settings received.")
+  }
+
+  if (schemaRegistrySettings.isEmpty) {
+    throw new IllegalArgumentException("Empty Schema Registry settings received.")
   }
 
   if (retentionPolicy == null) {
@@ -42,12 +45,9 @@ class AvroDecoder(schemaPathProvider: SchemaPathProvider, retentionPolicy: Schem
       throw new IllegalArgumentException("Null DataStreamReader instance received.")
     }
 
-    val schemaPath = schemaPathProvider.get
-    val schemaRegistrySettings = schemaPathProvider.getSchemaRegistrySettings
-    logger.info(s"Schema path: '$schemaPath'.")
     logger.info(s"SchemaRegistry settings: $schemaRegistrySettings")
 
     import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro("value", Some(schemaPath), schemaPathProvider.getSchemaRegistrySettings)(retentionPolicy)
+    streamReader.fromConfluentAvro("value", None, Some(schemaRegistrySettings))(retentionPolicy)
   }
 }

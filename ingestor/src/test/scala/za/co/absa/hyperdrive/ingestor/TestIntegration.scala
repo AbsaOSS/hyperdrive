@@ -40,8 +40,6 @@ import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.transformer.encoding.impl.AvroDecoder
-import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
-import za.co.absa.hyperdrive.transformer.encoding.schema.impl.SchemaRegistrySchemaPathProvider
 import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.impl.ParquetStreamWriter
 
@@ -139,7 +137,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private def getCheckpointOffsetManager(topic: String, checkpointLocation: String, conf: Configuration): OffsetManager = new CheckpointingOffsetManager(topic, checkpointLocation, conf)
 
-  private def getAvroDecoder(retentionPolicy: SchemaRetentionPolicy, schemaRegistrySettings: Map[String,String]): AvroDecoder = new AvroDecoder(getSchemaProvider(schemaRegistrySettings), retentionPolicy)
+  private def getAvroDecoder(retentionPolicy: SchemaRetentionPolicy, schemaRegistrySettings: Map[String,String]): AvroDecoder = new AvroDecoder(schemaRegistrySettings, retentionPolicy)
 
   private def getSelectAllTransformer: StreamTransformer = new SelectAllStreamTransformer
 
@@ -163,8 +161,6 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   }
 
   private def readIngestedParquet(sourcePath: String, spark: SparkSession): DataFrame = spark.read.parquet(sourcePath)
-
-  private def getSchemaProvider(schemaRegistrySettings: Map[String,String]): SchemaPathProvider = new SchemaRegistrySchemaPathProvider(schemaRegistrySettings)
 
   def getSchemaRegistrySettings(topic: String): Map[String,String] = {
     SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS +

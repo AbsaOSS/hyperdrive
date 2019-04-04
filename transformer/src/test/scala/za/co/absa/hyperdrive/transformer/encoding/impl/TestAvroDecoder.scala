@@ -21,25 +21,27 @@ package za.co.absa.hyperdrive.transformer.encoding.impl
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
-import za.co.absa.hyperdrive.transformer.encoding.schema.SchemaPathProvider
+import za.co.absa.hyperdrive.shared.InfrastructureSettings.SchemaRegistrySettings
 
 class TestAvroDecoder extends FlatSpec with MockitoSugar {
 
   behavior of "AvroDecoder"
 
-  it should "throw on null SchemaPathProvider" in {
-    assertThrows[IllegalArgumentException](new AvroDecoder(null, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+  it should "throw on null Schema Registry settings" in {
+    assertThrows[IllegalArgumentException](new AvroDecoder(schemaRegistrySettings = null, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+  }
+  it should "throw on empty Schema Registry settings" in {
+    assertThrows[IllegalArgumentException](new AvroDecoder(schemaRegistrySettings = Map[String,String](), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
   }
 
   it should "throw on null SchemaRetentionPolicy" in {
-    val schemaPathProvider = mock[SchemaPathProvider]
-    assertThrows[IllegalArgumentException](new AvroDecoder(schemaPathProvider, null))
+    assertThrows[IllegalArgumentException](new AvroDecoder(SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, retentionPolicy = null))
   }
 
   it should "throw on null StreamDataReader" in {
-    val schemaPathProvider = mock[SchemaPathProvider]
     val schemaRetentionPolicy = SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
-    val avroDecoder = new AvroDecoder(schemaPathProvider, schemaRetentionPolicy)
+
+    val avroDecoder = new AvroDecoder(SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, schemaRetentionPolicy)
     assertThrows[IllegalArgumentException](avroDecoder.decode(streamReader = null))
   }
 }
