@@ -35,7 +35,7 @@ import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings, SparkSettings}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
-import za.co.absa.hyperdrive.transformer.encoding.impl.AvroDecoder
+import za.co.absa.hyperdrive.transformer.encoding.impl.AvroStreamDecoder
 import za.co.absa.hyperdrive.trigger.mock.NotificationDispatcher
 import za.co.absa.hyperdrive.trigger.notification.Notification
 import za.co.absa.hyperdrive.trigger.utils.PayloadPrinter
@@ -142,8 +142,8 @@ object IngestionTrigger {
     new CheckpointingOffsetManager(topic, SparkSettings.CHECKPOINT_BASE_LOCATION, new Configuration())
   }
 
-  private def createAvroDecoder(topic: String): AvroDecoder = {
-    new AvroDecoder(getSchemaRegistrySettings(topic), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
+  private def createAvroDecoder(topic: String): AvroStreamDecoder = {
+    new AvroStreamDecoder(getSchemaRegistrySettings(topic), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
   }
 
   private def getSchemaRegistrySettings(topic: String): Map[String,String] = {

@@ -24,7 +24,7 @@ import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 
-class AvroDecoder(schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+class AvroStreamDecoder(schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
 
   if (schemaRegistrySettings == null) {
     throw new IllegalArgumentException("Null Schema Registry settings received.")
