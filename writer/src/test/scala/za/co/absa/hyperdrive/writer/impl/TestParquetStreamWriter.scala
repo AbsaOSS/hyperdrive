@@ -37,8 +37,8 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = null))
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  "))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = null, None))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", None))
   }
 
   it should "throw on null DataFrame" in {
@@ -47,7 +47,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val offsetManager = mock[OffsetManager]
     when(offsetManager.configureOffsets(dataStreamWriter)).thenReturn(dataStreamWriter)
 
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, None)
     assertThrows[IllegalArgumentException](writer.write(dataFrame = null, offsetManager))
   }
 
@@ -57,7 +57,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataFrame = mock[DataFrame]
     when(dataFrame.writeStream).thenReturn(dataStreamWriter)
 
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, None)
     assertThrows[IllegalArgumentException](writer.write(dataFrame, offsetManager = null))
   }
 
@@ -65,7 +65,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager)
+    invokeWriter(dataStreamWriter, offsetManager, None)
     verify(dataStreamWriter).format("parquet")
   }
 
@@ -73,7 +73,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager)
+    invokeWriter(dataStreamWriter, offsetManager, None)
     verify(dataStreamWriter).trigger(Trigger.Once)
   }
 
@@ -81,7 +81,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager)
+    invokeWriter(dataStreamWriter, offsetManager, None)
     verify(dataStreamWriter).outputMode(OutputMode.Append())
   }
 
@@ -89,7 +89,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager)
+    invokeWriter(dataStreamWriter, offsetManager, None)
     verify(offsetManager).configureOffsets(dataStreamWriter)
   }
 
@@ -97,13 +97,27 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager)
+    invokeWriter(dataStreamWriter, offsetManager, None)
     verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager): Unit = {
+  it should " include extra options in case they exist" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getOffsetManager(dataStreamWriter)
+
+    val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
+
+    invokeWriter(dataStreamWriter, offsetManager, Some(extraConfs))
+    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+
+    extraConfs.foreach {
+      case (key: String, value: String) => verify(dataStreamWriter).option(key, value)
+    }
+  }
+
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager, extraOptions: Option[Map[String,String]]): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, extraOptions)
     writer.write(dataFrame, offsetManager)
   }
 
@@ -112,6 +126,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     when(dataStreamWriter.trigger(any(Trigger.Once().getClass))).thenReturn(dataStreamWriter)
     when(dataStreamWriter.format(anyString())).thenReturn(dataStreamWriter)
     when(dataStreamWriter.outputMode(any(OutputMode.Append().getClass))).thenReturn(dataStreamWriter)
+    when(dataStreamWriter.option(anyString(), anyString())).thenReturn(dataStreamWriter)
     dataStreamWriter
   }
 

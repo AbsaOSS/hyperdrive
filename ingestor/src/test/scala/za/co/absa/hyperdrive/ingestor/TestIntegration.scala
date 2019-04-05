@@ -141,7 +141,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private def getSelectAllTransformer: StreamTransformer = new SelectAllStreamTransformer
 
-  private def getParquetStreamWriter(destination: String): StreamWriter = new ParquetStreamWriter(destination)
+  private def getParquetStreamWriter(destination: String): StreamWriter = new ParquetStreamWriter(destination, None)
 
   private def produceRandomRecords(howMany: Int): List[Row] = ComplexRecordsGenerator.generateUnparsedRows(howMany)
 

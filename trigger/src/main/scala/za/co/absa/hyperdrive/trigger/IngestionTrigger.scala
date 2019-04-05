@@ -154,6 +154,6 @@ object IngestionTrigger {
   private def createStreamTransformer: StreamTransformer = new SelectAllStreamTransformer
 
   private def createStreamWriter(destination: String): StreamWriter = {
-    new ParquetStreamWriter(destination)
+    new ParquetStreamWriter(destination, None)
   }
 }
