@@ -19,12 +19,12 @@
 package za.co.absa.hyperdrive.writer.impl
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
+import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.writer.StreamWriter
 
-class ParquetStreamWriter(destination: String) extends StreamWriter(destination) {
+class ParquetStreamWriter(destination: String, extraConfOptions: Option[Map[String,String]]) extends StreamWriter(destination) {
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
@@ -39,13 +39,31 @@ class ParquetStreamWriter(destination: String) extends StreamWriter(destination)
       throw new IllegalArgumentException("Null OffsetManager instance.")
     }
 
-    val outStream = dataFrame
+    val outStream = getOutStream(dataFrame)
+
+    val streamWithOptions = addOptions(outStream, extraConfOptions)
+
+    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, offsetManager)
+
+    streamWithOptionsAndOffset.start(destination)
+  }
+
+  private def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
+    dataFrame
       .writeStream
       .trigger(Trigger.Once())
       .format(source = "parquet")
       .outputMode(OutputMode.Append())
-
-    offsetManager.configureOffsets(outStream)
-      .start(destination)
   }
+
+  private def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Option[Map[String,String]]): DataStreamWriter[Row] = {
+    extraConfOptions match {
+      case Some(options) => options.foldLeft(outStream) {
+        case (previousOutStream, (optionKey, optionValue)) => previousOutStream.option(optionKey, optionValue)
+      }
+      case None => outStream
+    }
+  }
+
+  private def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: OffsetManager): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream)
 }
