@@ -27,6 +27,7 @@ import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 import za.co.absa.hyperdrive.writer.StreamWriter
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
+import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 
 class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
@@ -51,6 +52,8 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
       streamWriter,
       dataFrame,
       streamingQuery)
+    when(streamReader.getSourceName).thenReturn("test-source")
+    when(streamWriter.getDestination).thenReturn("test-destination")
   }
 
   behavior of SparkIngestor.getClass.getName
@@ -106,6 +109,47 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("stream"))
     assert(throwable.getMessage.toLowerCase.contains("writer"))
+  }
+
+  it should "throw IngestionStartException if stream reader fails during setup" in {
+    when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
+    when(streamReader.read(sparkSession)).thenThrow(classOf[NullPointerException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  }
+
+  it should "throw IngestionStartException if offset manager fails during setup" in {
+    when(offsetManager.configureOffsets(nullMockedDataStream)).thenReturn(nullMockedDataStream)
+    when(offsetManager.configureOffsets(nullMockedDataStream)).thenThrow(classOf[NullPointerException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  }
+
+  it should "throw IngestionStartException if format decoder fails during setup" in {
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamDecoder.decode(nullMockedDataStream)).thenThrow(classOf[NullPointerException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  }
+
+  it should "throw IngestionStartException if stream transformer fails during setup" in {
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenThrow(classOf[NullPointerException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  }
+
+  it should "throw IngestionStartException if stream writer fails during setup" in {
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
+    when(streamWriter.write(dataFrame, offsetManager)).thenThrow(classOf[NullPointerException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  }
+
+  it should "throw IngestionException if ingestion fails during execution" in {
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
+    when(streamingQuery.stop()).thenThrow(classOf[IllegalStateException])
+    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "invoke the components in correct order" in {

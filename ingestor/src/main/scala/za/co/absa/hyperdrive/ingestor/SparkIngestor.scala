@@ -24,11 +24,13 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
+import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
 
 import scala.util.Random
+import scala.util.control.NonFatal
 
 /**
   * This object is responsible for running the ingestion job by using the components it
@@ -54,7 +56,9 @@ object SparkIngestor {
     * @param streamTransformer [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
-  @throws(classOf[Exception])
+  @throws(classOf[IllegalArgumentException])
+  @throws(classOf[IngestionStartException])
+  @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
             streamReader: StreamReader,
             offsetManager: OffsetManager,
@@ -97,20 +101,18 @@ object SparkIngestor {
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
       streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination
     } catch {
-      case e: Throwable =>
-        logger.error(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.")
-        throw e
+      case NonFatal(e) =>
+        throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)
     }
 
     try {
       ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
       ingestionQuery.stop()
     } catch {
-      case e: Throwable =>
-        logger.error(s"PROBABLY FAILED INGESTION $ingestionId. The was no error in the query plan, but something when wrong. " +
+      case NonFatal(e) =>
+        throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. The was no error in the query plan, but something when wrong. " +
           s"Pay attention to this exception since the query has been started, which might lead to duplicate data or similar issues. " +
-          s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.")
-        throw e
+          s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }
 
     logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
