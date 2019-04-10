@@ -19,4 +19,4 @@ package za.co.absa.hyperdrive.ingestor.configuration.components
 
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 
-case class AvroStreamDecoderConf(schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy)
+case class AvroStreamDecoderConf(topic: String, schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy)

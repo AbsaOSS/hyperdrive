@@ -21,16 +21,15 @@ package za.co.absa.hyperdrive.transformer.data.impl
 import org.apache.spark.sql.DataFrame
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 
-class TestSelectAllStreamTransformer extends FlatSpec with MockitoSugar {
+class TestColumnSelectorStreamTransformer extends FlatSpec with MockitoSugar {
 
-  private val transformer = new SelectAllStreamTransformer
-
-  behavior of transformer.getClass.getName
+  behavior of createTransformer(Seq("*")).getClass.getName
 
   it should "throw on null DataFrame" in {
+    val transformer = createTransformer(Seq("*"))
     assertThrows[IllegalArgumentException](
       transformer.transform(streamData = null)
     )
@@ -40,7 +39,26 @@ class TestSelectAllStreamTransformer extends FlatSpec with MockitoSugar {
     val streamData = mock[DataFrame]
     when(streamData.select("*")).thenReturn(streamData)
 
+    val transformer = createTransformer(Seq("*"))
     assert(streamData == transformer.transform(streamData))
-    verify(streamData.select("*"))
+    verify(streamData).select("*")
   }
+
+  it should "select only specified columns" in {
+    val columns = Seq("a","b","c")
+    val streamData = mock[DataFrame]
+    when(streamData.select(columns.head, columns.tail:_*)).thenReturn(streamData)
+
+    val transformer = createTransformer(columns)
+    assert(streamData == transformer.transform(streamData))
+    verify(streamData).select(columns.head, columns.tail:_*)
+  }
+
+  it should "throw on empty list of columns" in {
+    assertThrows[IllegalArgumentException](
+      new ColumnSelectorStreamTransformer(Seq())
+    )
+  }
+
+  private def createTransformer(columns: Seq[String]): StreamTransformer = new ColumnSelectorStreamTransformer(columns)
 }

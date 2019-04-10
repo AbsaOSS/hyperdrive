@@ -17,6 +17,7 @@
 
 package za.co.absa.hyperdrive.ingestor
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.codehaus.plexus.logging.LoggerManager
@@ -27,7 +28,7 @@ import za.co.absa.hyperdrive.manager.offset.impl.CheckpointingOffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
+import za.co.absa.hyperdrive.transformer.data.impl.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.transformer.encoding.impl.AvroStreamDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
@@ -41,7 +42,7 @@ class IngestionDriver {
     logger.info("Ingestion invoked. Going to instantiate components.")
     val spark = getSparkSession(configurations.sparkConf)
     val streamReader = getStreamReader(configurations.streamReaderConf)
-    val offsetManager = getOffsetManager(configurations.offsetManagerConf)
+    val offsetManager = getOffsetManager(configurations.offsetManagerConf, spark.sparkContext.hadoopConfiguration)
     val streamDecoder = getStreamDecoder(configurations.streamDecoderConf)
     val streamTransformer = getStreamTransformer(configurations.streamTransformerConf)
     val streamWriter = getStreamWriter(configurations.streamWriterConf)
@@ -54,11 +55,11 @@ class IngestionDriver {
 
   private def getStreamReader(conf: KafkaStreamReaderConf): StreamReader = new KafkaStreamReader(conf.topic, conf.brokers, conf.extraConfs)
 
-  private def getOffsetManager(conf: CheckpointingOffsetManagerConf): OffsetManager = new CheckpointingOffsetManager(conf.topic, conf.checkpointBaseLocation, conf.configuration)
+  private def getOffsetManager(conf: CheckpointingOffsetManagerConf, configuration: Configuration): OffsetManager = new CheckpointingOffsetManager(conf.topic, conf.checkpointBaseLocation, configuration)
 
-  private def getStreamDecoder(conf: AvroStreamDecoderConf): StreamDecoder = new AvroStreamDecoder(conf.schemaRegistrySettings, conf.retentionPolicy)
+  private def getStreamDecoder(conf: AvroStreamDecoderConf): StreamDecoder = new AvroStreamDecoder(conf.topic, conf.schemaRegistrySettings, conf.retentionPolicy)
 
-  private def getStreamTransformer(conf: SelectAllStreamTransformerConf): StreamTransformer = new SelectAllStreamTransformer
+  private def getStreamTransformer(conf: ColumnSelectorStreamTransformerConf): StreamTransformer = new ColumnSelectorStreamTransformer(conf.columns)
 
   private def getStreamWriter(conf: ParquetStreamWriterConf): StreamWriter = new ParquetStreamWriter(conf.destination, conf.extraConfOptions)
 }

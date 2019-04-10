@@ -17,6 +17,4 @@
 
 package za.co.absa.hyperdrive.ingestor.configuration.components
 
-import org.apache.hadoop.conf.Configuration
-
-case class CheckpointingOffsetManagerConf(topic: String, checkpointBaseLocation: String, configuration: Configuration)
+case class CheckpointingOffsetManagerConf(topic: String, checkpointBaseLocation: String)

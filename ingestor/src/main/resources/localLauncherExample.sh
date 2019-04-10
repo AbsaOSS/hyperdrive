@@ -1,0 +1,1 @@
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.0 --class za.co.absa.hyperdrive.ingestor.drivers.PropertiesIngestionDriver --master local path/to/ingestor-1.0.0-SNAPSHOT.jar /path/to/Ingestion.properties

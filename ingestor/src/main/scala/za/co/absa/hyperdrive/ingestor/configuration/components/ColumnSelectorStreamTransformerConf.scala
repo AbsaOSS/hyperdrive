@@ -17,4 +17,4 @@
 
 package za.co.absa.hyperdrive.ingestor.configuration.components
 
-case class SelectAllStreamTransformerConf(query: String)
+case class ColumnSelectorStreamTransformerConf(columns: Seq[String])

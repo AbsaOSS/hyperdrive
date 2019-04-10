@@ -18,13 +18,19 @@
 
 package za.co.absa.hyperdrive.transformer.encoding.impl
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 
-class AvroStreamDecoder(schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+class AvroStreamDecoder(topic: String, schemaRegistrySettings: Map[String,String], retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+
+  if (StringUtils.isBlank(topic)) {
+    throw new IllegalArgumentException("Blank topic.")
+  }
 
   if (schemaRegistrySettings == null) {
     throw new IllegalArgumentException("Null Schema Registry settings received.")
@@ -45,9 +51,10 @@ class AvroStreamDecoder(schemaRegistrySettings: Map[String,String], retentionPol
       throw new IllegalArgumentException("Null DataStreamReader instance received.")
     }
 
-    logger.info(s"SchemaRegistry settings: $schemaRegistrySettings")
+    val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
+    logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
 
     import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro("value", None, Some(schemaRegistrySettings))(retentionPolicy)
+    streamReader.fromConfluentAvro("value", None, Some(schemaRegistryFullSettings))(retentionPolicy)
   }
 }

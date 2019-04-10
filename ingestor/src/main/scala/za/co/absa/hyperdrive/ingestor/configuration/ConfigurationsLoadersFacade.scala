@@ -17,13 +17,11 @@
 
 package za.co.absa.hyperdrive.ingestor.configuration
 
-import za.co.absa.hyperdrive.ingestor.configuration.loaders.{ParametersConfigurationsLoader, PropertiesConfigurationsLoader, SystemPropertiesConfigurationLoader}
+import za.co.absa.hyperdrive.ingestor.configuration.loaders.{ParametersConfigurationsLoader, PropertiesConfigurationsLoader}
 
 object ConfigurationsLoadersFacade {
 
   def loadFromProperties(propertiesPath: String): CompositeIngestionConfigurations = PropertiesConfigurationsLoader.load(propertiesPath)
 
   def loadFromParameters(args: Array[String]): CompositeIngestionConfigurations = ParametersConfigurationsLoader.load(args)
-
-  def loadFromSystemProperties: CompositeIngestionConfigurations = SystemPropertiesConfigurationLoader.load
 }

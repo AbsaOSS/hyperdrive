@@ -39,10 +39,7 @@ class TestCheckpointingOffsetManager extends FlatSpec with BeforeAndAfterEach wi
 
   override def beforeEach: Unit = tempDir = TempDir.getNew
 
-  override def afterEach: Unit = {
-    println(s"Deleting temp directory from '${tempDir.getAbsolutePath}'.")
-    FileUtils.deleteDirectory(tempDir)
-  }
+  override def afterEach: Unit = FileUtils.deleteDirectory(tempDir)
 
   behavior of "CheckpointingOffsetManager"
 

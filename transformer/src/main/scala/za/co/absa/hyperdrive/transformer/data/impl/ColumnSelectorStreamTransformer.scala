@@ -21,12 +21,17 @@ package za.co.absa.hyperdrive.transformer.data.impl
 import org.apache.spark.sql.DataFrame
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
 
-class SelectAllStreamTransformer extends StreamTransformer {
+class ColumnSelectorStreamTransformer(columns: Seq[String]) extends StreamTransformer {
+
+  if (columns == null || columns.isEmpty) {
+    throw new IllegalArgumentException("Empty list of columns to select.")
+  }
+
   def transform(streamData: DataFrame): DataFrame = {
     if (streamData == null) {
       throw new IllegalArgumentException("Null DataFrame received.")
     }
 
-    streamData.select(col = "*")
+    streamData.select(columns.head, columns.tail:_*)
   }
 }

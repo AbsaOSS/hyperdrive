@@ -23,6 +23,8 @@ import java.io.File
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
+import org.apache.logging.log4j.LogManager
+import org.apache.spark.sql.catalyst.expressions.{GenericRow, GenericRowWithSchema}
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import org.springframework.kafka.test.EmbeddedKafkaBroker
@@ -37,13 +39,15 @@ import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, Hyperd
 import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.shared.utils.TempDir
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
+import za.co.absa.hyperdrive.transformer.data.impl.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
 import za.co.absa.hyperdrive.transformer.encoding.impl.AvroStreamDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.impl.ParquetStreamWriter
 
 class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
+
+  private val logger = LogManager.getLogger
 
   private val tempDir = TempDir.getNew
 
@@ -99,7 +103,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
     spark = getSparkSession
     reader = getKafkaStreamReader(defaultTopic, kafkaBroker.getBrokersAsString)
     manager = getCheckpointOffsetManager(defaultTopic, checkpointingLocation, configuration)
-    decoder = getAvroDecoder(schemaRetentionPolicy, schemaRegistrySettings)
+    decoder = getAvroDecoder(defaultTopic, schemaRetentionPolicy, schemaRegistrySettings)
     transformer = getSelectAllTransformer
     writer = getParquetStreamWriter(ingestionDestination)
   }
@@ -137,9 +141,9 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private def getCheckpointOffsetManager(topic: String, checkpointLocation: String, conf: Configuration): OffsetManager = new CheckpointingOffsetManager(topic, checkpointLocation, conf)
 
-  private def getAvroDecoder(retentionPolicy: SchemaRetentionPolicy, schemaRegistrySettings: Map[String,String]): AvroStreamDecoder = new AvroStreamDecoder(schemaRegistrySettings, retentionPolicy)
+  private def getAvroDecoder(topic: String, retentionPolicy: SchemaRetentionPolicy, schemaRegistrySettings: Map[String,String]): AvroStreamDecoder = new AvroStreamDecoder(topic, schemaRegistrySettings, retentionPolicy)
 
-  private def getSelectAllTransformer: StreamTransformer = new SelectAllStreamTransformer
+  private def getSelectAllTransformer: StreamTransformer = new ColumnSelectorStreamTransformer(Seq("*"))
 
   private def getParquetStreamWriter(destination: String): StreamWriter = new ParquetStreamWriter(destination, None)
 
@@ -163,9 +167,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private def readIngestedParquet(sourcePath: String, spark: SparkSession): DataFrame = spark.read.parquet(sourcePath)
 
   def getSchemaRegistrySettings(topic: String): Map[String,String] = {
-    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS +
-      (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic) +
-      (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
+    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
   private def equals(rows: List[Row], dataFrame: DataFrame)(implicit encoder: Encoder[Row]): Boolean = {
@@ -174,7 +176,13 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
     val that = spark.sparkContext.parallelize(rows).toDF
 
     val columns = dataFrame.schema.fields.map(_.name)
-    val diff = columns.map(col => dataFrame.select(col).except(that.select(col)).count) // gets the difference by column
-    diff.sum == 0
+    if (columns.length == rows.head.length) {
+      val diff = columns.map(col => dataFrame.select(col).except(that.select(col)).count) // gets the difference by column
+      diff.sum == 0
+    }
+    else {
+      logger.error(s"Mismatching number of columns: row has '${rows.head.length}', dataframe has '${columns.length}'.")
+      false
+    }
   }
 }

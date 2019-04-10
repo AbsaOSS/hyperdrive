@@ -20,7 +20,7 @@ package za.co.absa.hyperdrive.ingestor
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.{DataStreamReader, StreamingQuery}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec}
+import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer

@@ -34,7 +34,7 @@ import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.impl.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{HyperdriveSettings, KafkaSettings, SchemaRegistrySettings, SparkSettings}
 import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.impl.SelectAllStreamTransformer
+import za.co.absa.hyperdrive.transformer.data.impl.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.transformer.encoding.impl.AvroStreamDecoder
 import za.co.absa.hyperdrive.trigger.mock.NotificationDispatcher
 import za.co.absa.hyperdrive.trigger.notification.Notification
@@ -143,15 +143,15 @@ object IngestionTrigger {
   }
 
   private def createAvroDecoder(topic: String): AvroStreamDecoder = {
-    new AvroStreamDecoder(getSchemaRegistrySettings(topic), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
+    new AvroStreamDecoder(topic, getSchemaRegistrySettings(topic), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY)
   }
 
   private def getSchemaRegistrySettings(topic: String): Map[String,String] = {
     // attaching topic and schema id to general Schema Registry settings
-    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic, SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
+    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
-  private def createStreamTransformer: StreamTransformer = new SelectAllStreamTransformer
+  private def createStreamTransformer: StreamTransformer = new ColumnSelectorStreamTransformer(columns = Seq("*"))
 
   private def createStreamWriter(destination: String): StreamWriter = {
     new ParquetStreamWriter(destination, None)

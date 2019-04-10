@@ -27,21 +27,26 @@ class TestAvroStreamDecoder extends FlatSpec with MockitoSugar {
 
   behavior of "AvroDecoder"
 
+  it should "throw on blank topic" in {
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = null, SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "  ", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+  }
+
   it should "throw on null Schema Registry settings" in {
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(schemaRegistrySettings = null, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "topic", schemaRegistrySettings = null, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
   }
   it should "throw on empty Schema Registry settings" in {
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(schemaRegistrySettings = Map[String,String](), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "topic", schemaRegistrySettings = Map[String,String](), SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
   }
 
   it should "throw on null SchemaRetentionPolicy" in {
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, retentionPolicy = null))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "topic", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, retentionPolicy = null))
   }
 
   it should "throw on null StreamDataReader" in {
     val schemaRetentionPolicy = SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
 
-    val avroDecoder = new AvroStreamDecoder(SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, schemaRetentionPolicy)
+    val avroDecoder = new AvroStreamDecoder(topic = "topic", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, schemaRetentionPolicy)
     assertThrows[IllegalArgumentException](avroDecoder.decode(streamReader = null))
   }
 }

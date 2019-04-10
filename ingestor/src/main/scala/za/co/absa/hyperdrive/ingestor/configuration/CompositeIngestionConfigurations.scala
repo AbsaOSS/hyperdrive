@@ -24,4 +24,4 @@ case class CompositeIngestionConfigurations(sparkConf:             SparkConf,
                                             offsetManagerConf:     CheckpointingOffsetManagerConf,
                                             streamDecoderConf:     AvroStreamDecoderConf,
                                             streamWriterConf:      ParquetStreamWriterConf,
-                                            streamTransformerConf: SelectAllStreamTransformerConf)
+                                            streamTransformerConf: ColumnSelectorStreamTransformerConf)

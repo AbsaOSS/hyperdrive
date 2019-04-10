@@ -43,7 +43,7 @@ object PropertiesIngestionDriver extends IngestionDriver {
 
     logger.info(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
     val configurations = ConfigurationsLoadersFacade.loadFromProperties(propertiesFile.get)
-    logger.info("Configurations loaded. Going to invoke ingestion.")
+    logger.info(s"Configurations loaded. Going to invoke ingestion: [$configurations]")
     ingest(configurations)
   }
 
