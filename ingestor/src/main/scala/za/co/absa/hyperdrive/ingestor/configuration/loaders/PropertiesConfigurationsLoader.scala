@@ -17,55 +17,27 @@
 
 package za.co.absa.hyperdrive.ingestor.configuration.loaders
 
-import java.io.{FileInputStream, InputStream}
+import java.io.FileInputStream
 import java.util.Properties
 
-import org.apache.logging.log4j.LogManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.ingestor.configuration.CompositeIngestionConfigurations
 import za.co.absa.hyperdrive.ingestor.configuration.components._
 
 import scala.util.{Failure, Success, Try}
 
-object SparkConfKeys {
-  val KEY_SPARK_APP_NAME = "spark.app.name"
-}
-
-object StreamReaderKeys {
-  val KEY_EXTRA_CONFS: String = "source.extra.confs"
-  val KEY_SOURCE_TOPIC: String = "source.topic"
-  val KEY_SOURCE_BROKERS: String = "source.brokers"
-}
-
-object OffsetManagerKeys {
-  val KEY_OFFSET_MANAGER_TOPIC: String = StreamReaderKeys.KEY_SOURCE_TOPIC
-  val KEY_CHECKPOINT_BASE_LOCATION: String = "checkpoint.base.location"
-}
-
-object StreamDecoderKeys {
-  val KEY_TOPIC:String = StreamReaderKeys.KEY_SOURCE_TOPIC
-  val KEY_SCHEMA_RETENTION_POLICY: String = "schema.retention.policy"
-  val KEY_SCHEMA_REGISTRY_SETTINGS: String = "schema.registry.settings"
-}
-
-object StreamWriterKeys {
-  val KEY_EXTRA_CONFS: String = "sink.extra.confs"
-  val KEY_DESTINATION_DIRECTORY: String = "destination.directory"
-}
-
-object StreamTransformerKeys {
-  val KEY_TRANSFORMATION_QUERY: String = "stream.tranformation.query"
-}
+import ConfigurationsKeys._
 
 /**
   * This loader loads configurations from a properties file.
   */
 private[configuration] object PropertiesConfigurationsLoader {
 
-  private val logger = LogManager.getLogger
+  def load(properties: Properties): CompositeIngestionConfigurations = loadConfigurations(properties)
 
-  def load(path: String): CompositeIngestionConfigurations = {
-    val properties = loadProperties(path)
+  def load(path: String): CompositeIngestionConfigurations = loadConfigurations(loadProperties(path))
+
+  private def loadConfigurations(properties: Properties): CompositeIngestionConfigurations = {
     CompositeIngestionConfigurations(
       loadSparkConf(properties),
       loadStreamReaderConfs(properties),

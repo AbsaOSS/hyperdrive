@@ -19,6 +19,6 @@ schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
 stream.tranformation.query=*
 
 # Sink(Parquet) settings
-destination.directory=/ingestion/destination-directory
+destination.directory=/tmp/ingestion/destination-directory
 #these configurations are going to be added to the Parquet DataStreamWriter
 sink.extra.confs=key1\=value1
