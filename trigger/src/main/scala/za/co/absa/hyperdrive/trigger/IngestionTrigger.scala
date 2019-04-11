@@ -43,6 +43,7 @@ import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.impl.ParquetStreamWriter
 
 import scala.collection.JavaConverters._
+import ConfigParams._
 
 object IngestionTrigger {
 
@@ -50,12 +51,11 @@ object IngestionTrigger {
 
   def main(args: Array[String]): Unit = {
 
-    resolveBrokersAndSchemaRegistry(args)
-
     import java.util.Properties
+    import ConfigParams._
 
     val  props = new Properties()
-    props.put(KafkaSettings.BROKERS_SETTING_KEY, KafkaSettings.BROKERS)
+    props.put(KafkaSettings.BROKERS_SETTING_KEY, KAFKA_BROKERS)
     props.put(KafkaSettings.KEY_DESERIALIZER_KEY, KafkaSettings.KEY_DESERIALIZER)
     props.put(KafkaSettings.VALUE_DESERIALIZER_KEY, KafkaSettings.VALUE_DESERIALIZER)
     props.put(KafkaSettings.GROUP_ID_KEY, "SomeGroupId")
@@ -104,15 +104,6 @@ object IngestionTrigger {
     }
   }
 
-  private def resolveBrokersAndSchemaRegistry(args: Array[String]): Unit = {
-    if (args.nonEmpty) {
-      KafkaSettings.BROKERS = args(0).trim
-      SchemaRegistrySettings.URL = args(1).trim
-    }
-    logger.info(s"Kaka broker resolved to: ${KafkaSettings.BROKERS}")
-    logger.info(s"Schema Registry broker resolved to: ${SchemaRegistrySettings.URL}")
-  }
-
   private def getSparkSession(topic: String): SparkSession = {
     SparkSession
       .builder()
@@ -135,11 +126,11 @@ object IngestionTrigger {
   }
 
   private def createStreamReader(topic: String): StreamReader = {
-    new KafkaStreamReader(topic, KafkaSettings.BROKERS, Map[String,String]())
+    new KafkaStreamReader(topic, KAFKA_BROKERS, Map[String,String]())
   }
 
   private def createOffsetManager(topic: String): OffsetManager = {
-    new CheckpointingOffsetManager(topic, SparkSettings.CHECKPOINT_BASE_LOCATION, new Configuration())
+    new CheckpointingOffsetManager(topic, CHECKPOINT_BASE_LOCATION, new Configuration())
   }
 
   private def createAvroDecoder(topic: String): AvroStreamDecoder = {
@@ -148,7 +139,7 @@ object IngestionTrigger {
 
   private def getSchemaRegistrySettings(topic: String): Map[String,String] = {
     // attaching topic and schema id to general Schema Registry settings
-    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
+    SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
   private def createStreamTransformer: StreamTransformer = new ColumnSelectorStreamTransformer(columns = Seq("*"))

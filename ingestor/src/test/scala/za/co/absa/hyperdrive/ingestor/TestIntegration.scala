@@ -71,6 +71,12 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private var transformer: StreamTransformer = _
   private var writer: StreamWriter = _
 
+  private lazy val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "http://localhost:8081",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaRegistrySettings.VALUE_SCHEMA_NAMING_STRATEGY,
+    SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY   -> SchemaRegistrySettings.VALUE_SCHEMA_NAMING_STRATEGY
+  )
+
   override def afterAll(): Unit = kafkaBroker.destroy()
 
   override def beforeEach(): Unit = {
@@ -167,7 +173,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private def readIngestedParquet(sourcePath: String, spark: SparkSession): DataFrame = spark.read.parquet(sourcePath)
 
   def getSchemaRegistrySettings(topic: String): Map[String,String] = {
-    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
+    SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest")
   }
 
   private def equals(rows: List[Row], dataFrame: DataFrame)(implicit encoder: Encoder[Row]): Boolean = {

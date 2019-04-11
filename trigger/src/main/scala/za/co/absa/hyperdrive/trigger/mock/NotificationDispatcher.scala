@@ -22,6 +22,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 import za.co.absa.hyperdrive.trigger.notification.Notification
+import za.co.absa.hyperdrive.trigger.ConfigParams._
 
 object NotificationDispatcher {
 
@@ -57,12 +58,12 @@ object NotificationDispatcher {
       .toConfluentAvro(HyperdriveSettings.NOTIFICATION_TOPIC, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(getSchemaRegistrySettings)
       .write
       .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, KafkaSettings.BROKERS)
+      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, KAFKA_BROKERS)
       .option(KafkaSettings.TOPIC_DISPATCH_KEY, HyperdriveSettings.NOTIFICATION_TOPIC)
       .save()
   }
 
   def getSchemaRegistrySettings: Map[String,String] = {
-    SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> HyperdriveSettings.NOTIFICATION_TOPIC)
+    SCHEMA_REGISTRY_ACCESS_SETTINGS + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> HyperdriveSettings.NOTIFICATION_TOPIC)
   }
 }

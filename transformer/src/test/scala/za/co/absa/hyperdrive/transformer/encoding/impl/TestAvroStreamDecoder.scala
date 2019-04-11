@@ -20,16 +20,23 @@ package za.co.absa.hyperdrive.transformer.encoding.impl
 
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.SchemaRegistrySettings
 
 class TestAvroStreamDecoder extends FlatSpec with MockitoSugar {
 
+  private lazy val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "http://localhost:8081",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaRegistrySettings.VALUE_SCHEMA_NAMING_STRATEGY,
+    SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY   -> SchemaRegistrySettings.VALUE_SCHEMA_NAMING_STRATEGY
+  )
+
   behavior of "AvroDecoder"
 
   it should "throw on blank topic" in {
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = null, SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "  ", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = null, SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "  ", SCHEMA_REGISTRY_ACCESS_SETTINGS, SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY))
   }
 
   it should "throw on null Schema Registry settings" in {
@@ -40,13 +47,13 @@ class TestAvroStreamDecoder extends FlatSpec with MockitoSugar {
   }
 
   it should "throw on null SchemaRetentionPolicy" in {
-    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "topic", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, retentionPolicy = null))
+    assertThrows[IllegalArgumentException](new AvroStreamDecoder(topic = "topic", SCHEMA_REGISTRY_ACCESS_SETTINGS, retentionPolicy = null))
   }
 
   it should "throw on null StreamDataReader" in {
     val schemaRetentionPolicy = SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
 
-    val avroDecoder = new AvroStreamDecoder(topic = "topic", SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS, schemaRetentionPolicy)
+    val avroDecoder = new AvroStreamDecoder(topic = "topic", SCHEMA_REGISTRY_ACCESS_SETTINGS, schemaRetentionPolicy)
     assertThrows[IllegalArgumentException](avroDecoder.decode(streamReader = null))
   }
 }

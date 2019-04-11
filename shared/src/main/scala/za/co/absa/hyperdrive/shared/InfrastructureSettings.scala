@@ -54,7 +54,6 @@ object InfrastructureSettings {
 
   object SparkSettings {
     val CHECKPOINT_LOCATION_KEY  = "checkpointLocation"
-    val CHECKPOINT_BASE_LOCATION = "/tmp/HYPERDRIVE_CHECKPOINT"
     val FAIL_ON_DATA_LOSS_KEY    = "failOnDataLoss"
     val DEPLOY_MODE_KEY          = "spark.submit.deployMode"
     val MASTER_YARN              = "yarn"
@@ -65,7 +64,6 @@ object InfrastructureSettings {
 
   object KafkaSettings {
     val STREAM_FORMAT_KAFKA_NAME  = "kafka"
-    var BROKERS                   = "PLAINTEXT://localhost:9092"
     val BROKERS_SETTING_KEY       = "bootstrap.servers"
     val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"
 
@@ -85,16 +83,8 @@ object InfrastructureSettings {
   }
 
   object SchemaRegistrySettings {
-    var URL                                  = "http://localhost:8081"
-    //var URL                                  = "http://localhost:7002"
     val KEY_SCHEMA_NAMING_STRATEGY: String   = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
     val VALUE_SCHEMA_NAMING_STRATEGY: String = SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
-
-    lazy val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> URL,
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> VALUE_SCHEMA_NAMING_STRATEGY,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY   -> VALUE_SCHEMA_NAMING_STRATEGY
-    )
   }
 
   object AvroSettings {
