@@ -22,7 +22,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 import za.co.absa.hyperdrive.trigger.notification.Notification
-import za.co.absa.hyperdrive.trigger.ConfigParams._
+import ConfigParams._
 
 object NotificationDispatcher {
 

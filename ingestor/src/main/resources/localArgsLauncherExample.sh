@@ -1,3 +1,0 @@
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.0 --class za.co.absa.hyperdrive.ingestor.drivers.ParametersIngestionDriver --master local ~/path/to/ingestor.jar spark.app.name=ingestor-app-pane source.brokers=PLAINTEXT://localhost:9092 source.topic=payload_topic checkpoint.base.location=/tmp/checkpoint-location schema.registry.settings=schema.registry.url=http://localhost:8081,value.schema.id=latest,value.schema.naming.strategy=topic.name schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY stream.tranformation.query=* destination.directory=/tmp/ingestion/destination-directory
-
-

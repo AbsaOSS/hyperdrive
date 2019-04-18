@@ -63,6 +63,7 @@ object InfrastructureSettings {
   }
 
   object KafkaSettings {
+    //val STREAM_FORMAT_KAFKA_NAME  = "org.apache.spark.sql.kafka010.KafkaSourceProvider"
     val STREAM_FORMAT_KAFKA_NAME  = "kafka"
     val BROKERS_SETTING_KEY       = "bootstrap.servers"
     val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"

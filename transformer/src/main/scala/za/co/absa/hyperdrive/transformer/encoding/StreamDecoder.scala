@@ -22,7 +22,16 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 
 /**
-  * Base class for data decoders. Possible implementations are, for instance, Avro, Protobuffer, Thrift, etc.
+  * Base class for all StreamDecoders.
+  *
+  * The process for adding a new StreamDecoder implementation is:
+  * <ul>
+  * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.transformer.encoding.impl.protobuffer).</li>
+  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.transformer.encoding.impl.protobuffer.ProtobufferStreamDecoder).</li>
+  * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.transformer.encoding.factories.protobuffer).</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.transformer.encoding.StreamDecoder]].</li>
+  * <li>5. Add the factory to the abstract stream decoder factory at [[za.co.absa.hyperdrive.transformer.encoding.factories.StreamDecoderAbstractFactory]] as described in the class documentation.</li>
+  * </ul>
   */
 abstract class StreamDecoder {
 

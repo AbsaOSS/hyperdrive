@@ -1,0 +1,57 @@
+#
+#  Copyright 2019 ABSA Group Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+# This files contains all properties that can be set for an ingestion pipeline
+
+# Pipeline settings
+component.ingestor=spark
+component.reader=KafkaStreamReader
+component.decoder=AvroKafkaStreamDecoder
+component.manager=CheckpointOffsetManager
+component.transformer=ColumnSelectorStreamTransformer
+component.writer=ParquetStreamWriter
+
+# Spark settings
+ingestor.spark.app.name=ingestor-app-pane
+
+# Source(Kafka) settings
+reader.kafka.topic=souce-payload-topic
+reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
+#reader.kafka.security.protocol=SSL
+#reader.kafka.ssl.truststore.location=path/to/your/truststore.jks
+#reader.kafka.ssl.truststore.password=your_truststore_password
+#reader.kafka.ssl.keystore.location=path/to/your/keystore.jks
+#reader.kafka.ssl.keystore.password=your_keystore_password
+#reader.kafka.ssl.key.password=your_ssl_password
+
+# Offset management(checkpointing) settings
+manager.checkpoint.base.location=/tmp/checkpoint-location
+
+# Format(ABRiS) settings
+decoder.avro.schema.registry.url=http://localhost:8081
+decoder.avro.value.schema.id=latest
+decoder.avro.value.schema.naming.strategy=topic.name
+decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
+
+# Transformations(Enceladus) settings
+transformer.columns.to.select=*
+
+# Sink(Parquet) settings
+sink.parquet.destination.directory=/tmp/ingestion/destination-directory
+#these configurations are going to be added to the Parquet DataStreamWriter
+sink.parquet.extra.conf.1=key1=value1
+sink.parquet.extra.conf.2=key2=value2

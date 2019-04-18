@@ -20,7 +20,18 @@ package za.co.absa.hyperdrive.transformer.data
 
 import org.apache.spark.sql.DataFrame
 
+/**
+  * Base class for all StreamTransformers.
+  *
+  * The process for adding a new StreamTransformer implementation is:
+  * <ul>
+  * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus).</li>
+  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus.EnceladusStreamTransformer).</li>
+  * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.transformer.data.factories.enceladus).</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.transformer.data.StreamTransformer]].</li>
+  * <li>5. Add the factory to the abstract stream transformer factory at [[za.co.absa.hyperdrive.transformer.data.factories.StreamTransformerAbstractFactory]] as described in the class documentation.</li>
+  * </ul>
+  */
 abstract class StreamTransformer {
-
   def transform(streamData: DataFrame): DataFrame
 }

@@ -31,12 +31,6 @@
     <artifactId>trigger</artifactId>
 
     <dependencies>
-        <!--Spark-->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-yarn_2.11</artifactId>
-            <version>2.3.0</version>
-        </dependency>
         <!--Components from the project-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
@@ -60,7 +54,7 @@
         </dependency>
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>ingestor</artifactId>
+            <artifactId>driver</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
