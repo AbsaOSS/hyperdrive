@@ -26,9 +26,8 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.KafkaSettings._
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.SparkSettings
 import za.co.absa.hyperdrive.shared.utils.TempDir
+import CheckpointOffsetManagerProps._
 
 class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with  MockitoSugar {
 
@@ -101,6 +100,6 @@ class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with 
     manager.configureOffsets(dataStreamWriter, validConfiguration)
 
     val expectedCheckpointLocationTopic = s"${tempDir.getAbsolutePath}/$validTopic"
-    verify(dataStreamWriter).option(SparkSettings.CHECKPOINT_LOCATION_KEY, expectedCheckpointLocationTopic)
+    verify(dataStreamWriter).option(CHECKPOINT_LOCATION_KEY, expectedCheckpointLocationTopic)
   }
 }

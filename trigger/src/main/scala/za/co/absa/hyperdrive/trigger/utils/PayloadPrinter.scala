@@ -26,7 +26,7 @@ object PayloadPrinter {
   val FORMAT_JSON = "json"
 
   def main(args: Array[String]): Unit = {
-    showContent("/tmp/HYPERDRIVE_PAYLOAD/dest2", FORMAT_JSON)
+    showContent(sourceDir = "/tmp/HYPERDRIVE_PAYLOAD/dest2", FORMAT_JSON)
   }
 
   def showContent(sourceDir: String, format: String): Unit = {
@@ -39,6 +39,6 @@ object PayloadPrinter {
     }
 
     println(s"TOTAL messages in '$sourceDir': ${data.count()}")
-    data.show(false)
+    data.show(truncate = false)
   }
 }

@@ -19,7 +19,6 @@
 package za.co.absa.hyperdrive.trigger.mock
 
 import org.apache.spark.sql.{Encoder, Row, SparkSession}
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
 import ConfigParams._
 
@@ -27,7 +26,8 @@ object RandomPayloadProducer {
 
   private val NUM_RECORDS = 5
   HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
-  //SCHEMA_REGISTRY_URL = "http://asgardedge:8081"
+  SCHEMA_REGISTRY_URL = "http://localhost:8081"
+  KAFKA_BROKERS = "PLAINTEXT://localhost:9092"
 
   def main(args: Array[String]): Unit = {
 

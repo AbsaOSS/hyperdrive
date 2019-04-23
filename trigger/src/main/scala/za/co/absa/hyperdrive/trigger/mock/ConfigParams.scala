@@ -22,7 +22,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStr
 
 object ConfigParams {
 
-  val KAFKA_BROKERS = "PLAINTEXT://localhost:9092"
+  var KAFKA_BROKERS = "PLAINTEXT://localhost:9092"
   val CHECKPOINT_BASE_LOCATION = "/tmp/HYPERDRIVE_CHECKPOINT"
   var SCHEMA_REGISTRY_URL = "http://localhost:8081"
 

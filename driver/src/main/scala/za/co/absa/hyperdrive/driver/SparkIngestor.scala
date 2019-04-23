@@ -25,11 +25,10 @@ import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
+import za.co.absa.hyperdrive.transformer.StreamTransformer
+import za.co.absa.hyperdrive.decoder.StreamDecoder
 import za.co.absa.hyperdrive.writer.StreamWriter
 
-import scala.util.Random
 import scala.util.control.NonFatal
 
 /**

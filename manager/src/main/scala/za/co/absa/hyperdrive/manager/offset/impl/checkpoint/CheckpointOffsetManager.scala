@@ -23,10 +23,17 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{KafkaSettings, SparkSettings}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
+private[checkpoint] object CheckpointOffsetManagerProps {
+  val STARTING_OFFSETS_KEY      = "startingOffsets"
+  val CHECKPOINT_LOCATION_KEY   = "checkpointLocation"
+  val STARTING_OFFSETS_EARLIEST = "earliest"
+}
+
 private[offset] class CheckpointOffsetManager(val topic: String, val checkpointBaseLocation: String) extends OffsetManager(topic) {
+
+  import CheckpointOffsetManagerProps._
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException(s"Invalid topic: '$topic'")
@@ -51,7 +58,7 @@ private[offset] class CheckpointOffsetManager(val topic: String, val checkpointB
 
     if (startingOffsets.isDefined) {
       logger.info(s"Setting starting offsets for topic '$topic' = ${startingOffsets.get}.")
-      streamReader.option(KafkaSettings.STARTING_OFFSETS_KEY, startingOffsets.get)
+      streamReader.option(STARTING_OFFSETS_KEY, startingOffsets.get)
     } else {
       logger.info(s"No offsets to set for topic '$topic'.")
       streamReader
@@ -66,7 +73,7 @@ private[offset] class CheckpointOffsetManager(val topic: String, val checkpointB
     throwIfInvalidCheckpointLocation(configuration)
 
     logger.info(s"Checkpoint location resolved to: '$checkpointLocation' for topic '$topic'")
-    streamWriter.option(SparkSettings.CHECKPOINT_LOCATION_KEY, checkpointLocation)
+    streamWriter.option(CHECKPOINT_LOCATION_KEY, checkpointLocation)
   }
 
   private def resolveCheckpointLocation(topic: String): String = {
@@ -78,7 +85,7 @@ private[offset] class CheckpointOffsetManager(val topic: String, val checkpointB
       Option.empty
     }
     else {
-      Option(KafkaSettings.STARTING_OFFSETS_EARLIEST)
+      Option(STARTING_OFFSETS_EARLIEST)
     }
   }
 

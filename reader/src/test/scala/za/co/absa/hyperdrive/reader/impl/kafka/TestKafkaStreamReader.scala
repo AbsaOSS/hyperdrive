@@ -24,8 +24,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.KafkaSettings
-
+import KafkaStreamReaderProps._
 
 class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 
@@ -85,9 +84,9 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
-    verify(dataStreamReader).format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-    verify(dataStreamReader).option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, validTopic)
-    verify(dataStreamReader).option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, validBrokers)
+    verify(dataStreamReader).format(KafkaStreamReaderProps.STREAM_FORMAT_KAFKA_NAME)
+    verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
+    verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
 
     validExtraConfs.foreach(pair => verify(dataStreamReader).option(pair._1, pair._2))
   }
@@ -101,9 +100,9 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
-    verify(dataStreamReader).format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-    verify(dataStreamReader).option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, validTopic)
-    verify(dataStreamReader).option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, validBrokers)
+    verify(dataStreamReader).format(STREAM_FORMAT_KAFKA_NAME)
+    verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
+    verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
 
     validExtraConfs.foreach(conf => verify(dataStreamReader, never()).option(conf._1, conf._2)) // verify never
   }
@@ -121,7 +120,7 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 
   private def getMockedDataStreamReader: DataStreamReader = {
     val dataStreamReader = mock[DataStreamReader]
-    when(dataStreamReader.format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)).thenReturn(dataStreamReader)
+    when(dataStreamReader.format(STREAM_FORMAT_KAFKA_NAME)).thenReturn(dataStreamReader)
     when(dataStreamReader.option(anyString(), anyString())).thenReturn(dataStreamReader)
     dataStreamReader
   }

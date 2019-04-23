@@ -31,6 +31,12 @@
     <artifactId>trigger</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>abris_2.11</artifactId>
+            <version>${abris.version}</version>
+        </dependency>
+
         <!--Components from the project-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>

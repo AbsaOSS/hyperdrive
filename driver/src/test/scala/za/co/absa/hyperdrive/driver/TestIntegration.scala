@@ -28,20 +28,20 @@ import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import org.scalatest._
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
+import za.co.absa.hyperdrive.decoder.StreamDecoder
+import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, KafkaSettings, SchemaRegistrySettings}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
 import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.shared.utils.TempDir
-import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
-import za.co.absa.hyperdrive.transformer.encoding.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.transformer.StreamTransformer
+import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory
 
@@ -74,7 +74,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private lazy val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "http://localhost:8081",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaRegistrySettings.VALUE_SCHEMA_NAMING_STRATEGY,
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaStorageNamingStrategies.TOPIC_NAME,
     SchemaManager.PARAM_VALUE_SCHEMA_ID  -> "latest"
   )
 
@@ -197,11 +197,11 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
     import za.co.absa.abris.avro.AvroSerDe._
     dataframe
-      .toConfluentAvro(topic, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(schemaRegistrySettings)
+      .toConfluentAvro(topic, schemaName = "schemaName", schemaNamespace = "schemaNamespace")(schemaRegistrySettings)
       .write
-      .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, brokers)
-      .option(KafkaSettings.TOPIC_DISPATCH_KEY, topic)
+      .format(source = "kafka")
+      .option("kafka.bootstrap.servers", brokers)
+      .option("topic", topic)
       .save()
   }
 

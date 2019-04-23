@@ -21,7 +21,13 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.reader.StreamReader
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.KafkaSettings
+
+private[kafka] object KafkaStreamReaderProps {
+  val STREAM_FORMAT_KAFKA_NAME  = "kafka"
+  val BROKERS_SETTING_KEY       = "bootstrap.servers"
+  val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"
+  val TOPIC_SUBSCRIPTION_KEY    = "subscribe"
+}
 
 /**
   * Creates a stream reader from Kafka.
@@ -52,6 +58,8 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
     */
   override def read(spark: SparkSession): DataStreamReader = {
 
+    import KafkaStreamReaderProps._
+
     if (spark == null) {
       throw new IllegalArgumentException("Null SparkSession instance.")
     }
@@ -62,9 +70,9 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
 
     val streamReader = spark
       .readStream
-      .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-      .option(KafkaSettings.TOPIC_SUBSCRIPTION_KEY, topic)
-      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, brokers)
+      .format(STREAM_FORMAT_KAFKA_NAME)
+      .option(TOPIC_SUBSCRIPTION_KEY, topic)
+      .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
     extraConfs.foldLeft(streamReader) {
       case (previousStreamReader, (newConfKey, newConfValue)) => previousStreamReader.option(newConfKey, newConfValue)

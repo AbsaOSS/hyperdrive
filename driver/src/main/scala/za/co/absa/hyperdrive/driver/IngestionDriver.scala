@@ -20,15 +20,15 @@ package za.co.absa.hyperdrive.driver
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
+import za.co.absa.hyperdrive.decoder.StreamDecoder
+import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.reader.StreamReader
 import za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.IngestorKeys
-import za.co.absa.hyperdrive.transformer.data.StreamTransformer
-import za.co.absa.hyperdrive.transformer.data.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.transformer.encoding.StreamDecoder
-import za.co.absa.hyperdrive.transformer.encoding.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.transformer.StreamTransformer
+import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.writer.StreamWriter
 import za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory
 
@@ -49,7 +49,7 @@ private[driver] class IngestionDriver {
     SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
   }
 
-  private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).master("local").getOrCreate()
+  private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.getFactory(conf).build(conf)
 

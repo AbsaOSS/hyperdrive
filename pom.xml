@@ -36,6 +36,7 @@
         <module>trigger</module>
         <module>parent-conf</module>
         <module>shared</module>
+        <module>decoder</module>
     </modules>
 
 </project>
