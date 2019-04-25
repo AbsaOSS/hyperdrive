@@ -22,9 +22,21 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 
-abstract class OffsetManager(topic: String, configuration: Configuration) {
+/**
+  * Base class for all OffsetManagers.
+  *
+  * The process for adding a new OffsetManager implementation is:
+  * <ul>
+  * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.manager.offset.impl.jdbc).</li>
+  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.manager.offset.impl.jdbc.JDBCOffsetManager).</li>
+  * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.manager.offset.factories.jdbc).</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.manager.offset.OffsetManager]].</li>
+  * <li>5. Add the factory to the abstract offset manager factory at [[za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory]] as described in the class documentation.</li>
+  * </ul>
+  */
+abstract class OffsetManager(topic: String) {
 
-  def configureOffsets(streamReader: DataStreamReader): DataStreamReader
+  def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
 
-  def configureOffsets(streamWriter: DataStreamWriter[Row]): DataStreamWriter[Row]
+  def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row]
 }

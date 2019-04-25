@@ -24,6 +24,7 @@
         <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
@@ -60,9 +61,11 @@
         <!--Kafka-->
         <kafka.version>2.1.1</kafka.version>
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
+        <kafka.spark.version>0-10</kafka.spark.version>
+        <spark.sql.kafka.version>2.3.3</spark.sql.kafka.version>
 
         <!--Spark-->
-        <spark.version>2.2.1</spark.version>
+        <spark.version>2.3.0</spark.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -72,13 +75,23 @@
 
         <!--Apache Curator-->
         <apache.curator.version>4.2.0</apache.curator.version>
+
+        <!--Shade Maven plug-in-->
+        <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
+
+        <!--Surefire Maven plug-in-->
+        <maven.surefire.plugin.version>3.0.0-M3</maven.surefire.plugin.version>
+
+        <!--Configurations-->
+        <commons.configuration2.version>2.4</commons.configuration2.version>
+        <commons.beanutils.version>1.9.3</commons.beanutils.version>
     </properties>
 
     <dependencies>
         <!--ABRiS-->
         <dependency>
             <groupId>za.co.absa</groupId>
-            <artifactId>abris_2.11</artifactId>
+            <artifactId>abris_${scala.compat.version}</artifactId>
         </dependency>
 
         <!--Logging-->
@@ -97,6 +110,18 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-jcl</artifactId>
+        </dependency>
+
+        <!--Configurations-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+        </dependency>
+
+        <!--Spark/Kafka-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
         </dependency>
 
         <!--Tests-->
@@ -122,6 +147,23 @@
                 <groupId>za.co.absa</groupId>
                 <artifactId>abris_2.11</artifactId>
                 <version>${abris.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!--Spark-->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
+                <version>${spark.version}</version>
             </dependency>
 
             <!--Logging-->
@@ -153,16 +195,21 @@
                 <version>${kafka.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka_${scala.compat.version}</artifactId>
-                <version>${kafka.version}</version>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+                <version>${spark.sql.kafka.version}</version>
             </dependency>
 
-            <!--Spark-->
+            <!--Configurations-->
             <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
-                <version>${spark.version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
+                <version>${commons.configuration2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons.beanutils.version}</version>
             </dependency>
 
             <!--Tests-->
@@ -243,6 +290,7 @@
             <!-- disable surefire -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
                 </configuration>

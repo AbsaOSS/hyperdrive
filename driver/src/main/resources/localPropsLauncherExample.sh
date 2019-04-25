@@ -1,0 +1,1 @@
+spark-submit --class za.co.absa.hyperdrive.ingestor.drivers.PropertiesIngestionDriver --master local path/to/driver-1.0.0-SNAPSHOT.jar /path/to/Ingestion.properties
