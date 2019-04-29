@@ -12,22 +12,103 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# Hyperdrive - Kafka to HDFS Ingestion tool
+# Hyperdrive - A Lambda Fast-to-Batch Ingestion Framework for Spark
+Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
 
-Hyperdrive is a flexible ingestor platform that allows configurable ingestion from Kafka into HDFS. 
+It is composed of two main modules: triggers and ingestors.
 
-It is composed of Spark ingestion jobs and watchers for notification topics containing the parameters of the ingestion.
-
-The notification topic serves as the "API" for the platform.
+The triggers define when ingestions must happen, the ingestor defines how.
 
 
 ## Motivation
-
 In environments composed of multiple and diverse data sources, getting access to all of them as well as creating a data lake is quite a challenging task.
 
-One approach that has been gathering momentum is to use the so called Lambda Architecture (http://lambda-architecture.net/). However, the ingestion from Kafka into HDFS is not yet standardized in the industry. Parameters such as periodicity might be source-dependent which makes it harder to create a silver bullet solution.
+On top of that, the need for near real time has become a trend. In some cases, reacting to end-of-day files in batch way is simply not acceptable anymore. 
 
-On the other hand, if the task of deciding when and what to ingest is put on data producers' shoulders, it becomes possible to create a general solution for ingestion. This is what Hyperdrive is intended to be.
+One approach that has been gathering momentum to unify those worlds is to use the so called Lambda Architecture (http://lambda-architecture.net/), by defining two layers, fast and batch, and how they should play together. However, there are two main issues. 
+
+First, for large organizations, it is simply not possible to have all source systems to implement their own Lambdas, due to technical, organizational, priority or political issues - or all of those together.
+
+Second, the ingestion from fast into batch layer is not yet standardized in the industry. Parameters such as periodicity might be source-dependent, which makes it harder to create a silver bullet solution that is resource-savvy.
+
+From that, if the task of deciding when and what to ingest is put on data producers' shoulders, it becomes possible to create a general solution for ingestion. This is what Hyperdrive is intended to be.
+
+## Architecture
+Hyperdrive separates the framework in two independent components: ingestors and triggers. For the rest of this document, an ingestion will mean data movement from the fast into the batch layer, with or without transformations.
+
+### Ingestors
+
+Ingestors define how an ingestion must happen. To do that, it defines 6 components: readers, managers, decoders, transformers, writers and drivers.
+
+#### Readers
+Readers define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
+
+#### Managers
+Managers define extra configurations for readers and writers, e.g. Kafka offset settings.
+
+#### Decoders
+Decoders define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
+
+#### Transformers
+Defines transformations to be applied to the decoded DataFrame, e.g. dropping columns
+
+#### Writers
+Defines where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
+
+#### Drivers
+Configures the whole pipeline after receiving the configuration specification, e.g. a properties file.
+
+
+### Triggers
+Triggers define when an ingestion should be executed and how it should be requested.
+
+To do this, they need need to define triggering policies, capacity management, Spark job watching capabilities and failure recovery features.
+
+Triggering policies are configurable. For watching jobs and recovering from failures, triggers use Spark Launchers provided by Spark itself, databases to persist the state, and YARN REST apis to connect to the cluster after a failure. For capacity management, triggers can be configured to not allow more than a given number of parallel ingestions.
+
+
+## Usage
+To use Hyperdrive, it is first necessary to configure the trigger and the ingestor.
+
+### Ingestor
+To use Hyperdrive Ingestor, it is necessary to first configure it. The template located at ```driver/src/resources/Ingestion.properties.template``` exemplifies the configurations.
+
+The settings starting with ```component.``` define which components should implement each of the responsibilities described in [Ingestors](#ingestors).
+
+Settings starting with ```reader.``` will be used by [readers](#readers), the ones starting with ```manager.``` will configure [managers](#managers), and so on, for each component. 
+
+For now, there is a Hyperdrive driver located at ```za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver```, in the ```driver``` module. Upon running ```mvn clean package``` at the root level of the project, a runnable JAR will be generated under ```target``` in the driver module. You can invoke that JAR via ```spark-submit```.
+
+Due to Spark-Kafka integration issues, it will **only work with Spark 2.3+**.
+
+The built-in components have the following capabilities:
+
+- *reader* - Connects to a secure Kafka broker.
+- *manager* - defines checkpoints for the stream reader and writer.
+- *decoder* - decodes the payload as Confluent Avro, retrieving the schema from the specified Schema Registry.
+- *transformer* - selects all columns from the decoded DataFrame.
+- *writer* - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's ```processAllAvailable``` method on the stream writer.
+
+### Trigger
+*Coming soon.*
+
+## Extensions
+Both, Hyperdrive trigger and ingestor are extensible.
+
+### Ingestor
+Each component (except for the ```driver``) is located in a separate Maven module. Each of these modules is composed of an abstract class defining the component API, a factory trait to define factories for each of the components, implementations for the component API and factory, and an abstract factory, located in the package ```factories```, that will create the concrete factory based on the configurations.
+
+To extend a component, it is necessary to:
+
+1. Extend the component's abstract class definition.
+2. Create a factory for the extension.
+3. Specify the configurations it needs and add them to ```za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys``` under the module ```shared```.
+4. Add the component factory to the abstract factory under the package ```factories```.
+
+After that, the new module will be able to be seamlessly invoked from the driver.
+
+### Trigger
+*Coming soon.*
 
 ## Features
 

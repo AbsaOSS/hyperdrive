@@ -15,7 +15,7 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.decoder.impl.avro
+package za.co.absa.hyperdrive.decoder.impl.confluent.avro
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
@@ -25,7 +25,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.decoder.StreamDecoder
 
-private[decoder] class AvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String], val retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String], val retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException("Blank topic.")

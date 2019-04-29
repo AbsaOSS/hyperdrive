@@ -20,7 +20,7 @@
 # Pipeline settings
 component.ingestor=spark
 component.reader=KafkaStreamReader
-component.decoder=AvroKafkaStreamDecoder
+component.decoder=ConfluentAvroKafkaStreamDecoder
 component.manager=CheckpointOffsetManager
 component.transformer=ColumnSelectorStreamTransformer
 component.writer=ParquetStreamWriter
@@ -51,7 +51,7 @@ decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
 transformer.columns.to.select=*
 
 # Sink(Parquet) settings
-sink.parquet.destination.directory=/tmp/ingestion/destination-directory
+writer.parquet.destination.directory=/tmp/ingestion/destination-directory
 #these configurations are going to be added to the Parquet DataStreamWriter
-sink.parquet.extra.conf.1=key1=value1
-sink.parquet.extra.conf.2=key2=value2
+writer.parquet.extra.conf.1=key1=value1
+writer.parquet.extra.conf.2=key2=value2

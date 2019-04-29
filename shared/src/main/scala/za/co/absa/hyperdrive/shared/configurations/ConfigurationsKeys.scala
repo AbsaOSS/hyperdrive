@@ -75,7 +75,7 @@ object ConfigurationsKeys {
   }
 
   object ParquetStreamWriterKeys {
-    val rootComponentRootKey = "sink"
+    val rootComponentRootKey = "writer"
     val rootFactoryConfKey = s"$rootComponentRootKey.parquet"
 
     val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
