@@ -15,20 +15,20 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.decoder.factories.avro
+package za.co.absa.hyperdrive.decoder.factories.confluent.avro
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
-import za.co.absa.hyperdrive.decoder.impl.avro.AvroKafkaStreamDecoder
+import za.co.absa.hyperdrive.decoder.impl.confluent.avro.ConfluentAvroKafkaStreamDecoder
 import za.co.absa.hyperdrive.decoder.{StreamDecoder, StreamDecoderFactory}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
-private[factories] object AvroKafkaStreamDecoderFactory extends StreamDecoderFactory {
+private[factories] object ConfluentAvroKafkaStreamDecoderFactory extends StreamDecoderFactory {
 
-  override def name: String = "AvroKafkaStreamDecoder"
+  override def name: String = "ConfluentAvroKafkaStreamDecoder"
 
   override def build(config: Configuration): StreamDecoder = {
     val topic = getTopic(config)
@@ -37,7 +37,7 @@ private[factories] object AvroKafkaStreamDecoderFactory extends StreamDecoderFac
 
     LogManager.getLogger.info(s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', schema retention policy='$schemaRetentionPolicy', schema registry settings='$schemaRegistrySettings'.")
 
-    new AvroKafkaStreamDecoder(topic, schemaRegistrySettings, schemaRetentionPolicy)
+    new ConfluentAvroKafkaStreamDecoder(topic, schemaRegistrySettings, schemaRetentionPolicy)
   }
 
   private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")

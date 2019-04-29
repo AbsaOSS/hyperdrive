@@ -21,7 +21,7 @@ import org.apache.commons.configuration2.Configuration
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
-import za.co.absa.hyperdrive.decoder.factories.avro.AvroKafkaStreamDecoderFactory
+import za.co.absa.hyperdrive.decoder.factories.confluent.avro.ConfluentAvroKafkaStreamDecoderFactory
 
 
 class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
@@ -31,8 +31,8 @@ class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
   behavior of StreamDecoderAbstractFactory.getClass.getSimpleName
 
   it should "create factory for AvroStreamDecoder" in {
-    when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(AvroKafkaStreamDecoderFactory.name)
-    assert(AvroKafkaStreamDecoderFactory == StreamDecoderAbstractFactory.getFactory(configStub))
+    when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(ConfluentAvroKafkaStreamDecoderFactory.name)
+    assert(ConfluentAvroKafkaStreamDecoderFactory == StreamDecoderAbstractFactory.getFactory(configStub))
   }
 
   it should "throw if invalid decoder type is specified" in {

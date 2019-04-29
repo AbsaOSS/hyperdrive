@@ -20,7 +20,7 @@ package za.co.absa.hyperdrive.decoder.factories
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.decoder.StreamDecoderFactory
-import za.co.absa.hyperdrive.decoder.factories.avro.AvroKafkaStreamDecoderFactory
+import za.co.absa.hyperdrive.decoder.factories.confluent.avro.ConfluentAvroKafkaStreamDecoderFactory
 
 import scala.util.{Failure, Success, Try}
 
@@ -35,7 +35,7 @@ object StreamDecoderAbstractFactory {
   val componentConfigKey = "component.decoder"
 
   private val factoryMap = Map[String,StreamDecoderFactory](
-    AvroKafkaStreamDecoderFactory.name.toLowerCase -> AvroKafkaStreamDecoderFactory)
+    ConfluentAvroKafkaStreamDecoderFactory.name.toLowerCase -> ConfluentAvroKafkaStreamDecoderFactory)
 
   def getFactory(config: Configuration): StreamDecoderFactory = {
 
