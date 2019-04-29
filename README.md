@@ -96,7 +96,7 @@ The built-in components have the following capabilities:
 Both, Hyperdrive trigger and ingestor are extensible.
 
 ### Ingestor
-Each component (except for the ```driver``) is located in a separate Maven module. Each of these modules is composed of an abstract class defining the component API, a factory trait to define factories for each of the components, implementations for the component API and factory, and an abstract factory, located in the package ```factories```, that will create the concrete factory based on the configurations.
+Each component (except for the ```driver```) is located in a separate Maven module. Each of these modules is composed of an abstract class defining the component API, a factory trait to define factories for each of the components, implementations for the component API and factory, and an abstract factory, located in the package ```factories```, that will create the concrete factory based on the configurations.
 
 To extend a component, it is necessary to:
 
