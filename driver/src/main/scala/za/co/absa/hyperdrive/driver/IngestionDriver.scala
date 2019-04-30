@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.decoder.StreamDecoder
 import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.driver.drivers.CommandLineIngestionDriver.logger
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.reader.StreamReader
@@ -37,7 +38,9 @@ private[driver] class IngestionDriver {
   private val logger = LogManager.getLogger
 
   def ingest(configuration: Configuration): Unit = {
-    logger.info("Ingestion invoked. Going to instantiate components.")
+    logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
+    printConfiguration(configuration)
+
     val spark = getSparkSession(configuration)
     val streamReader = getStreamReader(configuration)
     val offsetManager = getOffsetManager(configuration)
@@ -60,4 +63,12 @@ private[driver] class IngestionDriver {
   private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.getFactory(conf).build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.getFactory(conf).build(conf)
+
+  private def printConfiguration(configuration: Configuration): Unit = {
+    import scala.collection.JavaConverters._
+    configuration
+      .getKeys
+      .asScala
+      .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
+  }
 }
