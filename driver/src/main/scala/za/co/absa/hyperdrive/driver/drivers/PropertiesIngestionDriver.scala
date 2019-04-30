@@ -45,12 +45,12 @@ object PropertiesIngestionDriver extends IngestionDriver {
     }
 
     logger.info(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
-    val configurations = loadConfigurations(propertiesFile.get)
+    val configurations = loadConfiguration(propertiesFile.get)
     logger.info(s"Configurations loaded. Going to invoke ingestion: [$configurations]")
     ingest(configurations)
   }
 
-  private def loadConfigurations(path: String): Configuration = {
+  private def loadConfiguration(path: String): Configuration = {
     val parameters = new Parameters()
     new FileBasedConfigurationBuilder[PropertiesConfiguration](classOf[PropertiesConfiguration])
       .configure(parameters.fileBased()
