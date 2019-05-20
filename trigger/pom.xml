@@ -20,87 +20,164 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>parent-conf</artifactId>
-        <groupId>za.co.absa.hyperdrive</groupId>
-        <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../parent-conf/pom.xml</relativePath>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
 
+    <modelVersion>4.0.0</modelVersion>
+    <version>0.0.1-SNAPSHOT</version>
+    <groupId>za.co.absa.hyperdrive</groupId>
     <artifactId>trigger</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <scala.compat.version>2.11</scala.compat.version>
+        <spark.version>2.4.1</spark.version>
+        <slick.version>3.3.2</slick.version>
+        <slick-hikaricp.version>3.3.1</slick-hikaricp.version>
+        <postgresql>42.2.6</postgresql>
+        <kafka.version>2.2.0</kafka.version>
+        <play-json.version>2.7.3</play-json.version>
+        <play-ws-standalone.version>2.0.3</play-ws-standalone.version>
+        <play-ahc-ws-standalone.version>2.0.2</play-ahc-ws-standalone.version>
+        <spring-boot-starter-web.version>2.0.0.RELEASE</spring-boot-starter-web.version>
+        <jackson-module.version>2.9.8</jackson-module.version>
+        <spring-boot-starter-tomcat.version>2.0.0.RELEASE</spring-boot-starter-tomcat.version>
+        <alchim31>3.2.0</alchim31>
+        <openui5.version>1.60.2</openui5.version>
+        <lodash.version>4.17.10</lodash.version>
+        <momentjs.version>2.22.2</momentjs.version>
+        <webjars.locator.version>0.35</webjars.locator.version>
+        <scala-maven-plugin.version>3.2.1</scala-maven-plugin.version>
+        <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+        <spring.version>2.0.0.RELEASE</spring.version>
+        <maven.war.version>2.2</maven.war.version>
+        <maven.ant.plugin.version>1.8</maven.ant.plugin.version>
+        <log4j.version>2.11.1</log4j.version>
+        <slf4j.log4j2.version>1.7.26</slf4j.log4j2.version>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>za.co.absa</groupId>
-            <artifactId>abris_2.11</artifactId>
-            <version>${abris.version}</version>
-        </dependency>
-
-        <!--Components from the project-->
-        <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>reader</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick_${scala.compat.version}</artifactId>
+            <version>${slick.version}</version>
         </dependency>
         <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>transformer</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick-hikaricp_${scala.compat.version}</artifactId>
+            <version>${slick-hikaricp.version}</version>
         </dependency>
         <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>writer</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql}</version>
         </dependency>
         <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>manager</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_${scala.compat.version}</artifactId>
+            <version>${kafka.version}</version>
         </dependency>
         <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>driver</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-launcher_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>shared</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play-json_${scala.compat.version}</artifactId>
+            <version>${play-json.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play-ws-standalone-json_${scala.compat.version}</artifactId>
+            <version>${play-ws-standalone.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play-ahc-ws-standalone_${scala.compat.version}</artifactId>
+            <version>${play-ahc-ws-standalone.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring-boot-starter-web.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
+            <version>${jackson-module.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <version>${spring-boot-starter-tomcat.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- WebJars -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>openui5</artifactId>
+            <version>${openui5.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>lodash</artifactId>
+            <version>${lodash.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>momentjs</artifactId>
+            <version>${momentjs.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-core</artifactId>
+            <version>${webjars.locator.version}</version>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.version}</version>
+                <configuration>
+                    <mainClass>core.api.rest.Application</mainClass>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>repackage</goal>
                         </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>za.co.absa.hyperdrive.trigger.IngestionTrigger</mainClass>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>${alchim31}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <phase>process-test-resources</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scalaVersion>${scala.compat.version}</scalaVersion>
+                </configuration>
             </plugin>
         </plugins>
     </build>

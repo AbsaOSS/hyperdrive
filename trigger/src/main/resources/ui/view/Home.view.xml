@@ -1,0 +1,73 @@
+<mvc:View
+        controllerName="hyperdriver.controller.Home"
+        xmlns="sap.m"
+        xmlns:l="sap.ui.layout"
+        xmlns:mvc="sap.ui.core.mvc"
+        xmlns:lab="it.designfuture.chartjs">
+    <Page showHeader="true">
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Title text=""/>
+                    <Title text="Home"/>
+                </contentLeft>
+                <contentRight>
+                    <Button icon="sap-icon://refresh" type="Transparent" press=".onRunsRefresh">
+                    </Button>
+                    <Title text=""/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+        <l:BlockLayout
+                id="BlockLayouts"
+                busy="false"
+                background="Dashboard">
+            <l:BlockLayoutRow
+                    rowColorSet="ColorSet2">
+                <l:BlockLayoutCell>
+                    <Title
+                            text="Runs success rate"
+                            level="H4"
+                            titleStyle="H2"
+                            width="100%"/>
+                    <lab:PieChartJS
+                            id="successRateChart"
+                            responsive="false"
+                            isDoughnut="true"
+                            cutoutPercentage="50"
+                            datasets="{/successRate/datasets}"
+                            labels="{/successRate/labels}"
+                            tooltipEnabled="true"
+                            legendPosition="right"
+                            legendDisplay="true">
+
+                    </lab:PieChartJS>
+                </l:BlockLayoutCell>
+                <l:BlockLayoutCell>
+                    <Title
+                            text="Running / Queued runs"
+                            level="H4"
+                            titleStyle="H2"
+                            width="100%"/>
+                    <lab:PieChartJS
+                            id="runningQueuedChart"
+                            responsive="false"
+                            isDoughnut="true"
+                            cutoutPercentage="50"
+                            datasets="{/runningQueued/datasets}"
+                            labels="{/runningQueued/labels}"
+                            tooltipEnabled="true"
+                            legendPosition="right"
+                            legendDisplay="true">
+                    </lab:PieChartJS>
+                </l:BlockLayoutCell>
+            </l:BlockLayoutRow>
+        </l:BlockLayout>
+        <footer>
+            <Bar>
+                <contentRight>
+                </contentRight>
+            </Bar>
+        </footer>
+    </Page>
+</mvc:View>

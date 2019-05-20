@@ -1,0 +1,128 @@
+{
+	"_version": "1.12.0",
+	"sap.app": {
+		"id": "hyperdriver",
+		"type": "application",
+		"i18n": "i18n/i18n.properties",
+		"title": "{{appTitle}}",
+		"description": "{{appDescription}}",
+		"applicationVersion": {
+			"version": "1.0.0"
+		}
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		},
+		"supportedThemes": [
+			"sap_hcb",
+			"sap_bluecrystal",
+			"sap_belize"
+		]
+	},
+	"sap.ui5": {
+		"rootView": {
+			"viewName": "hyperdriver.view.App",
+			"type": "XML",
+			"async": true,
+			"id": "app"
+		},
+		"dependencies": {
+			"minUI5Version": "1.30",
+			"libs": {
+				"sap.ui.core": {},
+				"sap.m": {},
+				"sap.tnt": {},
+				"sap.ui.layout": {},
+				"sap.uxap": {}
+			}
+		},
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "hyperdriver.i18n.i18n"
+				}
+			},
+			"side": {
+				"type": "sap.ui.model.json.JSONModel",
+				"uri": "model/sideContent.json"
+			}
+		},
+		"routing": {
+			"config": {
+				"routerClass": "sap.m.routing.Router",
+				"controlId": "mainContents",
+				"viewType": "XML",
+				"controlAggregation": "pages",
+				"viewPath": "hyperdriver.view",
+				"async": true,
+				"bypassed": {
+					"target": "home"
+				}
+			},
+			"routes": [
+				{
+					"pattern": "Login",
+					"name": "login",
+					"target": "login"
+				},
+				{
+					"pattern": "",
+					"name": "home",
+					"target": "home"
+				},
+				{
+					"pattern": "Workflows",
+					"name": "workflows",
+					"target": "workflows"
+				},
+				{
+					"pattern": "UpsertWorkflow/:id:",
+					"name": "upsertWorkflow",
+					"target": "upsertWorkflow"
+				},
+				{
+					"pattern": "Runs",
+					"name": "runs",
+					"target": "runs"
+				},
+				{
+					"pattern": "WorkflowRuns/{jobDefinitionId}",
+					"name": "workflowRuns",
+					"target": "workflowRuns"
+				}
+			],
+			"targets": {
+				"login": {
+					"viewId": "login",
+					"viewName": "Login"
+				},
+				"home": {
+					"viewId": "home",
+					"viewName": "Home"
+				},
+				"workflows": {
+					"viewId": "workflows",
+					"viewName": "Workflows"
+				},
+				"upsertWorkflow": {
+					"viewId": "upsertWorkflow",
+					"viewName": "UpsertWorkflow"
+				},
+				"runs": {
+					"viewId": "runs",
+					"viewName": "Runs"
+				},
+				"workflowRuns": {
+					"viewId": "workflowRuns",
+					"viewName": "WorkflowRuns",
+					"viewLevel": 2
+				}
+			}
+		}
+	}
+}

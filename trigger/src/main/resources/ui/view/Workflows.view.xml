@@ -1,0 +1,94 @@
+<mvc:View
+		controllerName="hyperdriver.controller.Workflows"
+		xmlns="sap.m"
+		xmlns:l="sap.ui.layout"
+		xmlns:mvc="sap.ui.core.mvc"
+		xmlns:cust="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+	<Page>
+		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Title text=""/>
+					<Title text="Workflows"/>
+				</contentLeft>
+				<contentRight>
+					<Button icon="sap-icon://refresh" type="Transparent" press=".onWorkflowsRefresh">
+					</Button>
+					<Title text=""/>
+				</contentRight>
+			</Bar>
+		</customHeader>
+
+		<l:BlockLayout background="Default">
+			<l:BlockLayoutRow>
+				<l:BlockLayoutCell backgroundColorSet="ColorSet9" backgroundColorShade="ShadeA" width="3">
+					<Table items="{/workflows}" fixedLayout="false">
+						<columns>
+							<Column vAlign="Middle">
+								<Text text="Workflow name"/>
+							</Column>
+							<Column vAlign="Middle">
+								<Text text="Is active"/>
+							</Column>
+							<Column vAlign="Middle">
+								<Text text="Create date time"/>
+							</Column>
+							<Column vAlign="Middle">
+								<Text text="Update date time"/>
+							</Column>
+							<Column hAlign="Center" vAlign="Middle">
+								<Text text="Actions"/>
+							</Column>
+						</columns>
+						<items>
+							<ColumnListItem>
+								<cells>
+									<Text text="{name}"/>
+									<Text text="{= ${isActive} ? 'Yes' : 'No' }"/>
+									<Text text="{created}"/>
+									<Text text="{updated}"/>
+									<MenuButton icon="sap-icon://menu">
+										<menu>
+											<Menu itemSelected=".onWorkflowAction">
+												<items>
+													<MenuItem
+															text="{= ${isActive} ? 'Deactivate' : 'Activate' }"
+															icon="{= ${isActive} ? 'sap-icon://pause' : 'sap-icon://play' }"
+															cust:action="updateActiveStatus"
+															cust:id="{id}"
+															cust:isActive="{isActive}"/>
+													<MenuItem
+															text="Edit"
+															icon="sap-icon://edit"
+															cust:action="edit"
+															cust:id="{id}"/>
+													<MenuItem
+															text="Delete"
+															icon="sap-icon://delete"
+															cust:action="delete"
+															cust:id="{id}"/>
+												</items>
+											</Menu>
+										</menu>
+									</MenuButton>
+								</cells>
+							</ColumnListItem>
+						</items>
+					</Table>
+				</l:BlockLayoutCell>
+			</l:BlockLayoutRow>
+		</l:BlockLayout>
+
+		<footer>
+			<Bar>
+				<contentRight>
+					<Button
+							id="createWorkflow"
+							text="Create Workflow"
+							icon="sap-icon://add"
+							press=".onCreateWorkflow"/>
+				</contentRight>
+			</Bar>
+		</footer>
+	</Page>
+</mvc:View>

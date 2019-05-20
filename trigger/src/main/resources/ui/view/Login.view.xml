@@ -1,0 +1,26 @@
+<core:View
+		id="loginDetailView"
+		controllerName="hyperdriver.controller.Login"
+		xmlns:core="sap.ui.core"
+		xmlns:mvc="sap.ui.core.mvc"
+		xmlns="sap.m">
+	<Page title="Login" enableScrolling="true">
+		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Title text=""/>
+					<Title text="Login"/>
+				</contentLeft>
+			</Bar>
+		</customHeader>
+		<content>
+			<VBox id="loginForm" fitContainer="true" justifyContent="Center" alignItems="Center">
+				<items>
+					<Input type="Text" id="username" placeholder="username" submit="onLoginSubmit"/>
+					<Input type="Password" id="password" placeholder="password" submit="onLoginSubmit"/>
+					<Button type="Emphasized" id="loginSubmit" text="Login" width="10rem" press="onLoginSubmit"/>
+				</items>
+			</VBox>
+		</content>
+	</Page>
+</core:View>

@@ -1,0 +1,32 @@
+{
+	"navigation": [
+		{
+			"title": "Home",
+			"icon": "sap-icon://home",
+			"expanded": false,
+			"key": "home",
+			"items": []
+		},
+		{
+			"title": "Workflows",
+			"icon": "sap-icon://SAP-icons-TNT/workflow-editor",
+			"expanded": false,
+			"key": "workflows",
+			"items": []
+		},
+		{
+			"title": "Runs",
+			"icon": "sap-icon://media-play",
+			"expanded": false,
+			"key": "runs",
+			"items": []
+		}
+	],
+	"fixedNavigation": [
+		{
+			"key": "git",
+			"title": "Github",
+			"icon": "sap-icon://chain-link"
+		}
+	]
+}

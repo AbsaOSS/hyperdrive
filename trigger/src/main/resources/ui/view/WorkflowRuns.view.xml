@@ -1,0 +1,64 @@
+<mvc:View
+		controllerName="hyperdriver.controller.WorkflowRuns"
+		xmlns="sap.m"
+		xmlns:l="sap.ui.layout"
+		xmlns:mvc="sap.ui.core.mvc">
+	<Page>
+		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Title text=""/>
+					<Title text="Workflow Runs"/>
+				</contentLeft>
+				<contentRight>
+					<Button icon="sap-icon://nav-back" type="Transparent" press=".onBackPress">
+					</Button>
+					<Button icon="sap-icon://refresh" type="Transparent" press=".onRunsRefresh">
+					</Button>
+					<Title text=""/>
+				</contentRight>
+			</Bar>
+		</customHeader>
+
+		<l:BlockLayout background="Default">
+			<l:BlockLayoutRow>
+				<l:BlockLayoutCell backgroundColorSet="ColorSet9" backgroundColorShade="ShadeA" width="3">
+					<Table items="{/runs}" fixedLayout="false">
+						<columns>
+							<Column>
+								<Text text="Run id"/>
+							</Column>
+							<Column vAlign="Middle">
+								<Text text="Create date time"/>
+							</Column>
+							<Column vAlign="Middle">
+								<Text text="Update date time"/>
+							</Column>
+							<Column>
+								<Text text="Status"/>
+							</Column>
+
+						</columns>
+						<items>
+							<ColumnListItem>
+								<cells>
+									<Text text="{id}"/>
+									<Text text="{created}"/>
+									<Text text="{updated}"/>
+									<Text text="{jobStatus/name}"/>
+								</cells>
+							</ColumnListItem>
+						</items>
+					</Table>
+				</l:BlockLayoutCell>
+			</l:BlockLayoutRow>
+		</l:BlockLayout>
+
+		<footer>
+			<Bar>
+				<contentRight>
+				</contentRight>
+			</Bar>
+		</footer>
+	</Page>
+</mvc:View>

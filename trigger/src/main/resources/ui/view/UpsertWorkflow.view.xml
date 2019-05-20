@@ -1,0 +1,130 @@
+<mvc:View
+		controllerName="hyperdriver.controller.UpsertWorkflow"
+		xmlns:core="sap.ui.core"
+		xmlns:l="sap.ui.layout"
+		xmlns:mvc="sap.ui.core.mvc"
+		xmlns="sap.m"
+		xmlns:form="sap.ui.layout.form">
+	<Page>
+		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Title text=""/>
+					<Title text="{/title} Workflow"/>
+				</contentLeft>
+				<contentRight>
+					<Button icon="sap-icon://nav-back" type="Transparent" press=".onBackPress">
+					</Button>
+					<Title text=""/>
+				</contentRight>
+			</Bar>
+		</customHeader>
+		<l:BlockLayout background="Dashboard">
+			<l:BlockLayoutRow>
+				<l:BlockLayoutCell title="Workflow">
+					<form:SimpleForm adjustLabelSpan="true" editable="true">
+						<form:content>
+							<Label text="Workflow Name"/>
+							<Input id="workflowName"
+								   type="Text" placeholder="Workflow name*" width="100%" value="{/workflow/name}"/>
+							<Label text="Is Active"/>
+							<CheckBox selected="{/workflow/isActive}"/>
+						</form:content>
+					</form:SimpleForm>
+				</l:BlockLayoutCell>
+				<l:BlockLayoutCell title="Sensor">
+					<form:SimpleForm adjustLabelSpan="true" editable="true">
+						<form:content>
+							<Label text="Event type"/>
+							<Select id="eventTypeSelect" showSecondaryValues="false" items="{/eventTypes}"
+									selectedKey="{/workflow/trigger/eventType/name}" change="onEventTypeSelect">
+								<items>
+									<core:Item key="{type}" text="{type}" />
+								</items>
+							</Select>
+							<Label text="Kafka servers"/>
+							<VBox>
+								<List mode="Delete" items="{/workflow/trigger/triggerProperties/properties/maps/servers}" delete="onDeleteServer">
+									<CustomListItem>
+										<Input type="Text" value="{}" placeholder="Server"/>
+									</CustomListItem>
+								</List>
+								<Button id="addServer" icon="sap-icon://add" press="onAddServer"/>
+							</VBox>
+							<Label text="Topic"/>
+							<Input
+									type="Text"
+									value="{/workflow/trigger/triggerProperties/properties/variables/topic}"
+									placeholder="Topic name"/>
+							<Label text="Match properties"/>
+							<VBox>
+								<List mode="Delete" items="{/workflow/trigger/triggerProperties/matchProperties}"
+									  delete="onDeleteMatchProperty">
+									<CustomListItem>
+										<Input type="Text" value="{keyField}" placeholder="Key" width="50%"/>
+										<Input type="Text" value="{valueField}" placeholder="Value" width="50%"/>
+									</CustomListItem>
+								</List>
+								<Button id="addMatchProperty" icon="sap-icon://add" press="onAddMatchProperty"/>
+							</VBox>
+
+
+						</form:content>
+					</form:SimpleForm>
+				</l:BlockLayoutCell>
+				<l:BlockLayoutCell title="Job">
+					<form:SimpleForm adjustLabelSpan="true" editable="true">
+						<form:content>
+							<Label text="Job type"/>
+							<Select id="newRuleSelect" showSecondaryValues="false" items="{/jobTypes}"
+									selectedKey="{/workflow/job/jobType/name}" change="onJobTypeSelect">
+								<items>
+									<core:Item key="{type}" text="{type}" />
+								</items>
+							</Select>
+
+							<Label text="Job Name"/>
+							<Input id="jobName"
+								   type="Text" placeholder="Job name*" width="100%" value="{/workflow/job/name}"/>
+
+							<Label text="Job jar"/>
+							<Input id="jobJar"
+								   type="Text" placeholder="Job jar*" width="100%" value="{/workflow/job/jobParameters/variables/jobJar}"/>
+
+							<Label text="Main class"/>
+							<Input id="mainClass"
+								   type="Text" placeholder="Main class*" width="100%" value="{/workflow/job/jobParameters/variables/mainClass}"/>
+
+							<Label text="Deployment mode"/>
+							<Select id="deploymentMode" selectedKey="{/workflow/job/jobParameters/variables/deploymentMode}">
+								<items>
+									<core:Item key="cluster" text="cluster" />
+									<core:Item key="client" text="client" />
+								</items>
+							</Select>
+
+							<Label text="App arguments"/>
+							<VBox>
+								<List mode="Delete" items="{/workflow/job/jobParameters/maps/appArguments}"
+									  delete="onDeleteJobProperty">
+									<CustomListItem>
+										<Input type="Text" value="{}" placeholder="App argument"/>
+									</CustomListItem>
+								</List>
+								<Button id="addJobProperty" icon="sap-icon://add" press="onAddJobProperty"/>
+							</VBox>
+						</form:content>
+					</form:SimpleForm>
+				</l:BlockLayoutCell>
+			</l:BlockLayoutRow>
+		</l:BlockLayout>
+		<footer>
+			<Bar>
+				<contentRight>
+					<Button id="onSaveWorkflow" text="Save" icon="sap-icon://accept" press=".onSaveWorkflow"/>
+					<Button id="onCancelWorkflow" text="Cancel" icon="sap-icon://cancel" press=".onCancelWorkflow"/>
+				</contentRight>
+			</Bar>
+		</footer>
+	</Page>
+</mvc:View>

@@ -1,0 +1,73 @@
+<mvc:View
+		controllerName="hyperdriver.controller.Runs"
+		xmlns="sap.m"
+		xmlns:l="sap.ui.layout"
+		xmlns:mvc="sap.ui.core.mvc">
+	<Page>
+		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Title text=""/>
+					<Title text="Runs"/>
+				</contentLeft>
+				<contentRight>
+					<Button icon="sap-icon://refresh" type="Transparent" press=".onRunsRefresh">
+					</Button>
+					<Title text=""/>
+				</contentRight>
+			</Bar>
+		</customHeader>
+
+		<l:BlockLayout background="Default">
+			<l:BlockLayoutRow>
+				<l:BlockLayoutCell backgroundColorSet="ColorSet9" backgroundColorShade="ShadeA" width="3">
+					<Table items="{/runs}" fixedLayout="false">
+						<columns>
+							<Column>
+								<Text text="Workflow name"/>
+							</Column>
+							<Column>
+								<Text text="Is active"/>
+							</Column>
+							<Column>
+								<Text text="Total"/>
+							</Column>
+							<Column>
+								<Text text="Successful / Failed"/>
+							</Column>
+							<Column>
+								<Text text="Queued / Running"/>
+							</Column>
+
+						</columns>
+						<items>
+							<ColumnListItem
+									vAlign="Middle"
+									type="Navigation"
+									press=".onRunsPress">
+								<cells>
+									<Text text="{workflowName}"/>
+									<Text text="{= ${isActive} ? 'Yes' : 'No' }"/>
+									<Text text="{total}"/>
+									<Text text="{successful} / {failed}"/>
+									<Text text="{queued} / {running}"/>
+									<ToggleButton
+											id="flaggedButton"
+											icon="sap-icon://flag"
+											pressed="{path: 'Flagged', type: '.types.flagged'}"
+											class="sapUiMediumMarginBeginEnd"/>
+								</cells>
+							</ColumnListItem>
+						</items>
+					</Table>
+				</l:BlockLayoutCell>
+			</l:BlockLayoutRow>
+		</l:BlockLayout>
+		<footer>
+			<Bar>
+				<contentRight>
+				</contentRight>
+			</Bar>
+		</footer>
+	</Page>
+</mvc:View>

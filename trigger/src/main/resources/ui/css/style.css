@@ -1,0 +1,8 @@
+html, body {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+.minW40rem {
+  min-width: 40rem !important;
+}
