@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.decoder.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.decoder.StreamDecoderFactory
+import za.co.absa.hyperdrive.decoder.{StreamDecoder, StreamDecoderFactory}
 import za.co.absa.hyperdrive.decoder.factories.confluent.avro.ConfluentAvroKafkaStreamDecoderFactory
 
 import scala.util.{Failure, Success, Try}
@@ -37,14 +37,14 @@ object StreamDecoderAbstractFactory {
   private val factoryMap = Map[String,StreamDecoderFactory](
     ConfluentAvroKafkaStreamDecoderFactory.name.toLowerCase -> ConfluentAvroKafkaStreamDecoderFactory)
 
-  def getFactory(config: Configuration): StreamDecoderFactory = {
+  def build(config: Configuration): StreamDecoder = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
 
     Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory
+      case Success(factory) => factory.build(config)
       case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamDecoderFactory name: '$factoryName'.", exception)
     }
   }

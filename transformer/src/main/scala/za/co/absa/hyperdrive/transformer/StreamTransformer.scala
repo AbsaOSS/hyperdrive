@@ -29,7 +29,7 @@ import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFact
   * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus.EnceladusStreamTransformer).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.transformer.data.factories.enceladus).</li>
   * <li>4. Add the factory as an implementation of [[StreamTransformer]].</li>
-  * <li>5. Add the factory to the abstract stream transformer factory at [[StreamTransformerAbstractFactory]] as described in the class documentation.</li>
+  * <li>5. Add the factory to the abstract stream transformer factory at [[StreamTransformerFactory]] as described in the class documentation.</li>
   * </ul>
   */
 abstract class StreamTransformer {

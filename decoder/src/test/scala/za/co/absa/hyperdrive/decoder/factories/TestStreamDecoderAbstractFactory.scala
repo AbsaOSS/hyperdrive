@@ -21,7 +21,11 @@ import org.apache.commons.configuration2.Configuration
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
+import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.decoder.factories.confluent.avro.ConfluentAvroKafkaStreamDecoderFactory
+import za.co.absa.hyperdrive.decoder.impl.confluent.avro.ConfluentAvroKafkaStreamDecoder
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
 
 class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
@@ -30,19 +34,25 @@ class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
 
   behavior of StreamDecoderAbstractFactory.getClass.getSimpleName
 
-  it should "create factory for AvroStreamDecoder" in {
+  it should "create AvroStreamDecoder" in {
     when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(ConfluentAvroKafkaStreamDecoderFactory.name)
-    assert(ConfluentAvroKafkaStreamDecoderFactory == StreamDecoderAbstractFactory.getFactory(configStub))
+    when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
+    when(configStub.getString(KEY_SCHEMA_REGISTRY_URL)).thenReturn("http://localhost:8081")
+    when(configStub.getString(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID)).thenReturn("latest")
+    when(configStub.getString(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY)).thenReturn(SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+    when(configStub.getString(KEY_SCHEMA_RETENTION_POLICY)).thenReturn(SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA.toString)
+
+    assert(StreamDecoderAbstractFactory.build(configStub).isInstanceOf[ConfluentAvroKafkaStreamDecoder])
   }
 
   it should "throw if invalid decoder type is specified" in {
     val invalidDecoderType = "invalid.decoder-type"
     when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(invalidDecoderType)
-    val throwable = intercept[IllegalArgumentException](StreamDecoderAbstractFactory.getFactory(configStub))
+    val throwable = intercept[IllegalArgumentException](StreamDecoderAbstractFactory.build(configStub))
     assert(throwable.getMessage.toLowerCase.contains(invalidDecoderType))
   }
 
   it should "throw if no decoder type specified" in {
-    assertThrows[IllegalArgumentException](StreamDecoderAbstractFactory.getFactory(configStub))
+    assertThrows[IllegalArgumentException](StreamDecoderAbstractFactory.build(configStub))
   }
 }

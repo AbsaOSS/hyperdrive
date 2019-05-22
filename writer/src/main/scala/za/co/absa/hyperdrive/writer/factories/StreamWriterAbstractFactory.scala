@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.writer.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.writer.StreamWriterFactory
+import za.co.absa.hyperdrive.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.writer.factories.parquet.ParquetStreamWriterFactory
 
 import scala.util.{Failure, Success, Try}
@@ -36,14 +36,14 @@ object StreamWriterAbstractFactory {
   private val factoryMap = Map[String,StreamWriterFactory](
     ParquetStreamWriterFactory.name.toLowerCase -> ParquetStreamWriterFactory)
 
-  def getFactory(config: Configuration): StreamWriterFactory = {
+  def build(config: Configuration): StreamWriter = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
 
     Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory
+      case Success(factory) => factory.build(config)
       case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamWriterFactory name: '$factoryName'.", exception)
     }
   }

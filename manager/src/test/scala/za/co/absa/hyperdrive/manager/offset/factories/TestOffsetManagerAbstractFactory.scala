@@ -23,6 +23,8 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import za.co.absa.hyperdrive.manager.offset.factories.checkpoint.CheckpointOffsetManagerFactory
+import za.co.absa.hyperdrive.manager.offset.impl.checkpoint.CheckpointOffsetManager
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys._
 
 class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
@@ -32,19 +34,21 @@ class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach 
 
   override def beforeEach(): Unit = reset(configStub)
 
-  it should "create factory for CheckpointOffsetManager" in {
+  it should "create CheckpointOffsetManager" in {
     when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManagerFactory.name)
-    assert(CheckpointOffsetManagerFactory == OffsetManagerAbstractFactory.getFactory(configStub))
+    when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
+    when(configStub.getString(KEY_CHECKPOINT_BASE_LOCATION)).thenReturn("/tmp/checkpoint")
+    assert(OffsetManagerAbstractFactory.build(configStub).isInstanceOf[CheckpointOffsetManager])
   }
 
   it should "throw if manager parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
     when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](OffsetManagerAbstractFactory.getFactory(configStub))
+    val throwable = intercept[IllegalArgumentException](OffsetManagerAbstractFactory.build(configStub))
     assert(throwable.getMessage.contains(invalidFactoryName))
   }
 
   it should "throw if offset manager parameter is absent" in {
-    assertThrows[IllegalArgumentException](OffsetManagerAbstractFactory.getFactory(configStub))
+    assertThrows[IllegalArgumentException](OffsetManagerAbstractFactory.build(configStub))
   }
 }

@@ -54,15 +54,15 @@ private[driver] class IngestionDriver {
 
   private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
-  private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.getFactory(conf).build(conf)
+  private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getOffsetManager(conf: Configuration): OffsetManager = OffsetManagerAbstractFactory.getFactory(conf).build(conf)
+  private def getOffsetManager(conf: Configuration): OffsetManager = OffsetManagerAbstractFactory.build(conf)
 
-  private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.getFactory(conf).build(conf)
+  private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 
-  private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.getFactory(conf).build(conf)
+  private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.build(conf)
 
-  private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.getFactory(conf).build(conf)
+  private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
   private def printConfiguration(configuration: Configuration): Unit = {
     import scala.collection.JavaConverters._

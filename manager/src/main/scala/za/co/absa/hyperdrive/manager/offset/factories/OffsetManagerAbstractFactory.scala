@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.manager.offset.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.manager.offset.OffsetManagerFactory
+import za.co.absa.hyperdrive.manager.offset.{OffsetManager, OffsetManagerFactory}
 import za.co.absa.hyperdrive.manager.offset.factories.checkpoint.CheckpointOffsetManagerFactory
 
 import scala.util.{Failure, Success, Try}
@@ -35,14 +35,14 @@ object OffsetManagerAbstractFactory {
   private val factoryMap = Map[String,OffsetManagerFactory](
     CheckpointOffsetManagerFactory.name.toLowerCase -> CheckpointOffsetManagerFactory)
 
-  def getFactory(config: Configuration): OffsetManagerFactory = {
+  def build(config: Configuration): OffsetManager = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
 
     Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory
+      case Success(factory) => factory.build(config)
       case Failure(exception) => throw new IllegalArgumentException(s"Invalid OffsetManagerFactory name: '$factoryName'.", exception)
     }
   }

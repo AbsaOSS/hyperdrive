@@ -178,15 +178,15 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
   private def getSparkSession: SparkSession = SparkSession.builder().master("local[*]").appName("IntegrationTest").getOrCreate()
 
-  private def getStreamReader: StreamReader = StreamReaderAbstractFactory.getFactory(configuration).build(configuration)
+  private def getStreamReader: StreamReader = StreamReaderAbstractFactory.build(configuration)
 
-  private def getOffsetManager: OffsetManager = OffsetManagerAbstractFactory.getFactory(configuration).build(configuration)
+  private def getOffsetManager: OffsetManager = OffsetManagerAbstractFactory.build(configuration)
 
-  private def getStreamDecoder: StreamDecoder = StreamDecoderAbstractFactory.getFactory(configuration).build(configuration)
+  private def getStreamDecoder: StreamDecoder = StreamDecoderAbstractFactory.build(configuration)
 
-  private def getStreamTransformer: StreamTransformer = StreamTransformerAbstractFactory.getFactory(configuration).build(configuration)
+  private def getStreamTransformer: StreamTransformer = StreamTransformerAbstractFactory.build(configuration)
 
-  private def getStreamWriter: StreamWriter = StreamWriterAbstractFactory.getFactory(configuration).build(configuration)
+  private def getStreamWriter: StreamWriter = StreamWriterAbstractFactory.build(configuration)
 
   private def produceRandomRecords(howMany: Int): List[Row] = ComplexRecordsGenerator.generateUnparsedRows(howMany)
 

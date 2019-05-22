@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.reader.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.reader.StreamReaderFactory
+import za.co.absa.hyperdrive.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.reader.factories.kafka.KafkaStreamReaderFactory
 
 import scala.util.{Failure, Success, Try}
@@ -37,14 +37,14 @@ object StreamReaderAbstractFactory {
   private val factoryMap = Map[String,StreamReaderFactory](
     KafkaStreamReaderFactory.name -> KafkaStreamReaderFactory)
 
-  def getFactory(config: Configuration): StreamReaderFactory = {
+  def build(config: Configuration): StreamReader = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
 
     Try(factoryMap(factoryName)) match {
-      case Success(factory) => factory
+      case Success(factory) => factory.build(config)
       case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamReaderFactory name: '$factoryName'.", exception)
     }
   }

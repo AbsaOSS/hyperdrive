@@ -22,6 +22,8 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.reader.factories.kafka.KafkaStreamReaderFactory
+import za.co.absa.hyperdrive.reader.impl.kafka.KafkaStreamReader
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
 class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
@@ -31,19 +33,22 @@ class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach w
 
   override def beforeEach(): Unit = reset(configStub)
 
-  it should "create factory for KafkaStreamReader" in {
+  it should "create KafkaStreamReader" in {
     when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReaderFactory.name)
-    assert(KafkaStreamReaderFactory == StreamReaderAbstractFactory.getFactory(configStub))
+    when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
+    when(configStub.getStringArray(KEY_BROKERS)).thenReturn(Array("http://localhost:9092"))
+
+    assert(StreamReaderAbstractFactory.build(configStub).isInstanceOf[KafkaStreamReader])
   }
 
   it should "throw if reader parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
     when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](StreamReaderAbstractFactory.getFactory(configStub))
+    val throwable = intercept[IllegalArgumentException](StreamReaderAbstractFactory.build(configStub))
     assert(throwable.getMessage.contains(invalidFactoryName))
   }
 
   it should "throw if stream reader parameter is absent" in {
-    assertThrows[IllegalArgumentException](StreamReaderAbstractFactory.getFactory(configStub))
+    assertThrows[IllegalArgumentException](StreamReaderAbstractFactory.build(configStub))
   }
 }
