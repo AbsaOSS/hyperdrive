@@ -23,6 +23,8 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.writer.factories.parquet.ParquetStreamWriterFactory
+import za.co.absa.hyperdrive.writer.impl.parquet.ParquetStreamWriter
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
@@ -33,18 +35,22 @@ class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach w
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create factory for ParquetStreamWriter" in {
+    import scala.collection.JavaConverters._
     when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(ParquetStreamWriterFactory.name)
-    assert(ParquetStreamWriterFactory == StreamWriterAbstractFactory.getFactory(configStub))
+    when(configStub.getString(KEY_DESTINATION_DIRECTORY)).thenReturn("/tmp/parquet")
+    when(configStub.getKeys(KEY_EXTRA_CONFS_ROOT)).thenReturn(Seq[String]().asJava.iterator())
+
+    assert(StreamWriterAbstractFactory.build(configStub).isInstanceOf[ParquetStreamWriter])
   }
 
   it should "throw if writer parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
     when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](StreamWriterAbstractFactory.getFactory(configStub))
+    val throwable = intercept[IllegalArgumentException](StreamWriterAbstractFactory.build(configStub))
     assert(throwable.getMessage.contains(invalidFactoryName))
   }
 
   it should "throw if offset manager parameter is absent" in {
-    assertThrows[IllegalArgumentException](StreamWriterAbstractFactory.getFactory(configStub))
+    assertThrows[IllegalArgumentException](StreamWriterAbstractFactory.build(configStub))
   }
 }

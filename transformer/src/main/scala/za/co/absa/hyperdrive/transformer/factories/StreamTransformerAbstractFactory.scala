@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.transformer.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.transformer.StreamTransformerFactory
+import za.co.absa.hyperdrive.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.transformer.factories.select.ColumnSelectorStreamTransformerFactory
 
 import scala.util.{Failure, Success, Try}
@@ -37,14 +37,14 @@ object StreamTransformerAbstractFactory {
   private val factoryMap = Map[String,StreamTransformerFactory](
     ColumnSelectorStreamTransformerFactory.name.toLowerCase -> ColumnSelectorStreamTransformerFactory)
 
-  def getFactory(config: Configuration): StreamTransformerFactory = {
+  def build(config: Configuration): StreamTransformer = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
 
     Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory
+      case Success(factory) => factory.build(config)
       case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamTransformerFactory name: '$factoryName'.", exception)
     }
   }

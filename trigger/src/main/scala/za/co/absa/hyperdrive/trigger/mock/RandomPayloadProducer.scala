@@ -24,7 +24,7 @@ import ConfigParams._
 
 object RandomPayloadProducer {
 
-  private val NUM_RECORDS = 5
+  private val NUM_RECORDS = 6
   HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
   SCHEMA_REGISTRY_URL = "http://localhost:8081"
   KAFKA_BROKERS = "PLAINTEXT://localhost:9092"

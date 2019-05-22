@@ -22,28 +22,33 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import za.co.absa.hyperdrive.transformer.factories.select.ColumnSelectorStreamTransformerFactory
+import za.co.absa.hyperdrive.transformer.impl.select.ColumnSelectorStreamTransformer
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys._
 
 class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
-  private val configuration:Configuration = mock[Configuration]
+  private val configStub:Configuration = mock[Configuration]
 
-  override def beforeEach(): Unit = reset(configuration)
+  override def beforeEach(): Unit = reset(configStub)
 
   behavior of StreamTransformerAbstractFactory.getClass.getSimpleName
 
   it should "create factory for ColumnSelectorStreamTransformer" in {
-    when(configuration.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformerFactory.name)
-    assert(StreamTransformerAbstractFactory.getFactory(configuration) == ColumnSelectorStreamTransformerFactory)
+    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformerFactory.name)
+    when(configStub.getStringArray(KEY_COLUMNS_TO_SELECT)).thenReturn(Array("*"))
+
+    assert(StreamTransformerAbstractFactory.build(configStub).isInstanceOf[ColumnSelectorStreamTransformer])
   }
 
   it should "throw if data transformer parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
-    when(configuration.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.getFactory(configuration))
+    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
+    val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(configStub))
+
     assert(throwable.getMessage.contains(invalidFactoryName))
   }
 
   it should "throw if data transformer parameter is absent" in {
-    assertThrows[IllegalArgumentException](StreamTransformerAbstractFactory.getFactory(configuration))
+    assertThrows[IllegalArgumentException](StreamTransformerAbstractFactory.build(configStub))
   }
 }
