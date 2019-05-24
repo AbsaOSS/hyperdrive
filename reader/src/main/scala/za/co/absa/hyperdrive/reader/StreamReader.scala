@@ -27,10 +27,11 @@ import org.apache.spark.sql.streaming.DataStreamReader
   * The process for adding a new StreamReader implementation is:
   * <ul>
   * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.reader.impl.solace).</li>
-  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.reader.impl.solace.SolaceStreamReader).</li>
+  * <li>2. Add the extension of this class (e.g. za.co.absa.hyperdrive.reader.impl.solace.SolaceStreamReader).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.reader.factories.solace).</li>
   * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.reader.StreamReaderFactory]].</li>
   * <li>5. Add the factory to the abstract stream reader factory at [[za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory]] as described in the class documentation.</li>
+  * <li>6. ITEM 5 WILL CHANGE SOON IN FAVOR OF A MAVEN ARCHETYPE TO BE MADE AVAILABLE TO CLASSPATH.
   * </ul>
   */
 abstract class StreamReader {
