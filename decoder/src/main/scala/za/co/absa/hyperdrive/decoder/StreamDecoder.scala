@@ -24,10 +24,11 @@ import org.apache.spark.sql.streaming.DataStreamReader
   * The process for adding a new StreamDecoder implementation is:
   * <ul>
   * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.decoder.impl.protobuffer).</li>
-  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.decoder.impl.protobuffer.ProtobufferStreamDecoder).</li>
+  * <li>2. Add the extension of this class (e.g. za.co.absa.hyperdrive.decoder.impl.protobuffer.ProtobufferStreamDecoder).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.decoder.factories.protobuffer).</li>
   * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.decoder.StreamDecoderFactory]].</li>
   * <li>5. Add the factory to the abstract stream decoder factory at [[za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory]] as described in the class documentation.</li>
+  * <li>6. ITEM 5 WILL CHANGE SOON IN FAVOR OF A MAVEN ARCHETYPE TO BE MADE AVAILABLE TO CLASSPATH.
   * </ul>
   */
 abstract class StreamDecoder {

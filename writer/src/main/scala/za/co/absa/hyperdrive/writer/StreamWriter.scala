@@ -28,9 +28,9 @@ import za.co.absa.hyperdrive.manager.offset.OffsetManager
   * The process for adding a new StreamWriter implementation is:
   * <ul>
   * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.writer.impl.jdbc).</li>
-  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.writer.impl.JDBCStreamWriter).</li>
+  * <li>2. Add the extension of this class (e.g. za.co.absa.hyperdrive.writer.impl.JDBCStreamWriter).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.writer.factories.jdbc).</li>
-  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.writer.StreamWriter]].</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.writer.StreamWriterFactory]].</li>
   * <li>5. Add the factory to the abstract stream writer factory at [[za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory]] as described in the class documentation.</li>
   * </ul>
   */

@@ -44,10 +44,13 @@ manager.checkpoint.base.location=/tmp/checkpoint-location
 # Format(ABRiS) settings
 decoder.avro.schema.registry.url=http://localhost:8081
 decoder.avro.value.schema.id=latest
+# options = {topic.name, record.name, topic.record.name}
 decoder.avro.value.schema.naming.strategy=topic.name
+# options = {RETAIN_SELECTED_COLUMN_ONLY, RETAIN_ORIGINAL_SCHEMA}
 decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
 
 # Transformations(Enceladus) settings
+# comma separated list of columns to select
 transformer.columns.to.select=*
 
 # Sink(Parquet) settings

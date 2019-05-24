@@ -28,10 +28,11 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
   * The process for adding a new OffsetManager implementation is:
   * <ul>
   * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.manager.offset.impl.jdbc).</li>
-  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.manager.offset.impl.jdbc.JDBCOffsetManager).</li>
+  * <li>2. Add the extension of this class (e.g. za.co.absa.hyperdrive.manager.offset.impl.jdbc.JDBCOffsetManager).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.manager.offset.factories.jdbc).</li>
-  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.manager.offset.OffsetManager]].</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.manager.offset.OffsetManagerFactory]].</li>
   * <li>5. Add the factory to the abstract offset manager factory at [[za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory]] as described in the class documentation.</li>
+  * <li>6. ITEM 5 WILL CHANGE SOON IN FAVOR OF A MAVEN ARCHETYPE TO BE MADE AVAILABLE TO CLASSPATH.
   * </ul>
   */
 abstract class OffsetManager(topic: String) {

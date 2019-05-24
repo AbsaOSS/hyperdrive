@@ -26,10 +26,11 @@ import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFact
   * The process for adding a new StreamTransformer implementation is:
   * <ul>
   * <li>1. Create the implementation package (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus).</li>
-  * <li>2. Add the implementation (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus.EnceladusStreamTransformer).</li>
+  * <li>2. Add the extension of this class (e.g. za.co.absa.hyperdrive.transformer.data.impl.enceladus.EnceladusStreamTransformer).</li>
   * <li>3. Create the factory package (e.g. za.co.absa.hyperdrive.transformer.data.factories.enceladus).</li>
-  * <li>4. Add the factory as an implementation of [[StreamTransformer]].</li>
-  * <li>5. Add the factory to the abstract stream transformer factory at [[StreamTransformerFactory]] as described in the class documentation.</li>
+  * <li>4. Add the factory as an implementation of [[za.co.absa.hyperdrive.transformer.StreamTransformerFactory]].</li>
+  * <li>5. Add the factory to the abstract stream transformer factory at [[za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory]] as described in the class documentation.</li>
+  * <li>6. ITEM 5 WILL CHANGE SOON IN FAVOR OF A MAVEN ARCHETYPE TO BE MADE AVAILABLE TO CLASSPATH.
   * </ul>
   */
 abstract class StreamTransformer {
