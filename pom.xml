@@ -29,14 +29,9 @@
 
     <modules>
         <module>driver</module>
-        <module>reader</module>
-        <module>writer</module>
-        <module>transformer</module>
-        <module>manager</module>
         <module>trigger</module>
         <module>parent-conf</module>
-        <module>shared</module>
-        <module>decoder</module>
+        <module>ingestor</module>
     </modules>
 
 </project>
