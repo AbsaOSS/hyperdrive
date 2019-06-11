@@ -31,7 +31,13 @@
         <module>driver</module>
         <module>trigger</module>
         <module>parent-conf</module>
-        <module>ingestor</module>
+
+        <module>ingestor/reader</module>
+        <module>ingestor/writer</module>
+        <module>ingestor/transformer</module>
+        <module>ingestor/manager</module>
+        <module>ingestor/shared</module>
+        <module>ingestor/decoder</module>
     </modules>
 
 </project>
