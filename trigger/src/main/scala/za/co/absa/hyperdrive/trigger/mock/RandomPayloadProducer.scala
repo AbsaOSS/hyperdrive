@@ -19,13 +19,15 @@
 package za.co.absa.hyperdrive.trigger.mock
 
 import org.apache.spark.sql.{Encoder, Row, SparkSession}
-import za.co.absa.hyperdrive.shared.InfrastructureSettings.{AvroSettings, HyperdriveSettings, KafkaSettings, SchemaRegistrySettings}
 import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
+import ConfigParams._
 
 object RandomPayloadProducer {
 
-  private val NUM_RECORDS = 5
+  private val NUM_RECORDS = 6
   HyperdriveSettings.PAYLOAD_TOPIC_IN_USE = HyperdriveSettings.PAYLOAD_TOPIC_1
+  SCHEMA_REGISTRY_URL = "http://localhost:8081"
+  KAFKA_BROKERS = "PLAINTEXT://localhost:9092"
 
   def main(args: Array[String]): Unit = {
 
@@ -45,10 +47,10 @@ object RandomPayloadProducer {
     import za.co.absa.abris.avro.AvroSerDe._
 
     dataframe
-      .toConfluentAvro(HyperdriveSettings.PAYLOAD_TOPIC_IN_USE, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(SchemaRegistrySettings.SCHEMA_REGISTRY_ACCESS_SETTINGS)
+      .toConfluentAvro(HyperdriveSettings.PAYLOAD_TOPIC_IN_USE, AvroSettings.GENERAL_SCHEMA_NAME, AvroSettings.GENERAL_SCHEMA_NAMESPACE)(SCHEMA_REGISTRY_ACCESS_SETTINGS)
       .write
       .format(KafkaSettings.STREAM_FORMAT_KAFKA_NAME)
-      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, KafkaSettings.BROKERS)
+      .option(KafkaSettings.SPARK_BROKERS_SETTING_KEY, KAFKA_BROKERS)
       .option(KafkaSettings.TOPIC_DISPATCH_KEY, HyperdriveSettings.PAYLOAD_TOPIC_IN_USE)
       .save()
 
