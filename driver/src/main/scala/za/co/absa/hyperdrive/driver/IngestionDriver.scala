@@ -22,7 +22,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.decoder.StreamDecoder
 import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.driver.drivers.CommandLineIngestionDriver.logger
 import za.co.absa.hyperdrive.manager.offset.OffsetManager
 import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.reader.StreamReader
