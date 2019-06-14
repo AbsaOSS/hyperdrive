@@ -22,12 +22,12 @@ import java.util.UUID
 
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.transformer.StreamTransformer
-import za.co.absa.hyperdrive.decoder.StreamDecoder
-import za.co.absa.hyperdrive.writer.StreamWriter
 
 import scala.util.control.NonFatal
 
@@ -48,12 +48,12 @@ object SparkIngestor {
     * IF this method is invoked to ingest from a continuous source (e.g. a topic that is receiving data no-stop), it WILL
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
-    * @param spark [[SparkSession]] instance.
-    * @param streamReader [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
-    * @param decoder [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
-    * @param streamTransformer [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
-    * @param streamWriter [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
+    * @param spark             [[SparkSession]] instance.
+    * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
+    * @param offsetManager     [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
+    * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
+    * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
   @throws(classOf[IllegalArgumentException])
   @throws(classOf[IngestionStartException])

@@ -23,14 +23,14 @@ import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.{DataStreamReader, StreamingQuery}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.reader.StreamReader
-import za.co.absa.hyperdrive.writer.StreamWriter
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
-import za.co.absa.hyperdrive.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.transformer.StreamTransformer
 
 class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 

@@ -20,17 +20,17 @@ package za.co.absa.hyperdrive.driver
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.decoder.StreamDecoder
-import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
-import za.co.absa.hyperdrive.reader.StreamReader
-import za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.IngestorKeys
-import za.co.absa.hyperdrive.transformer.StreamTransformer
-import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.writer.StreamWriter
-import za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory
 
 private[driver] class IngestionDriver {
 
