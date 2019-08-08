@@ -7,7 +7,8 @@ object EventTypes {
   }
 
   case object Kafka extends EventType("Kafka")
+  case object AbsaKafka extends EventType("Absa-Kafka")
 
-  val eventTypes: Set[EventType] = Set(Kafka)
+  val eventTypes: Set[EventType] = Set(Kafka, AbsaKafka)
 
 }

@@ -1,0 +1,18 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" >
+    <Label text="Kafka servers"/>
+    <VBox>
+        <List mode="Delete" items="{/workflow/trigger/triggerProperties/properties/maps/servers}" delete="onDeleteServer" showNoData="false">
+            <CustomListItem>
+                <Input type="Text" value="{}" placeholder="Server"/>
+            </CustomListItem>
+        </List>
+        <Button id="addServer" icon="sap-icon://add" press="onAddServer"/>
+    </VBox>
+    <Label text="Topic"/>
+    <Input type="Text"
+           value="{/workflow/trigger/triggerProperties/properties/variables/topic}"
+           placeholder="Topic name"/>
+    <Label text="Match properties"/>
+    <Label text="Ingestion token"/>
+    <Input type="Text" value="{/workflow/trigger/triggerProperties/matchProperties/0/valueField}" editable="false"/>
+</core:FragmentDefinition>

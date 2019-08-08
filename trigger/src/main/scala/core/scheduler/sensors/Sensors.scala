@@ -56,7 +56,7 @@ class Sensors(eventProcessor: EventProcessor, eventTriggersRepository: EventTrig
     val activeSensors = sensors.keys.toSeq
     eventTriggersRepository.getNewActiveTriggers(activeSensors).map {
       _.foreach {
-        case eventTrigger if eventTrigger.eventType == EventTypes.Kafka =>
+        case eventTrigger if eventTrigger.eventType == EventTypes.Kafka || eventTrigger.eventType == EventTypes.AbsaKafka =>
           sensors.put(
             eventTrigger.id, new KafkaSensor(eventProcessor.eventProcessor, eventTrigger.triggerProperties, executionContext)
           )

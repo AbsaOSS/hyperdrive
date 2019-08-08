@@ -4,55 +4,73 @@ sap.ui.define([
 	"use strict";
 	return BaseController.extend("hyperdriver.controller.UpsertWorkflow", {
 
-		onBackPress: function () {
-			this.myNavBack();
-		},
-
 		onInit: function () {
+			this.getRouter().attachRouteMatched(this.onViewDisplay, this);
 			this.getView().setModel(new sap.ui.model.json.JSONModel());
 			this._model = this.getView().getModel();
-			this.getRouter().attachRouteMatched(this.onViewDisplay, this);
+
+			this._emptyJobParameters = {
+				variables: {},
+				maps: {}
+			};
+			this._emptyTriggerProperties = {
+				properties: {
+					variables: {},
+					maps: {}
+				},
+				matchProperties: []
+			};
+			this._emptyWorkflow = {
+				isActive: false,
+					job: {
+					jobType: {
+						name: "Spark"
+					},
+					jobParameters: { ...this._emptyJobParameters }
+				},
+				trigger: {
+					eventType: {
+						name: "Absa-Kafka"
+					},
+					triggerProperties: {...this._emptyTriggerProperties }
+				}
+			}
 		},
 
 		onViewDisplay : function (evt) {
 			if(evt.getParameter("name") === "upsertWorkflow") {
-				this.getView().setModel(new sap.ui.model.json.JSONModel());
-				this._model = this.getView().getModel();
-
 				let id = evt.getParameter("arguments").id;
 				let isEdit = !!id;
-				this._model.setProperty("/isEdit", isEdit);
 				this._model.setProperty("/id", id);
+				this._model.setProperty("/isEdit", isEdit);
 
-				this._model.getProperty("/isEdit") ? this.initEditDialog() : this.initCreateDialog();
+				isEdit ? this.initEditDialog() : this.initCreateDialog();
 				this._model.setProperty("/jobTypes", this.jobTypes);
 				this._model.setProperty("/eventTypes", this.eventTypes);
-				if(isEdit && !this._model.getProperty("/workflow/name")) {
-					this.myNavBack();
-				}
 			}
 		},
 
 		initEditDialog: function () {
 			this._model.setProperty("/title", "Update");
 			WorkflowRepository.getWorkflow(this._model.getProperty("/id"), this._model);
+			this.loadViewFragments();
 		},
 
 		initCreateDialog: function () {
-			this._model.setProperty("/workflow", jQuery.extend(true, {}, this._emptyWorkflow));
 			this._model.setProperty("/title", "Create");
+			this._model.setProperty("/workflow", jQuery.extend(true, {}, this._emptyWorkflow));
+			this.loadViewFragments();
 		},
 
 		onSaveWorkflow: function () {
 			let isEdit = this._model.getProperty("/isEdit");
 			let workflow = this.getWorkflowToSave();
-			if(isEdit){
+			if(isEdit) {
 				WorkflowRepository.updateWorkflow(workflow);
-				this.myNavBack();
 			} else {
 				WorkflowRepository.createWorkflow(workflow);
-				this.myNavBack();
 			}
+			this.myNavBack();
 		},
 
 		getWorkflowToSave: function () {
@@ -66,93 +84,60 @@ sap.ui.define([
 			return workflow
 		},
 
-		onAddMatchProperty: function () {
-			let matchPropertiesPath = "/workflow/trigger/triggerProperties/matchProperties";
-			let currentMatchProperties = this._model.getProperty(matchPropertiesPath);
-			currentMatchProperties.push({
-				"keyField": "",
-				"valueField": ""
-			});
-			this._model.setProperty(matchPropertiesPath, currentMatchProperties);
+		loadViewFragments: function () {
+			this.onJobTypeSelect(true);
+			this.onEventTypeSelect(true);
 		},
 
-		onAddServer: function () {
-			let matchServersPath = "/workflow/trigger/triggerProperties/properties/maps/servers";
-			let currentServers = this._model.getProperty(matchServersPath);
-			currentServers ? currentServers.push("") : currentServers = [""];
-			this._model.setProperty(matchServersPath, currentServers);
+        onJobTypeSelect: function (isInitial) {
+			isInitial !== true && this._model.setProperty("/workflow/job/jobParameters", jQuery.extend(true, {}, this._emptyJobParameters));
+			let key = this.getView().byId("jobTypeSelect").getSelectedKey();
+			let fragmentName = this.jobTypes.find(function(e) { return e.name === key }).fragment;
+            this.showFragmentInView(fragmentName, "hyperdriver.view.job", "jobForm")
+        },
+
+        onEventTypeSelect: function (isInitial) {
+			isInitial !== true && this._model.setProperty("/workflow/trigger/triggerProperties", jQuery.extend(true, {}, this._emptyTriggerProperties));
+			let key = this.getView().byId("eventTypeSelect").getSelectedKey();
+            let fragmentName = this.eventTypes.find(function(e) { return e.name === key }).fragment;
+            this.showFragmentInView(fragmentName, "hyperdriver.view.sensor", "sensorForm")
 		},
 
-		onDeleteServer: function (oEv) {
-			let matchServersPath = "/workflow/trigger/triggerProperties/properties/maps/servers";
-			let toks = oEv.getParameter("listItem").getBindingContext().getPath().split("/");
-			let inputColumnIndex = parseInt(toks[toks.length - 1]);
-			let currentServers = this._model.getProperty(matchServersPath);
-			let newServers = currentServers.filter((_, index) => index !== inputColumnIndex);
-			this._model.setProperty(matchServersPath, newServers);
-		},
+        showFragmentInView: function (fragmentName, fragmentLocation, destination) {
+            let oFragmentController = this._fragmentController[fragmentName];
+            if (!oFragmentController) {
+                let oController = eval("new " + fragmentName + "(this._model)");
+                let oFragment = sap.ui.xmlfragment(fragmentName, fragmentLocation + "." + fragmentName, oController);
+				oFragmentController = {fragment: oFragment, controller: oController};
+                this._fragmentController[fragmentName] = oFragmentController;
+            }
 
-		onDeleteMatchProperty: function (oEv) {
-			let matchPropertiesPath = "/workflow/trigger/triggerProperties/matchProperties";
-			let toks = oEv.getParameter("listItem").getBindingContext().getPath().split("/");
-			let inputColumnIndex = parseInt(toks[toks.length - 1]);
-			let currentMatchProperties = this._model.getProperty(matchPropertiesPath);
-			let newMatchProperties = currentMatchProperties.filter((_, index) => index !== inputColumnIndex);
-			this._model.setProperty(matchPropertiesPath, newMatchProperties);
-		},
+            let oLayout = this.getView().byId(destination);
+            oLayout.removeAllContent();
+			oFragmentController.fragment.forEach(oElement =>
+                oLayout.addContent(oElement)
+            );
+			oFragmentController.controller.onShow();
+        },
 
-		onAddJobProperty: function () {
-			let matchPropertiesPath = "/workflow/job/jobParameters/maps/appArguments";
-			let currentMatchProperties = this._model.getProperty(matchPropertiesPath);
-			currentMatchProperties ? currentMatchProperties.push("") : currentMatchProperties = [""];
-			this._model.setProperty(matchPropertiesPath, currentMatchProperties);
-		},
-
-		onDeleteJobProperty: function (oEv) {
-			let matchPropertiesPath = "/workflow/job/jobParameters/maps/appArguments";
-			let toks = oEv.getParameter("listItem").getBindingContext().getPath().split("/");
-			let inputColumnIndex = parseInt(toks[toks.length - 1]);
-			let currentMatchProperties = this._model.getProperty(matchPropertiesPath);
-			let newMatchProperties = currentMatchProperties.filter((_, index) => index !== inputColumnIndex);
-			this._model.setProperty(matchPropertiesPath, newMatchProperties);
+		onBackPress: function () {
+			this.myNavBack();
 		},
 
 		onCancelWorkflow: function () {
 			this.myNavBack();
 		},
 
-		_emptyWorkflow: {
-			"isActive": false,
-			"job":{
-				"jobType": {
-					"name": "Spark"
-				},
-				"jobParameters": {
-					"variables": {},
-					"maps": {}
-				}
-			},
-			"trigger": {
-				"eventType": {
-					"name": "Kafka"
-				},
-				"triggerProperties": {
-					"properties": {
-						"variables": {},
-						"maps": {}
-					},
-					"matchProperties": []
-				}
-			}
-		},
+        _fragmentController: {},
 
 		jobTypes: [
-			{type: "Spark"}
+            {name: "Spark", fragment: "spark"}
 		],
 
-		eventTypes: [
-			{type: "Kafka"}
-		]
+        eventTypes: [
+            {name: "Absa-Kafka", fragment: "absaKafka"},
+            {name: "Kafka", fragment: "kafka"}
+        ]
 
 	});
 });

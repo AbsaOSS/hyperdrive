@@ -1,0 +1,34 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Label text="Job Name"/>
+    <Input id="jobName"
+           type="Text" placeholder="Job name*" width="100%" value="{/workflow/job/name}"/>
+
+    <Label text="Job jar"/>
+    <Input id="jobJar"
+           type="Text" placeholder="Job jar*" width="100%" value="{/workflow/job/jobParameters/variables/jobJar}"/>
+
+    <Label text="Main class"/>
+    <Input id="mainClass"
+           type="Text" placeholder="Main class*" width="100%" value="{/workflow/job/jobParameters/variables/mainClass}"/>
+
+    <Label text="Deployment mode"/>
+    <Select id="deploymentMode" selectedKey="{/workflow/job/jobParameters/variables/deploymentMode}">
+        <items>
+            <core:Item key="cluster" text="cluster" />
+            <core:Item key="client" text="client" />
+        </items>
+    </Select>
+
+    <Label text="App arguments"/>
+    <VBox>
+        <List mode="Delete"
+              items="{/workflow/job/jobParameters/maps/appArguments}"
+              delete="onDeleteJobProperty"
+              showNoData="false">
+            <CustomListItem>
+                <Input type="Text" value="{}" placeholder="App argument"/>
+            </CustomListItem>
+        </List>
+        <Button id="addJobProperty" icon="sap-icon://add" press="onAddJobProperty"/>
+    </VBox>
+</core:FragmentDefinition>
