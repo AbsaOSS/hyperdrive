@@ -4,10 +4,10 @@
     <property resource="application.properties" />
 
     <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${logging.dir}/app.log</file>
+        <file>${logging.file}</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/archived/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${logging.path}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <!-- each archived file, size max 256MB -->
             <maxFileSize>256MB</maxFileSize>
             <!-- total size of all archive files, if total size > 20GB, it will delete old archived file -->
