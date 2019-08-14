@@ -13,7 +13,7 @@ final class JobInstanceTable(tag: Tag) extends Table[JobInstance](tag, _tableNam
 
   def jobName: Rep[String] = column[String]("job_name")
   def jobDefinitionId: Rep[Long] = column[Long]("job_definition_id")
-  def eventId: Rep[String] = column[String]("event_id", O.Unique, O.Length(30))
+  def eventId: Rep[String] = column[String]("event_id", O.Unique, O.Length(70))
   def jobType: Rep[JobType] = column[JobType]("job_type")
   def variables: Rep[Map[String, String]] = column[Map[String, String]]("variables")
   def maps: Rep[Map[String, Set[String]]] = column[Map[String, Set[String]]]("maps")

@@ -27,7 +27,12 @@ class KafkaSensor(
   private val kafkaProp = KafkaProperties(triggerProperties.properties)
 
   private val consumer = new KafkaConsumer[String, String](KafkaConfig.getConsumerProperties(kafkaProp))
-  consumer.subscribe(Collections.singletonList(kafkaProp.topic))
+
+  try {
+    consumer.subscribe(Collections.singletonList(kafkaProp.topic))
+  } catch {
+    case e: Exception => logger.debug(s"$logMsgPrefix. Exception during subscribe.", e)
+  }
 
   override def poll(): Future[Unit] = {
     logger.debug(s"$logMsgPrefix. Pooling new events.")
@@ -46,6 +51,7 @@ class KafkaSensor(
   }
 
   private def processRecords[A](records: Iterable[ConsumerRecord[A, String]]): Future[Unit] = {
+    logger.debug(s"$logMsgPrefix. Messages received = ${records.map(_.value())}")
     if(records.nonEmpty)
       eventsProcessor.apply(records.map(recordToEvent).toSeq, triggerProperties).map(_ => ():Unit)
     else

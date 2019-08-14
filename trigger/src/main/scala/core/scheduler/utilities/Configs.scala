@@ -11,6 +11,18 @@ import scala.util.Try
 
 private object Configs {
   val conf: Config = ConfigFactory.load()
+
+  def getMapFromConf(propertyName: String): Map[String, String] = {
+    Try {
+      val list = Configs.conf.getObjectList(propertyName).asScala
+      (for {
+        item: ConfigObject <- list
+        entry <- item.entrySet().asScala
+        key = entry.getKey
+        value = entry.getValue.unwrapped().toString
+      } yield (key, value)).toMap
+    }.getOrElse(Map.empty[String, String])
+  }
 }
 
 object KafkaConfig {
@@ -21,8 +33,11 @@ object KafkaConfig {
     properties.put("key.deserializer", Configs.conf.getString("kafkaSource.key.deserializer"))
     properties.put("value.deserializer", Configs.conf.getString("kafkaSource.value.deserializer"))
     properties.put("max.poll.records", Configs.conf.getString("kafkaSource.max.poll.records"))
-    properties.put("enable.auto.commit", "false")
-    properties.put("auto.offset.reset", "latest")
+
+    Configs.getMapFromConf("kafkaSource.properties").foreach { case (key, value)  =>
+      properties.put(key, value)
+    }
+
     properties
   }
 
@@ -60,16 +75,6 @@ object SparkExecutorConfig {
     Configs.conf.getString("sparkYarnSink.hadoopResourceManagerUrlBase")
   def getFilesToDeploy: Seq[String] =
     Try(Configs.conf.getStringList("sparkYarnSink.filesToDeploy").asScala).getOrElse(Seq.empty[String])
-  def getAdditionalConfs: Map[String, String] = {
-    Try {
-      val list = Configs.conf.getObjectList("sparkYarnSink.additionalConfs").asScala
-      (for {
-        item: ConfigObject <- list
-        entry <- item.entrySet().asScala
-        key = entry.getKey
-        value = entry.getValue.unwrapped().toString
-      } yield (key, value)).toMap
-    }.getOrElse(Map.empty[String, String])
-  }
-
+  def getAdditionalConfs: Map[String, String] =
+    Configs.getMapFromConf("sparkYarnSink.additionalConfs")
 }

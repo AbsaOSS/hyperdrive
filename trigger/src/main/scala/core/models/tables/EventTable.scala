@@ -8,7 +8,7 @@ import slick.lifted.ProvenShape
 
 final class EventTable(tag: Tag) extends Table[Event](tag, _tableName = "event") {
 
-  def sensorEventId: Rep[String] = column[String]("sensor_event_id", O.Length(30), O.Unique)
+  def sensorEventId: Rep[String] = column[String]("sensor_event_id", O.Length(70), O.Unique)
   def payload: Rep[JsValue] = column[JsValue]("payload")
   def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc, O.SqlType("BIGSERIAL"))
 
