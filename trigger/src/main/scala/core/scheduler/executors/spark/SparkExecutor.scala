@@ -17,6 +17,7 @@ import core.scheduler.executors.Executor
 import core.scheduler.utilities.SparkExecutorConfig
 import play.api.libs.ws.JsonBodyReadables._
 import core.scheduler.executors.spark.{FinalStatuses => YarnFinalStatuses}
+import org.slf4j.LoggerFactory
 
 object SparkExecutor extends Executor {
   private val wsClient = StandaloneAhcWSClient()(ActorMaterializer()(ActorSystem()))
@@ -56,7 +57,10 @@ object SparkExecutor extends Executor {
   private def getSparkLauncher(id: String, jobName: String, jobParameters: JobParameters): SparkLauncher = {
     val sparkParameters = SparkParameters(jobParameters)
 
-    val sparkLauncher = new SparkLauncher(Map("HADOOP_CONF_DIR" -> SparkExecutorConfig.getHadoopConfDir).asJava)
+    val sparkLauncher = new SparkLauncher(Map(
+      "HADOOP_CONF_DIR" -> SparkExecutorConfig.getHadoopConfDir,
+      "SPARK_PRINT_LAUNCH_COMMAND" -> "1"
+    ).asJava)
       .setMaster(SparkExecutorConfig.getMaster)
       .setDeployMode(sparkParameters.deploymentMode)
       .setMainClass(sparkParameters.mainClass)
@@ -65,6 +69,8 @@ object SparkExecutor extends Executor {
       .setAppName(jobName)
       .setConf("spark.yarn.tags", id)
       .addAppArgs(sparkParameters.appArguments.toSeq:_*)
+      .addSparkArg("--verbose")
+      .redirectToLog(LoggerFactory.getLogger(s"SparkExecutor.executorJobId=$id").getName)
     SparkExecutorConfig.getFilesToDeploy.foreach(file => sparkLauncher.addFile(file))
     SparkExecutorConfig.getAdditionalConfs.foreach(conf => sparkLauncher.setConf(conf._1, conf._2))
 
