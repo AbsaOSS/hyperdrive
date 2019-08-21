@@ -50,7 +50,7 @@ private[factories] object KafkaStreamReaderFactory extends StreamReaderFactory {
     brokers.mkString(",")
   }
 
-  private def getExtraOptions(configuration: Configuration): Map[String,String] = {
+  private def getPredefinedExtraOptions(configuration: Configuration): Map[String,String] = {
     val securityKeys = Seq(KEY_SECURITY_PROTOCOL, KEY_TRUSTSTORE_LOCATION, KEY_TRUSTSTORE_PASSWORD, KEY_KEYSTORE_LOCATION, KEY_KEYSTORE_PASSWORD, KEY_KEY_PASSWORD)
 
     val extraConfs = securityKeys.foldLeft(Map[String,String]()) {
@@ -70,10 +70,45 @@ private[factories] object KafkaStreamReaderFactory extends StreamReaderFactory {
     }
   }
 
+  private def getExtraOptions(configuration: Configuration): Map[String,String] = {
+    val optionalKeys = getKeysFromPrefix(configuration, rootFactoryOptionalKafkaKey)
+
+    val extraConfs = optionalKeys.foldLeft(Map[String,String]()) {
+      case (map,securityKey) =>
+        getOrNone(securityKey, configuration) match {
+          case Some(value) => map + (tweakOptionKeyName(securityKey) -> value)
+          case None => map
+        }
+    }
+
+    if (extraConfs.isEmpty || extraConfs.size == optionalKeys.size) {
+      extraConfs
+    }
+    else {
+      logger.warn(s"Assuming no security settings, since some appear to be missing: {${findMissingKeys(optionalKeys, extraConfs)}}")
+      Map[String,String]()
+    }
+  }
+
+  private def getKeysFromPrefix(configuration: Configuration, prefix: String): Seq[String] = {
+    val optionalKeys = configuration.getKeys(prefix)
+
+    if (optionalKeys != null) {
+      import scala.collection.JavaConverters._
+      optionalKeys.asScala.toSeq
+    } else {
+      Seq[String]()
+    }
+  }
+
   private def findMissingKeys(keys: Seq[String], map: Map[String,String]): Seq[String] = keys.filterNot(map.contains(_))
 
   private def tweakKeyName(key: String): String = {
     key.replace(s"$rootComponentConfKey.", "") // remove the component root configuration key
+  }
+
+  private def tweakOptionKeyName(key: String): String = {
+    key.replace(s"$rootFactoryOptionalConfKey.", "") // remove the component root.option configuration key
   }
 
   private def filterKeysContaining(map: Map[String,String], exclusionToken: String): Map[String,String] = map.filterKeys(!_.contains(exclusionToken))

@@ -35,6 +35,9 @@
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
         </repository>
     </repositories>
 

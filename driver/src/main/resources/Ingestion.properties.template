@@ -31,12 +31,12 @@ ingestor.spark.app.name=ingestor-app-pane
 # Source(Kafka) settings
 reader.kafka.topic=souce-payload-topic
 reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
-#reader.kafka.security.protocol=SSL
-#reader.kafka.ssl.truststore.location=path/to/your/truststore.jks
-#reader.kafka.ssl.truststore.password=your_truststore_password
-#reader.kafka.ssl.keystore.location=path/to/your/keystore.jks
-#reader.kafka.ssl.keystore.password=your_keystore_password
-#reader.kafka.ssl.key.password=your_ssl_password
+#reader.option.kafka.security.protocol=SSL
+#reader.option.kafka.ssl.truststore.location=path/to/your/truststore.jks
+#reader.option.kafka.ssl.truststore.password=your_truststore_password
+#reader.option.kafka.ssl.keystore.location=path/to/your/keystore.jks
+#reader.option.kafka.ssl.keystore.password=your_keystore_password
+#reader.option.kafka.ssl.key.password=your_ssl_password
 
 # Offset management(checkpointing) settings
 manager.checkpoint.base.location=/tmp/checkpoint-location

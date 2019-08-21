@@ -87,18 +87,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     assert(brokers == kafkaStreamReader.brokers)
 
     import kafkaStreamReader.extraConfs
-    securityConfsMap.foreach {case(key,value) => assert(value == extraConfs(removeComponentFromKey(key)))}
-  }
-
-  it should "assume empty security configurations if any is missing" in {
-    stubTopic()
-    stubBrokers()
-    stubSecurity(Set(KEY_SECURITY_PROTOCOL))
-
-    val kafkaStreamReader: KafkaStreamReader = KafkaStreamReaderFactory.build(configStub).asInstanceOf[KafkaStreamReader]
-    assert(topic == kafkaStreamReader.topic)
-    assert(brokers == kafkaStreamReader.brokers)
-    assert(kafkaStreamReader.extraConfs.isEmpty)
+    securityConfsMap.foreach {case(key,value) => assert(value == extraConfs(removeOptionalComponentFromKey(key)))}
   }
 
   private def stubProperty(key: String, value: String): Unit = configStub.addProperty(key, value)
@@ -114,4 +103,6 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
   }
 
   private def removeComponentFromKey(key: String): String = key.replaceAll(s"$rootComponentConfKey.", "")
+
+  private def removeOptionalComponentFromKey(key: String): String = key.replaceAll(s"$rootFactoryOptionalConfKey.", "")
 }

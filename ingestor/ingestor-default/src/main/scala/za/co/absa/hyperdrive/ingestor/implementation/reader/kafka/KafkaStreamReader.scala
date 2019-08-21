@@ -18,6 +18,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -37,6 +38,8 @@ private[reader] object KafkaStreamReaderProps {
   * @param extraConfs Extra configurations, e.g. SSL params.
   */
 class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Map[String,String]) extends StreamReader {
+
+  private val logger = LogManager.getLogger()
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException(s"Invalid topic: '$topic'")
@@ -68,6 +71,8 @@ class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: 
       throw new IllegalStateException("SparkSession is stopped.")
     }
 
+    setSystemAuthProps()
+
     val streamReader = spark
       .readStream
       .format(STREAM_FORMAT_KAFKA_NAME)
@@ -80,4 +85,22 @@ class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: 
   }
 
   override def getSourceName: String = s"Kafka topic: $topic"
+
+  private def setSystemAuthProps(): Unit = {
+    extraConfs.keys.foreach(key => {
+      if (key.contains("truststore.location")) {
+        System.setProperty("javax.net.ssl.trustStore", extraConfs(key))
+        logger.info(s"SET SYSTEM PROPERTY: 'javax.net.ssl.trustStore' = ${extraConfs(key)}")
+      } else if (key.contains("truststore.password")) {
+        System.setProperty("javax.net.ssl.trustStorePassword", extraConfs(key))
+        logger.info(s"SET SYSTEM PROPERTY: 'javax.net.ssl.trustStorePassword' = ${extraConfs(key)}")
+      } else if (key.contains("keystore.location")) {
+        System.setProperty("javax.net.ssl.keyStore", extraConfs(key))
+        logger.info(s"SET SYSTEM PROPERTY: 'javax.net.ssl.keyStore' = ${extraConfs(key)}")
+      } else if (key.contains("keystore.password")) {
+        System.setProperty("javax.net.ssl.keyStorePassword", extraConfs(key))
+        logger.info(s"SET SYSTEM PROPERTY: 'javax.net.ssl.keyStorePassword' = ${extraConfs(key)}")
+      }
+    })
+  }
 }
