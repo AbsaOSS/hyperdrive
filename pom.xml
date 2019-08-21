@@ -32,12 +32,9 @@
         <module>trigger</module>
         <module>parent-conf</module>
 
-        <module>ingestor/reader</module>
-        <module>ingestor/writer</module>
-        <module>ingestor/transformer</module>
-        <module>ingestor/manager</module>
+        <module>ingestor/api</module>
+        <module>ingestor/ingestor-default</module>
         <module>ingestor/shared</module>
-        <module>ingestor/decoder</module>
     </modules>
 
 </project>

@@ -40,15 +40,17 @@ object ConfigurationsKeys {
   object KafkaStreamReaderKeys {
     val rootComponentConfKey = "reader"
     val rootFactoryConfKey = s"$rootComponentConfKey.kafka"
+    val rootFactoryOptionalConfKey = s"$rootComponentConfKey.option"
+    val rootFactoryOptionalKafkaKey = s"$rootFactoryOptionalConfKey.kafka"
 
     val KEY_TOPIC = s"$rootFactoryConfKey.topic"
     val KEY_BROKERS = s"$rootFactoryConfKey.brokers"
-    val KEY_SECURITY_PROTOCOL = s"$rootFactoryConfKey.security.protocol"
-    val KEY_TRUSTSTORE_LOCATION = s"$rootFactoryConfKey.ssl.truststore.location"
-    val KEY_TRUSTSTORE_PASSWORD = s"$rootFactoryConfKey.ssl.truststore.password"
-    val KEY_KEYSTORE_LOCATION = s"$rootFactoryConfKey.ssl.keystore.location"
-    val KEY_KEYSTORE_PASSWORD = s"$rootFactoryConfKey.ssl.keystore.password"
-    val KEY_KEY_PASSWORD = s"$rootFactoryConfKey.ssl.key.password"
+    val KEY_SECURITY_PROTOCOL = s"$rootFactoryOptionalKafkaKey.security.protocol"
+    val KEY_TRUSTSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.truststore.location"
+    val KEY_TRUSTSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.truststore.password"
+    val KEY_KEYSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.keystore.location"
+    val KEY_KEYSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.keystore.password"
+    val KEY_KEY_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.key.password"
   }
 
   object ColumnSelectorStreamTransformerKeys {

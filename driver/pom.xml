@@ -34,27 +34,12 @@
         <!--Components from the project-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>reader</artifactId>
+            <artifactId>api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>transformer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>decoder</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>writer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>manager</artifactId>
+            <artifactId>ingestor-default</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
