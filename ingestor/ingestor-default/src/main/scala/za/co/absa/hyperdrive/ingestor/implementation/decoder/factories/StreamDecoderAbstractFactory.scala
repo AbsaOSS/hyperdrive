@@ -21,8 +21,6 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.StreamDecoderFactory
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent.ConfluentAvroKafkaStreamDecoderFactory
-
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -35,9 +33,6 @@ object StreamDecoderAbstractFactory {
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.decoder"
 
-  private val factoryMap = Map[String,StreamDecoderFactory](
-    ConfluentAvroKafkaStreamDecoderFactory.name.toLowerCase -> ConfluentAvroKafkaStreamDecoderFactory)
-
   def build(config: Configuration): StreamDecoder = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
@@ -46,6 +41,4 @@ object StreamDecoderAbstractFactory {
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamDecoderFactory](factoryName)
     factory.build(config)
   }
-
-  def getAvailableFactories: Set[String] = factoryMap.keys.toSet
 }

@@ -21,8 +21,6 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.implementation.manager.OffsetManagerFactory
-import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory
-
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -33,9 +31,6 @@ object OffsetManagerAbstractFactory {
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.manager"
 
-  private val factoryMap = Map[String,OffsetManagerFactory](
-    CheckpointOffsetManagerFactory.name.toLowerCase -> CheckpointOffsetManagerFactory)
-
   def build(config: Configuration): OffsetManager = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
@@ -44,6 +39,4 @@ object OffsetManagerAbstractFactory {
     val factory = ClassLoaderUtils.loadSingletonClassOfType[OffsetManagerFactory](factoryName)
     factory.build(config)
   }
-
-  def getAvailableFactories: Set[String] = factoryMap.keys.toSet
 }

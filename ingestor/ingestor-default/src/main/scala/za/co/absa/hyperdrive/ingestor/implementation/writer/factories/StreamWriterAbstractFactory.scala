@@ -21,8 +21,6 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.writer.StreamWriterFactory
-import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet.ParquetStreamWriterFactory
-
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -34,9 +32,6 @@ object StreamWriterAbstractFactory {
 
   val componentConfigKey = "component.writer"
 
-  private val factoryMap = Map[String,StreamWriterFactory](
-    ParquetStreamWriterFactory.name.toLowerCase -> ParquetStreamWriterFactory)
-
   def build(config: Configuration): StreamWriter = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
@@ -45,6 +40,4 @@ object StreamWriterAbstractFactory {
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamWriterFactory](factoryName)
     factory.build(config)
   }
-
-  def getAvailableFactories: Set[String] = factoryMap.keys.toSet
 }

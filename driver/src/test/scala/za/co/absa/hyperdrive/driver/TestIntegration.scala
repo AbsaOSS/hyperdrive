@@ -97,11 +97,11 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
     // Components
     configuration.addProperty(HyperdriveComponentsKeys.KEY_INGESTOR, "spark")
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_READER, StreamReaderAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_MANAGER, OffsetManagerAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_DECODER, StreamDecoderAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_TRANSFORMER, StreamTransformerAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_WRITER, StreamWriterAbstractFactory.getAvailableFactories.head)
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_READER, "za.co.absa.hyperdrive.ingestor.implementation.reader.factories.kafka.KafkaStreamReaderFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_MANAGER, "za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_DECODER, "za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent.ConfluentAvroKafkaStreamDecoderFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_TRANSFORMER, "za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.column.selection.ColumnSelectorStreamTransformerFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_WRITER, "za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet.ParquetStreamWriterFactory")
 
     // StreamReader
     configuration.addProperty(KafkaStreamReaderKeys.KEY_TOPIC, defaultTopic)
