@@ -23,7 +23,7 @@ import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.StreamDecoderFactory
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent.ConfluentAvroKafkaStreamDecoderFactory
 
-import scala.util.{Failure, Success, Try}
+import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
   * Abstract factory for stream decoders.
@@ -43,11 +43,8 @@ object StreamDecoderAbstractFactory {
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-
-    Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory.build(config)
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamDecoderFactory name: '$factoryName'.", exception)
-    }
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamDecoderFactory](factoryName)
+    factory.build(config)
   }
 
   def getAvailableFactories: Set[String] = factoryMap.keys.toSet

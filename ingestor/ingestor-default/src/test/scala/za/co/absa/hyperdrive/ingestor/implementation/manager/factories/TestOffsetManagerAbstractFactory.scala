@@ -34,7 +34,7 @@ class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach 
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create CheckpointOffsetManager" in {
-    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManagerFactory.name)
+    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManagerFactory.getClass.getName)
     when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
     when(configStub.getString(KEY_CHECKPOINT_BASE_LOCATION)).thenReturn("/tmp/checkpoint")
     assert(OffsetManagerAbstractFactory.build(configStub).isInstanceOf[CheckpointOffsetManager])

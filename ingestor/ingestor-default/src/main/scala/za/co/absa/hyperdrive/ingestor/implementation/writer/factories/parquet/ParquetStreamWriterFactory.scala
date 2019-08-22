@@ -29,8 +29,6 @@ import scala.util.{Failure, Success, Try}
 
 private[factories] object ParquetStreamWriterFactory extends StreamWriterFactory {
 
-  override def name: String = "ParquetStreamWriter"
-
   override def build(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
     val extraOptions = getExtraOptions(config)

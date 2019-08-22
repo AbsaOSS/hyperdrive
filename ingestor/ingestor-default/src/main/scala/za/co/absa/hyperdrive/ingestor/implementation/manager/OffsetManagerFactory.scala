@@ -21,6 +21,5 @@ import org.apache.commons.configuration2.Configuration
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 
 trait OffsetManagerFactory {
-  def name: String
   def build(config: Configuration): OffsetManager
 }

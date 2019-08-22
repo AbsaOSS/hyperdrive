@@ -26,8 +26,6 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSele
 
 private[factories] object ColumnSelectorStreamTransformerFactory extends StreamTransformerFactory {
 
-  override def name = "ColumnSelectorStreamTransformer"
-
   override def build (config: Configuration): StreamTransformer = {
     val columns = getColumnsAsSequence(config)
     LogManager.getLogger.info(s"Going to create ColumnSelectorStreamTransformer using: columns='$columns'")

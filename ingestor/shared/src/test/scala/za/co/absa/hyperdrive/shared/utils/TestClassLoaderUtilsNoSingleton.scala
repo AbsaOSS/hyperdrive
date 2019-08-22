@@ -15,11 +15,8 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.transformer
+package za.co.absa.hyperdrive.shared.utils
 
-import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+class TestClassLoaderUtilsNoSingleton {
 
-trait StreamTransformerFactory {
-  def build(config: Configuration): StreamTransformer
 }

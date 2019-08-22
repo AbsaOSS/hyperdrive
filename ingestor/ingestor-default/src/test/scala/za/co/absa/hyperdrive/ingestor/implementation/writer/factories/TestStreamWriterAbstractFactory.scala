@@ -36,7 +36,7 @@ class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach w
 
   it should "create factory for ParquetStreamWriter" in {
     import scala.collection.JavaConverters._
-    when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(ParquetStreamWriterFactory.name)
+    when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(ParquetStreamWriterFactory.getClass.getName)
     when(configStub.getString(KEY_DESTINATION_DIRECTORY)).thenReturn("/tmp/parquet")
     when(configStub.getKeys(KEY_EXTRA_CONFS_ROOT)).thenReturn(Seq[String]().asJava.iterator())
 

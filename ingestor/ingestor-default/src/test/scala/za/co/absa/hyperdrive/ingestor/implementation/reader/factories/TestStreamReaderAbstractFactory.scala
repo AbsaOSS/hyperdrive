@@ -34,7 +34,7 @@ class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach w
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create KafkaStreamReader" in {
-    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReaderFactory.name)
+    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReaderFactory.getClass.getName)
     when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
     when(configStub.getStringArray(KEY_BROKERS)).thenReturn(Array("http://localhost:9092"))
 

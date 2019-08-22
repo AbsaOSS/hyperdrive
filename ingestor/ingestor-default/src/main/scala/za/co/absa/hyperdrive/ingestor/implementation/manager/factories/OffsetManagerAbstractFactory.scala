@@ -23,7 +23,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.implementation.manager.OffsetManagerFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory
 
-import scala.util.{Failure, Success, Try}
+import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
   * To add a new factory, simply append it to "factoryMap".
@@ -41,11 +41,8 @@ object OffsetManagerAbstractFactory {
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-
-    Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory.build(config)
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid OffsetManagerFactory name: '$factoryName'.", exception)
-    }
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[OffsetManagerFactory](factoryName)
+    factory.build(config)
   }
 
   def getAvailableFactories: Set[String] = factoryMap.keys.toSet

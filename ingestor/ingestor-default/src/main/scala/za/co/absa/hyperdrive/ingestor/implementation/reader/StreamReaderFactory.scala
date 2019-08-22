@@ -22,6 +22,5 @@ import org.apache.commons.configuration2.Configuration
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 
 trait StreamReaderFactory {
-  def name: String
   def build(conf: Configuration): StreamReader
 }

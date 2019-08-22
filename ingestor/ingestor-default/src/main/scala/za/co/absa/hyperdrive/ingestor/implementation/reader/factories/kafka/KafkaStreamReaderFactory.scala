@@ -29,8 +29,6 @@ private[factories] object KafkaStreamReaderFactory extends StreamReaderFactory {
 
   private val logger = LogManager.getLogger
 
-  def name = "KafkaStreamReader"
-
   override def build(conf: Configuration): StreamReader = {
     val topic = getTopic(conf)
     val brokers = getBrokers(conf)

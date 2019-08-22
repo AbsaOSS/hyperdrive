@@ -23,7 +23,7 @@ import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.writer.StreamWriterFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet.ParquetStreamWriterFactory
 
-import scala.util.{Failure, Success, Try}
+import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
   * To add a new factory, just add it to "factoryMap" below.
@@ -42,11 +42,8 @@ object StreamWriterAbstractFactory {
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-
-    Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory.build(config)
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamWriterFactory name: '$factoryName'.", exception)
-    }
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamWriterFactory](factoryName)
+    factory.build(config)
   }
 
   def getAvailableFactories: Set[String] = factoryMap.keys.toSet
