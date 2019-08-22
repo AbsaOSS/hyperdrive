@@ -40,7 +40,7 @@ class JobInstanceRepositoryImpl extends JobInstanceRepository {
   )
 
   override def getJobInstances(jobDefinitionId: Long)(implicit ec: ExecutionContext): Future[Seq[JobInstance]] = db.run(
-    jobInstanceTable.filter(_.jobDefinitionId === jobDefinitionId).result
+    jobInstanceTable.filter(_.jobDefinitionId === jobDefinitionId).sortBy(_.id).result
   )
 
   override def getOverallStatistics()(implicit ec: ExecutionContext): Future[OverallStatistics] = db.run {
@@ -68,7 +68,7 @@ class JobInstanceRepositoryImpl extends JobInstanceRepository {
         jobInstances.filter(_.jobStatus.inSet(Seq(InQueue))).size,
         jobInstances.filter(_.jobStatus.inSet(JobStatuses.statuses.filter(_.isRunning))).size
       )
-    }).result
+    }).sortBy(_._2).result
   }.map(_.map((PerWorkflowStatistics.apply _).tupled(_)))
 
 }

@@ -37,7 +37,7 @@ class WorkflowRepositoryImpl extends WorkflowRepository {
   )
 
   override def getWorkflows()(implicit ec: ExecutionContext): Future[Seq[Workflow]] = db.run(
-    workflowTable.result
+    workflowTable.sortBy(_.name).result
   )
 
   override def deleteWorkflow(id: Long)(implicit ec: ExecutionContext): Future[Unit] = db.run(
