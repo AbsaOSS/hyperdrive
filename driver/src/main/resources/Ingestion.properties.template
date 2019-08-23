@@ -46,6 +46,11 @@ decoder.avro.schema.registry.url=http://localhost:8081
 decoder.avro.value.schema.id=latest
 # options = {topic.name, record.name, topic.record.name}
 decoder.avro.value.schema.naming.strategy=topic.name
+
+# for the case when the naming strategy is either record.name or topic.record.name
+#decoder.avro.value.schema.record.name = recordName
+#decoder.avro.value.schema.record.namespace = recordNamespace
+
 # options = {RETAIN_SELECTED_COLUMN_ONLY, RETAIN_ORIGINAL_SCHEMA}
 decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
 

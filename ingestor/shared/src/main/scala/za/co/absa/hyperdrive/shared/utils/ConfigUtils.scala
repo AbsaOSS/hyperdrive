@@ -18,7 +18,6 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.shared.data.TestSchemas.ErrorMessage
 
 import scala.util.{Failure, Success, Try}
 
