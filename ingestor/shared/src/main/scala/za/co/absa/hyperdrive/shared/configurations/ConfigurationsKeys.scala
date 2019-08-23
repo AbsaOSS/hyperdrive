@@ -66,6 +66,9 @@ object ConfigurationsKeys {
     val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = s"$rootFactoryConfKey.value.schema.naming.strategy"
     val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = s"$rootFactoryConfKey.value.schema.id"
     val KEY_SCHEMA_RETENTION_POLICY = s"$rootFactoryConfKey.schema.retention.policy"
+
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = s"$rootFactoryConfKey.value.schema.record.name"
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = s"$rootFactoryConfKey.value.schema.record.namespace"
   }
 
   object CheckpointOffsetManagerKeys {

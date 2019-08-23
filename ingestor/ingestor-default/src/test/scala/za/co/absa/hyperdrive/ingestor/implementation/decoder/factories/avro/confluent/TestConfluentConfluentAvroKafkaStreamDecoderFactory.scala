@@ -24,6 +24,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
+import SchemaManager._
 
 class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
@@ -41,12 +42,12 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
 
   private val configStub = mock[Configuration]
 
-  override def beforeEach(): Unit = reset(configStub)
+  override def beforeEach(): Unit = org.mockito.Mockito.reset(configStub)
 
   behavior of ConfluentAvroKafkaStreamDecoderFactory.getClass.getSimpleName
 
   it should "throw if topic is not informed" in {
-    stubSchemaRegistrySettings()
+    stubSchemaRegistrySettings(schemaRegistrySettings)
     stubSchemaRetentionPolicy()
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
@@ -55,7 +56,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
 
   it should "throw if retention policy is missing" in {
     stubTopic()
-    stubSchemaRegistrySettings()
+    stubSchemaRegistrySettings(schemaRegistrySettings)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
     assert(throwable.getMessage.toLowerCase.contains("retention"))
@@ -63,7 +64,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
 
   it should "throw if invalid retention policy specified" in {
     stubTopic()
-    stubSchemaRegistrySettings()
+    stubSchemaRegistrySettings(schemaRegistrySettings)
     stubSchemaRetentionPolicy(policy = "invalid-retention-policy")
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
@@ -81,25 +82,129 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
             beforeEach()
             stubTopic()
             stubSchemaRetentionPolicy()
-            stubSchemaRegistrySettings(Set(configKey))
+            stubSchemaRegistrySettings(schemaRegistrySettings, Set(configKey))
 
             val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
             assert(throwable.getMessage.toLowerCase.contains(expectedTokenInError))
         }
   }
 
-  it should "create avro stream decoder instance" in {
+  it should "throw on record name not available if record.name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaStorageNamingStrategies.RECORD_NAME
+    )
+
     stubTopic()
     stubSchemaRetentionPolicy()
-    stubSchemaRegistrySettings()
+    stubSchemaRegistrySettings(settings)
+
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    assert(throwable.getMessage.toLowerCase.contains("record.name"))
+  }
+
+  it should "throw on record namespace not available if record.name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaStorageNamingStrategies.RECORD_NAME,
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> "any.name"
+    )
+
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(settings)
+
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    assert(throwable.getMessage.toLowerCase.contains("record.namespace"))
+  }
+
+  it should "throw on record name not available if topic.record.name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
+    )
+
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(settings)
+
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    assert(throwable.getMessage.toLowerCase.contains("record.name"))
+  }
+
+  it should "throw on record namespace not available if topic.record.name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> "any.name"
+    )
+
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(settings)
+
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    assert(throwable.getMessage.toLowerCase.contains("record.namespace"))
+  }
+
+  it should "create avro stream decoder instance with topic naming strategy" in {
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(schemaRegistrySettings)
 
     val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
     assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
-    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(SchemaManager.PARAM_SCHEMA_REGISTRY_URL))
-    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(SchemaManager.PARAM_VALUE_SCHEMA_ID))
-    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
+    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
+    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
+    assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
+  }
+
+  it should "create avro stream decoder instance with record name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> "any.name",
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> "any.namespace"
+    )
+
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(settings)
+
+    val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+
+    assert(topic == decoder.topic)
+    assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
+    assert(settings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME) == decoder.schemaRegistrySettings(PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE) == decoder.schemaRegistrySettings(PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY))
+  }
+
+  it should "create avro stream decoder instance with topic record name naming strategy" in {
+    val settings = schemaRegistrySettings ++ Map[String,String](
+      KEY_SCHEMA_REGISTRY_URL -> schemaRegistryURL,
+      KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> "any.name",
+      KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> "any.namespace"
+    )
+
+    stubTopic()
+    stubSchemaRetentionPolicy()
+    stubSchemaRegistrySettings(settings)
+
+    val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+
+    assert(topic == decoder.topic)
+    assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
+    assert(settings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME) == decoder.schemaRegistrySettings(PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY))
+    assert(settings(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE) == decoder.schemaRegistrySettings(PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY))
   }
 
   private def stubProperty(key: String, value: String): Unit = when(configStub.getString(key)).thenReturn(value)
@@ -108,8 +213,8 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
 
   private def stubSchemaRetentionPolicy(policy: String = schemaRetentionPolicy): Unit = stubProperty(KEY_SCHEMA_RETENTION_POLICY, policy)
 
-  private def stubSchemaRegistrySettings(keysToExclude: Set[String] = Set[String]()): Unit = {
-      schemaRegistrySettings
+  private def stubSchemaRegistrySettings(settings: Map[String,String], keysToExclude: Set[String] = Set[String]()): Unit = {
+    settings
       .filterKeys(!keysToExclude.contains(_))
       .foreach {case(key,value) => stubProperty(key, value)}
   }
