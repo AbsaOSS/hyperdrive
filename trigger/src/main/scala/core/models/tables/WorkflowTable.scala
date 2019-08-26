@@ -7,7 +7,7 @@ import slick.lifted.ProvenShape
 import core.models.tables.JDBCProfile.profile._
 
 final class WorkflowTable(tag: Tag) extends Table[Workflow](tag, _tableName = "workflow") {
-  def name: Rep[String] = column[String]("name", O.Unique, O.Length(30))
+  def name: Rep[String] = column[String]("name", O.Unique, O.Length(45))
   def isActive: Rep[Boolean] = column[Boolean]("is_active")
   def created: Rep[LocalDateTime] = column[LocalDateTime]("created")
   def updated: Rep[Option[LocalDateTime]] = column[Option[LocalDateTime]]("updated")

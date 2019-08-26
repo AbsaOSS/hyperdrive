@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class InMemoryAuthentication extends HyperdriverAuthentication {
   val username: String = "hyperdriver-user"
-  val password: String = "hyperdriver"
+  val password: String = "hyperdriver-password"
 
   def validateParams() {
     if (username.isEmpty || password.isEmpty) {
