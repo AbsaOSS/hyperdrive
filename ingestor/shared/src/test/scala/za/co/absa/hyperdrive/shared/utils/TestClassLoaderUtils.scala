@@ -17,6 +17,8 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
+import java.net.{URL, URLClassLoader}
+
 import org.scalatest.FlatSpec
 
 class TestClassLoaderUtils extends FlatSpec {
@@ -31,6 +33,23 @@ class TestClassLoaderUtils extends FlatSpec {
     // then
     assert(singleton.isInstanceOf[TestClassLoaderUtilsTestTrait])
     assert(singleton.equals(TestClassLoaderUtilsSingletonInstanceOf))
+  }
+
+  it should "return the singleton class for a given trait and fully qualified class name from other jar" in {
+    // given
+    val jarPath: URL = getClass.getClassLoader.getResource("TestClassLoaderUtilsOther.jar")
+    val classLoader = ClassLoaderUtils.getClass.getClassLoader.asInstanceOf[URLClassLoader]
+    val method = classLoader.getClass.getSuperclass.getDeclaredMethod("addURL", classOf[URL])
+    method.setAccessible(true)
+    method.invoke(classLoader, jarPath)
+
+    val className = "za.co.absa.hyperdrive.shared.utils.TestClassLoaderUtilsSingletonInstanceOther"
+
+    // when
+    val singleton = ClassLoaderUtils.loadSingletonClassOfType[TestClassLoaderUtilsTestTrait](className)
+
+    // then
+    assert(singleton.isInstanceOf[TestClassLoaderUtilsTestTrait])
   }
 
   it should "throw if the given class does not exist" in {
