@@ -21,9 +21,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.implementation.reader.StreamReaderFactory
-import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.kafka.KafkaStreamReaderFactory
-
-import scala.util.{Failure, Success, Try}
+import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
   * Abstract factory for stream readers.
@@ -35,20 +33,12 @@ object StreamReaderAbstractFactory {
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.reader"
 
-  private val factoryMap = Map[String,StreamReaderFactory](
-    KafkaStreamReaderFactory.name -> KafkaStreamReaderFactory)
-
   def build(config: Configuration): StreamReader = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-
-    Try(factoryMap(factoryName)) match {
-      case Success(factory) => factory.build(config)
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamReaderFactory name: '$factoryName'.", exception)
-    }
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamReaderFactory](factoryName)
+    factory.build(config)
   }
-
-  def getAvailableFactories: Set[String] = factoryMap.keys.toSet
 }

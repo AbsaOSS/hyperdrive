@@ -21,6 +21,5 @@ import org.apache.commons.configuration2.Configuration
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 
 trait StreamDecoderFactory {
-  def name: String
   def build(config: Configuration): StreamDecoder
 }

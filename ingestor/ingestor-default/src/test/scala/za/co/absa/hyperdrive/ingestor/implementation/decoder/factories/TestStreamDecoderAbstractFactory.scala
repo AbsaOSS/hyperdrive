@@ -35,7 +35,7 @@ class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
   behavior of StreamDecoderAbstractFactory.getClass.getSimpleName
 
   it should "create AvroStreamDecoder" in {
-    when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(ConfluentAvroKafkaStreamDecoderFactory.name)
+    when(configStub.getString(StreamDecoderAbstractFactory.componentConfigKey)).thenReturn(ConfluentAvroKafkaStreamDecoderFactory.getClass.getName)
     when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
     when(configStub.getString(KEY_SCHEMA_REGISTRY_URL)).thenReturn("http://localhost:8081")
     when(configStub.getString(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID)).thenReturn("latest")

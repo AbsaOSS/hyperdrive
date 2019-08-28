@@ -31,8 +31,6 @@ import za.co.absa.hyperdrive.shared.utils.ConfigUtils._
 
 private[factories] object ConfluentAvroKafkaStreamDecoderFactory extends StreamDecoderFactory {
 
-  override def name: String = "ConfluentAvroKafkaStreamDecoder"
-
   override def build(config: Configuration): StreamDecoder = {
     val topic = getTopic(config)
     val schemaRegistrySettings = getSchemaRegistrySettings(config)

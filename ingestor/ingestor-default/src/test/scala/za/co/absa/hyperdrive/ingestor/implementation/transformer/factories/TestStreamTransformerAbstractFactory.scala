@@ -34,7 +34,7 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   behavior of StreamTransformerAbstractFactory.getClass.getSimpleName
 
   it should "create factory for ColumnSelectorStreamTransformer" in {
-    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformerFactory.name)
+    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformerFactory.getClass.getName)
     when(configStub.getStringArray(KEY_COLUMNS_TO_SELECT)).thenReturn(Array("*"))
 
     assert(StreamTransformerAbstractFactory.build(configStub).isInstanceOf[ColumnSelectorStreamTransformer])

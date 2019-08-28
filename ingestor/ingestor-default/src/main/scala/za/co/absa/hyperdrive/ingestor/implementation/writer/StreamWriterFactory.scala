@@ -21,6 +21,5 @@ import org.apache.commons.configuration2.Configuration
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 
 trait StreamWriterFactory {
-  def name: String
   def build(config: Configuration): StreamWriter
 }

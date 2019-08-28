@@ -27,8 +27,6 @@ import za.co.absa.hyperdrive.shared.utils.ConfigUtils._
 
 private[factories] object CheckpointOffsetManagerFactory extends OffsetManagerFactory {
 
-  override def name: String = "CheckpointOffsetManager"
-
   override def build(config: Configuration): OffsetManager = {
     val topic = getTopic(config)
     val checkpointBaseLocation = getCheckpointLocation(config)

@@ -21,9 +21,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.StreamTransformerFactory
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.column.selection.ColumnSelectorStreamTransformerFactory
-
-import scala.util.{Failure, Success, Try}
+import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
   * Abstract factory for stream transformers.
@@ -35,20 +33,12 @@ object StreamTransformerAbstractFactory {
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.transformer"
 
-  private val factoryMap = Map[String,StreamTransformerFactory](
-    ColumnSelectorStreamTransformerFactory.name.toLowerCase -> ColumnSelectorStreamTransformerFactory)
-
   def build(config: Configuration): StreamTransformer = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-
-    Try(factoryMap(factoryName.toLowerCase)) match {
-      case Success(factory) => factory.build(config)
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid StreamTransformerFactory name: '$factoryName'.", exception)
-    }
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamTransformerFactory](factoryName)
+    factory.build(config)
   }
-
-  def getAvailableFactories: Set[String] = factoryMap.keys.toSet
 }
