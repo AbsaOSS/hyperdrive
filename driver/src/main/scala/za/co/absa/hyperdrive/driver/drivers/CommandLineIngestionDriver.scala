@@ -44,8 +44,8 @@ object CommandLineIngestionDriver extends IngestionDriver {
   }
 
   private def setOrThrow(setting: String, configuration: Configuration): Unit = {
-    val settingKeyValue = setting.trim.split("=")
-    if (settingKeyValue.length != 2) {
+    val settingKeyValue = setting.trim.split("=", 2)
+    if (settingKeyValue.length != 2 || settingKeyValue.exists(_.isEmpty)) {
       throw new IllegalArgumentException(s"Invalid setting format: $setting")
     }
     configuration.setProperty(settingKeyValue(0), settingKeyValue(1))

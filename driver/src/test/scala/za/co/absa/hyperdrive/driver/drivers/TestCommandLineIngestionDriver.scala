@@ -52,7 +52,8 @@ class TestCommandLineIngestionDriver extends FlatSpec {
       KEY_KEYSTORE_PASSWORD -> "any-keystore!!@#$% password",
       KEY_KEYSTORE_LOCATION -> "/tmp/wherever/keystore.jks",
       KEY_TRUSTSTORE_PASSWORD -> "kd9910))383(((*-+",
-      KEY_TRUSTSTORE_LOCATION -> "another/place/truststore.jks"
+      KEY_TRUSTSTORE_LOCATION -> "another/place/truststore.jks",
+      "key.equals.sign.in.value" -> "value1=value2"
     )
   }
 }
