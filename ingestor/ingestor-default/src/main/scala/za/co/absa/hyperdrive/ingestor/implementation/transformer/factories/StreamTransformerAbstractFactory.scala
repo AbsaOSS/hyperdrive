@@ -19,8 +19,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.StreamTransformerFactory
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -39,6 +38,6 @@ object StreamTransformerAbstractFactory {
 
     val factoryName = config.getString(componentConfigKey)
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamTransformerFactory](factoryName)
-    factory.build(config)
+    factory.apply(config)
   }
 }

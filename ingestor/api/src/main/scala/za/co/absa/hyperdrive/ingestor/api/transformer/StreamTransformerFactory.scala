@@ -15,11 +15,10 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.transformer
+package za.co.absa.hyperdrive.ingestor.api.transformer
 
 import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 
 trait StreamTransformerFactory {
-  def build(config: Configuration): StreamTransformer
+  def apply(config: Configuration): StreamTransformer
 }

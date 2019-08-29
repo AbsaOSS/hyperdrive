@@ -15,14 +15,13 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.transformer
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection
 
 import org.apache.spark.sql.DataFrame
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 
 class TestColumnSelectorStreamTransformer extends FlatSpec with MockitoSugar {
 
