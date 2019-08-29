@@ -21,7 +21,7 @@
 component.ingestor=spark
 component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 component.decoder=za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent.ConfluentAvroKafkaStreamDecoderFactory
-component.manager=za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory
+component.manager=za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 component.transformer=za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
