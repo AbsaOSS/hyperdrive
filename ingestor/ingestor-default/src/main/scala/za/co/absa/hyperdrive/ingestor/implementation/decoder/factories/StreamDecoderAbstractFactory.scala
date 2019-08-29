@@ -19,8 +19,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.decoder.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.StreamDecoderFactory
+import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -39,6 +38,6 @@ object StreamDecoderAbstractFactory {
 
     val factoryName = config.getString(componentConfigKey)
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamDecoderFactory](factoryName)
-    factory.build(config)
+    factory.apply(config)
   }
 }

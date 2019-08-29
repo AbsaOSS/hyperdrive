@@ -15,14 +15,13 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder
+package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
 
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
 
 class TestConfluentAvroKafkaStreamDecoder extends FlatSpec with MockitoSugar {
 

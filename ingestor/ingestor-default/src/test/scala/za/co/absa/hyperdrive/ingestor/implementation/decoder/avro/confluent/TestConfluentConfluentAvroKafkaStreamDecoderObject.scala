@@ -15,18 +15,17 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent
+package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
 
 import org.apache.commons.configuration2.Configuration
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
+import za.co.absa.abris.avro.read.confluent.SchemaManager._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
-import SchemaManager._
 
-class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
+class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val topic = "topic"
   private val schemaRetentionPolicy = "RETAIN_SELECTED_COLUMN_ONLY"
@@ -44,13 +43,13 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
 
   override def beforeEach(): Unit = org.mockito.Mockito.reset(configStub)
 
-  behavior of ConfluentAvroKafkaStreamDecoderFactory.getClass.getSimpleName
+  behavior of ConfluentAvroKafkaStreamDecoder.getClass.getSimpleName
 
   it should "throw if topic is not informed" in {
     stubSchemaRegistrySettings(schemaRegistrySettings)
     stubSchemaRetentionPolicy()
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
   }
 
@@ -58,7 +57,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubTopic()
     stubSchemaRegistrySettings(schemaRegistrySettings)
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("retention"))
   }
 
@@ -67,7 +66,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRegistrySettings(schemaRegistrySettings)
     stubSchemaRetentionPolicy(policy = "invalid-retention-policy")
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("retention"))
   }
 
@@ -84,7 +83,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
             stubSchemaRetentionPolicy()
             stubSchemaRegistrySettings(schemaRegistrySettings, Set(configKey))
 
-            val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+            val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
             assert(throwable.getMessage.toLowerCase.contains(expectedTokenInError))
         }
   }
@@ -99,7 +98,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("record.name"))
   }
 
@@ -114,7 +113,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("record.namespace"))
   }
 
@@ -128,7 +127,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("record.name"))
   }
 
@@ -143,7 +142,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("record.namespace"))
   }
 
@@ -152,7 +151,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(schemaRegistrySettings)
 
-    val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+    val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
     assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
@@ -173,7 +172,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+    val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
     assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
@@ -196,7 +195,7 @@ class TestConfluentConfluentAvroKafkaStreamDecoderFactory extends FlatSpec with 
     stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
-    val decoder = ConfluentAvroKafkaStreamDecoderFactory.build(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+    val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
     assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
