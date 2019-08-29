@@ -15,15 +15,14 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.reader.factories.kafka
+package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import org.apache.commons.configuration2.DynamicCombinedConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
-class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
+class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
 
   private val configStub  = new DynamicCombinedConfiguration()
 
@@ -44,7 +43,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     KEY_TRUSTSTORE_PASSWORD -> truststorePassword,
     KEY_KEY_PASSWORD -> keyPassword)
 
-  behavior of KafkaStreamReaderFactory.getClass.getSimpleName
+  behavior of KafkaStreamReader.getClass.getSimpleName
 
   override def beforeEach(): Unit = {
     configStub.clear()
@@ -55,7 +54,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     stubBrokers() // setup brokers
     stubSecurity() // setup security
 
-    val throwable = intercept[IllegalArgumentException](KafkaStreamReaderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](KafkaStreamReader(configStub))
     assert(throwable.getMessage.toLowerCase.contains("topic")) // makes sure the error message mentions topic as the source
   }
 
@@ -63,7 +62,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     stubTopic() // setup brokers
     stubSecurity() // setup security
 
-    val throwable = intercept[IllegalArgumentException](KafkaStreamReaderFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](KafkaStreamReader(configStub))
     assert(throwable.getMessage.toLowerCase.contains("brokers")) // makes sure the error message mentions topic as the source
   }
 
@@ -71,7 +70,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     stubTopic()
     stubBrokers()
 
-    val kafkaStreamReader: KafkaStreamReader = KafkaStreamReaderFactory.build(configStub).asInstanceOf[KafkaStreamReader]
+    val kafkaStreamReader: KafkaStreamReader = KafkaStreamReader(configStub).asInstanceOf[KafkaStreamReader]
     assert(topic == kafkaStreamReader.topic)
     assert(brokers == kafkaStreamReader.brokers)
     assert(kafkaStreamReader.extraConfs.isEmpty)
@@ -82,7 +81,7 @@ class TestKafkaStreamReaderFactory extends FlatSpec with BeforeAndAfterEach {
     stubBrokers()
     stubSecurity()
 
-    val kafkaStreamReader: KafkaStreamReader = KafkaStreamReaderFactory.build(configStub).asInstanceOf[KafkaStreamReader]
+    val kafkaStreamReader: KafkaStreamReader = KafkaStreamReader(configStub).asInstanceOf[KafkaStreamReader]
     assert(topic == kafkaStreamReader.topic)
     assert(brokers == kafkaStreamReader.brokers)
 
