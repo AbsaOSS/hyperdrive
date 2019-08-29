@@ -15,14 +15,13 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet
+package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
-class TestParquetStreamWriterFactory extends FlatSpec with BeforeAndAfterEach {
+class TestParquetStreamWriterObject extends FlatSpec with BeforeAndAfterEach {
 
   private val configStub: Configuration = new BaseConfiguration()
 
@@ -31,10 +30,10 @@ class TestParquetStreamWriterFactory extends FlatSpec with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = configStub.clear()
 
-  behavior of ParquetStreamWriterFactory.getClass.getSimpleName
+  behavior of ParquetStreamWriter.getClass.getSimpleName
 
   it should "throw on blank destination directory" in {
-    val throwable = intercept[IllegalArgumentException](ParquetStreamWriterFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](ParquetStreamWriter(configStub))
     assert(throwable.getMessage.toLowerCase.contains("destination"))
   }
 
@@ -42,7 +41,7 @@ class TestParquetStreamWriterFactory extends FlatSpec with BeforeAndAfterEach {
     stubDestinationDirectory()
     stubExtraConfs()
 
-    val writer = ParquetStreamWriterFactory.build(configStub).asInstanceOf[ParquetStreamWriter]
+    val writer = ParquetStreamWriter(configStub).asInstanceOf[ParquetStreamWriter]
     assert(destinationDirectory == writer.getDestination)
     assert(extraConfs.toSet.diff(writer.extraConfOptions.get.toSet).isEmpty)
   }
@@ -50,7 +49,7 @@ class TestParquetStreamWriterFactory extends FlatSpec with BeforeAndAfterEach {
   it should "throw if an extra option is malformed" in {
     stubDestinationDirectory()
 
-    val writer = ParquetStreamWriterFactory.build(configStub).asInstanceOf[ParquetStreamWriter]
+    val writer = ParquetStreamWriter(configStub).asInstanceOf[ParquetStreamWriter]
     assert(destinationDirectory == writer.getDestination)
     assert(writer.extraConfOptions.isEmpty)
   }
@@ -60,7 +59,7 @@ class TestParquetStreamWriterFactory extends FlatSpec with BeforeAndAfterEach {
     stubExtraConfs()
     stubStringConfig(s"$KEY_EXTRA_CONFS_ROOT.wrong.conf","only.key=")
 
-    assertThrows[IllegalArgumentException](ParquetStreamWriterFactory.build(configStub))
+    assertThrows[IllegalArgumentException](ParquetStreamWriter(configStub))
   }
 
   private def stubStringConfig(key: String, value: String): Unit = configStub.addProperty(key, value)

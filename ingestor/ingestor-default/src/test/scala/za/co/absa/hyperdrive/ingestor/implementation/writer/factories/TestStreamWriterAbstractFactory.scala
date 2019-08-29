@@ -22,7 +22,6 @@ import org.mockito.Mockito.{reset, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
-import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet.ParquetStreamWriterFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
@@ -36,7 +35,7 @@ class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach w
 
   it should "create factory for ParquetStreamWriter" in {
     import scala.collection.JavaConverters._
-    when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(ParquetStreamWriterFactory.getClass.getName)
+    when(configStub.getString(StreamWriterAbstractFactory.componentConfigKey)).thenReturn(ParquetStreamWriter.getClass.getName)
     when(configStub.getString(KEY_DESTINATION_DIRECTORY)).thenReturn("/tmp/parquet")
     when(configStub.getKeys(KEY_EXTRA_CONFS_ROOT)).thenReturn(Seq[String]().asJava.iterator())
 

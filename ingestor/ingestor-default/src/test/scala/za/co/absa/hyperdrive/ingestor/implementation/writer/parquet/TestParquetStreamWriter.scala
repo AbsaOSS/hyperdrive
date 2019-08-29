@@ -15,7 +15,7 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer
+package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import java.io.File
 
@@ -28,7 +28,6 @@ import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
-import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 import za.co.absa.hyperdrive.shared.utils.TempDir
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {

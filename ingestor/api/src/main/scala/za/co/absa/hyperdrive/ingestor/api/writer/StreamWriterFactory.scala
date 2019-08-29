@@ -15,11 +15,10 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer
+package za.co.absa.hyperdrive.ingestor.api.writer
 
 import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 
 trait StreamWriterFactory {
-  def build(config: Configuration): StreamWriter
+  def apply(config: Configuration): StreamWriter
 }
