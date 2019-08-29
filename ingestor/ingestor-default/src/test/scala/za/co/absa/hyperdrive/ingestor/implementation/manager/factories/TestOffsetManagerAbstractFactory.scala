@@ -22,7 +22,6 @@ import org.mockito.Mockito.{when, _}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
-import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys._
 
 class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
@@ -34,7 +33,7 @@ class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach 
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create CheckpointOffsetManager" in {
-    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManagerFactory.getClass.getName)
+    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManager.getClass.getName)
     when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
     when(configStub.getString(KEY_CHECKPOINT_BASE_LOCATION)).thenReturn("/tmp/checkpoint")
     assert(OffsetManagerAbstractFactory.build(configStub).isInstanceOf[CheckpointOffsetManager])

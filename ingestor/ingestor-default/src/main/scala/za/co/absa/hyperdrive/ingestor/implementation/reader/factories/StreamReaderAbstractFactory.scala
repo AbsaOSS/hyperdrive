@@ -19,8 +19,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.reader.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
-import za.co.absa.hyperdrive.ingestor.implementation.reader.StreamReaderFactory
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -39,6 +38,6 @@ object StreamReaderAbstractFactory {
 
     val factoryName = config.getString(componentConfigKey)
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamReaderFactory](factoryName)
-    factory.build(config)
+    factory.apply(config)
   }
 }

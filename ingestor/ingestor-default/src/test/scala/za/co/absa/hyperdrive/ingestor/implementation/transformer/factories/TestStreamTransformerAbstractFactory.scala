@@ -22,7 +22,6 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.column.selection.ColumnSelectorStreamTransformerFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys._
 
 class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
@@ -34,7 +33,7 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   behavior of StreamTransformerAbstractFactory.getClass.getSimpleName
 
   it should "create factory for ColumnSelectorStreamTransformer" in {
-    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformerFactory.getClass.getName)
+    when(configStub.getString(StreamTransformerAbstractFactory.componentConfigKey)).thenReturn(ColumnSelectorStreamTransformer.getClass.getName)
     when(configStub.getStringArray(KEY_COLUMNS_TO_SELECT)).thenReturn(Array("*"))
 
     assert(StreamTransformerAbstractFactory.build(configStub).isInstanceOf[ColumnSelectorStreamTransformer])

@@ -17,12 +17,14 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
+import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.conf.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 private[manager] object CheckpointOffsetManagerProps {
@@ -47,7 +49,7 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
 
   private val checkpointLocation = resolveCheckpointLocation(topic)
 
-  override def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader = {
+  override def configureOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
     if (streamReader == null) {
       throw new IllegalArgumentException("Null DataStreamReader instance.")
     }
@@ -65,7 +67,7 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
     }
   }
 
-  override def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row] = {
+  override def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = {
     if (streamWriter == null) {
       throw new IllegalArgumentException("Null DataStreamWriter instance.")
     }
@@ -80,7 +82,7 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
     s"$checkpointBaseLocation/$topic"
   }
 
-  private def getStartingOffsets(checkpointLocation: String, configuration: Configuration): Option[String] = {
+  private def getStartingOffsets(checkpointLocation: String, configuration: org.apache.hadoop.conf.Configuration): Option[String] = {
     if (FileUtils.exists(checkpointLocation, configuration)) {
       Option.empty
     }
@@ -89,11 +91,27 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
     }
   }
 
-  private def throwIfInvalidCheckpointLocation(configuration: Configuration): Unit = {
+  private def throwIfInvalidCheckpointLocation(configuration: org.apache.hadoop.conf.Configuration): Unit = {
     if (StringUtils.isBlank(checkpointBaseLocation) ||
       FileUtils.notExists(checkpointBaseLocation, configuration) ||
       FileUtils.isNotDirectory(checkpointBaseLocation, configuration)) {
       throw new IllegalArgumentException(s"Invalid base checkpoint location: '$checkpointBaseLocation'. Does it exists and is a directory?")
     }
   }
+}
+
+object CheckpointOffsetManager extends OffsetManagerFactory {
+  override def apply(config: Configuration): OffsetManager = {
+    val topic = getTopic(config)
+    val checkpointBaseLocation = getCheckpointLocation(config)
+
+    LogManager.getLogger.info(s"Going to create CheckpointOffsetManager instance using: topic='$topic', checkpoint base location='$checkpointBaseLocation'")
+
+    new CheckpointOffsetManager(topic, checkpointBaseLocation)
+  }
+
+  private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Could not find topic. Is '$KEY_TOPIC' defined?")
+
+  private def getCheckpointLocation(configuration: Configuration): String = getOrThrow(KEY_CHECKPOINT_BASE_LOCATION, configuration, errorMessage = s"Could not find checkpoint base location. Is '$KEY_CHECKPOINT_BASE_LOCATION' defined?")
+
 }

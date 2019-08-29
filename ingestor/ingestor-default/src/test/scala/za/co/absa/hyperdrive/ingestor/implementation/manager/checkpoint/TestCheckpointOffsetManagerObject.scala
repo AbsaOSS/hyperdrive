@@ -15,16 +15,15 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint
+package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
 import org.apache.commons.configuration2.Configuration
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys._
 
-class TestCheckpointOffsetManagerFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
+class TestCheckpointOffsetManagerObject extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val topic = "topic"
   private val checkpointLocation = "/tmp/checkpoint/location"
@@ -33,19 +32,19 @@ class TestCheckpointOffsetManagerFactory extends FlatSpec with BeforeAndAfterEac
 
   override def beforeEach(): Unit = reset(configStub)
 
-  behavior of CheckpointOffsetManagerFactory.getClass.getSimpleName
+  behavior of CheckpointOffsetManager.getClass.getSimpleName
 
   it should "throw on blank topic" in {
     stubCheckpointLocation()
 
-    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManagerFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManager(configStub))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
   }
 
   it should "throw on blank checkpoint location" in {
     stubTopic()
 
-    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManagerFactory.build(configStub))
+    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManager(configStub))
     assert(throwable.getMessage.toLowerCase.contains("location"))
   }
 
@@ -53,7 +52,7 @@ class TestCheckpointOffsetManagerFactory extends FlatSpec with BeforeAndAfterEac
     stubTopic()
     stubCheckpointLocation()
 
-    val manager = CheckpointOffsetManagerFactory.build(configStub).asInstanceOf[CheckpointOffsetManager]
+    val manager = CheckpointOffsetManager(configStub).asInstanceOf[CheckpointOffsetManager]
     assert(topic == manager.topic)
     assert(checkpointLocation == manager.checkpointBaseLocation)
   }

@@ -15,18 +15,17 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.column.selection
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection
 
 import org.apache.commons.configuration2.{BaseConfiguration, DynamicCombinedConfiguration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys._
 
-class TestColumnSelectorStreamTransformerFactory extends FlatSpec with MockitoSugar {
+class TestColumnSelectorStreamTransformerObject extends FlatSpec with MockitoSugar {
 
-  behavior of ColumnSelectorStreamTransformerFactory.getClass.getSimpleName
+  behavior of ColumnSelectorStreamTransformer.getClass.getSimpleName
 
   it should "create ColumnSelectorStreamTransformer for columns specified in configurations" in {
     val columns = Seq("a","b","c")
@@ -34,14 +33,14 @@ class TestColumnSelectorStreamTransformerFactory extends FlatSpec with MockitoSu
     config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
     config.addProperty(KEY_COLUMNS_TO_SELECT, columns.mkString(","))
 
-    val transformer = ColumnSelectorStreamTransformerFactory.build(config).asInstanceOf[ColumnSelectorStreamTransformer]
+    val transformer = ColumnSelectorStreamTransformer(config).asInstanceOf[ColumnSelectorStreamTransformer]
     assert(columns == transformer.columns)
   }
 
   it should "assume all columns are should be selected if none is specified in configurations" in {
     val config = new BaseConfiguration()
 
-    val transformer = ColumnSelectorStreamTransformerFactory.build(config).asInstanceOf[ColumnSelectorStreamTransformer]
+    val transformer = ColumnSelectorStreamTransformer(config).asInstanceOf[ColumnSelectorStreamTransformer]
     assert(Seq("*") == transformer.columns)
   }
 }

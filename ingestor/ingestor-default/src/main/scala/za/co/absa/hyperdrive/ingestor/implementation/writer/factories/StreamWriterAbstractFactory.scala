@@ -19,8 +19,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.ingestor.implementation.writer.StreamWriterFactory
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -38,6 +37,6 @@ object StreamWriterAbstractFactory {
 
     val factoryName = config.getString(componentConfigKey)
     val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamWriterFactory](factoryName)
-    factory.build(config)
+    factory.apply(config)
   }
 }

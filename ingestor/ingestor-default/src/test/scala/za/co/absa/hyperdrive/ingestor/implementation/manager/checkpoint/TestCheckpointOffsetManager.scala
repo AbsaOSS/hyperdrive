@@ -15,7 +15,7 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.manager
+package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
 import java.io.File
 
@@ -26,9 +26,8 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
-import za.co.absa.hyperdrive.shared.utils.TempDir
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManagerProps._
+import za.co.absa.hyperdrive.shared.utils.TempDir
 
 class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with  MockitoSugar {
 

@@ -15,7 +15,7 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.reader
+package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
@@ -24,8 +24,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.{KafkaStreamReader, KafkaStreamReaderProps}
-import KafkaStreamReaderProps._
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReaderProps._
 
 class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 

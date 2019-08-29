@@ -15,11 +15,10 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder
+package za.co.absa.hyperdrive.ingestor.api.writer
 
 import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 
-trait StreamDecoderFactory {
-  def build(config: Configuration): StreamDecoder
+trait StreamWriterFactory {
+  def apply(config: Configuration): StreamWriter
 }

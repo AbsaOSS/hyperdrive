@@ -21,7 +21,6 @@ import org.apache.commons.configuration2.Configuration
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.kafka.KafkaStreamReaderFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
@@ -34,7 +33,7 @@ class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach w
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create KafkaStreamReader" in {
-    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReaderFactory.getClass.getName)
+    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReader.getClass.getName)
     when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
     when(configStub.getStringArray(KEY_BROKERS)).thenReturn(Array("http://localhost:9092"))
 
