@@ -26,11 +26,6 @@ object SparkUtils {
     df.sparkSession.createDataFrame(df.rdd, newSchema)
   }
 
-  def setAllColumnsNonNullable(df: DataFrame): DataFrame = {
-    val newSchema = setSchemaNullability(df.schema, desiredNullability = false)
-    df.sparkSession.createDataFrame(df.rdd, newSchema)
-  }
-
   private def setSchemaNullability(schema: StructType, desiredNullability: Boolean): StructType = {
     StructType(schema.fields.map(field =>
       field.dataType match {

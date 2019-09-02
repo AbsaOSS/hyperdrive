@@ -28,7 +28,7 @@ object SparkTestUtils {
     allFieldsContainNullability(schema, expectedNullability = false)
   }
 
-  def allFieldsContainNullability(schema: StructType, expectedNullability: Boolean): Boolean = {
+  private def allFieldsContainNullability(schema: StructType, expectedNullability: Boolean): Boolean = {
     schema.fields.forall(isExpectedNullability(_, expectedNullability))
   }
 

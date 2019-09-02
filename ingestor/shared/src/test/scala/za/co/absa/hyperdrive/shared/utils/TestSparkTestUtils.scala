@@ -38,25 +38,6 @@ class TestSparkTestUtils extends FunSpec {
   private val nestedTrueButOthersFalse = new StructType()
     .add(StructField("g", ArrayType(flatTypeFalseNullability, containsNull = true), nullable = false))
 
-  describe("allFieldsContainNullability") {
-
-    import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils.allFieldsContainNullability
-
-    it("should check the nullability of the outermost fields") {
-      assert(allFieldsContainNullability(flatTypeTrueNullability, expectedNullability = true))
-      assert(allFieldsContainNullability(flatTypeFalseNullability, expectedNullability = false))
-    }
-
-    it("should check the nullability of the nested fields") {
-      assert(allFieldsContainNullability(nestedTypeTrueNullability, expectedNullability = true))
-      assert(allFieldsContainNullability(nestedTypeFalseNullability, expectedNullability = false))
-    }
-
-    it("should return false if the innermost field nullability does not comply") {
-      assert(!allFieldsContainNullability(nestedTrueButOthersFalse, expectedNullability = false))
-    }
-  }
-
   describe("areAllFieldsNonNullable") {
 
     import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils.areAllFieldsNonNullable

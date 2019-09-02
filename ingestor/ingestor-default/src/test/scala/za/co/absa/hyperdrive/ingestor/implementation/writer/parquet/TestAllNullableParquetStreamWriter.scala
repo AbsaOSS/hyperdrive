@@ -58,15 +58,15 @@ class TestAllNullableParquetStreamWriter extends FunSuite with BeforeAndAfterEac
 
   private def getTestDataframe: DataFrame = {
     val nestedType1 = new StructType()
-      .add(StructField("a", IntegerType, false))
-      .add(StructField("b", LongType, false))
+      .add(StructField("a", IntegerType, nullable = false))
+      .add(StructField("b", LongType, nullable = false))
 
     val nestedType2 = new StructType()
-      .add(StructField("c", ArrayType(nestedType1, false), false))
+      .add(StructField("c", ArrayType(nestedType1, containsNull = false), nullable = false))
 
     val schema = new StructType()
-      .add(StructField("d", StringType, false))
-      .add(StructField("e", ArrayType(nestedType2, false), false))
+      .add(StructField("d", StringType, nullable = false))
+      .add(StructField("e", ArrayType(nestedType2, containsNull = false), nullable = false))
 
     spark.createDataFrame(spark.emptyDataFrame.rdd, schema)
   }
