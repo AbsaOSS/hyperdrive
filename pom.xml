@@ -31,6 +31,7 @@
         <module>driver</module>
         <module>trigger</module>
         <module>parent-conf</module>
+        <module>component-archetype</module>
 
         <module>ingestor/api</module>
         <module>ingestor/ingestor-default</module>
