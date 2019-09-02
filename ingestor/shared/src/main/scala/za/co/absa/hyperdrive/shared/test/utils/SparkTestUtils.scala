@@ -21,24 +21,29 @@ import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 object SparkTestUtils {
 
   def areAllFieldsNullable(schema: StructType): Boolean = {
-    schema.fields.forall(isNullable(_))
+    allFieldsContainNullability(schema, expectedNullability = true)
   }
 
-  private def isNullable(field: StructField): Boolean = {
-    val inspectionResult = field match {
-      case dt: StructType => areAllFieldsNullable(dt)
-      case dt: ArrayType => areAllFieldsNullable(dt)
-      case dt: StructField => dt.nullable
+  def areAllFieldsNonNullable(schema: StructType): Boolean = {
+    allFieldsContainNullability(schema, expectedNullability = false)
+  }
+
+  def allFieldsContainNullability(schema: StructType, expectedNullability: Boolean): Boolean = {
+    schema.fields.forall(isExpectedNullability(_, expectedNullability))
+  }
+
+  private def isExpectedNullability(field: StructField, expectedNullability: Boolean): Boolean = {
+    field.dataType match {
+      case dt: StructType => allFieldsContainNullability(dt, expectedNullability) // makes sure every field contains expected nullability
+      case dt: ArrayType => dt.containsNull == expectedNullability && isExpectedNullabilityForAll(dt, expectedNullability) // makes sure the field itself plus every inner field contains expected nullability
+      case _ => field.nullable == expectedNullability // makes sure the field contains expected nullability
     }
-
-    inspectionResult && field.nullable
   }
 
-  private def areAllFieldsNullable(arrayType: ArrayType): Boolean = {
+  private def isExpectedNullabilityForAll(arrayType: ArrayType, expectedNullability: Boolean): Boolean = {
     arrayType.elementType match {
-      case dt: ArrayType => dt.containsNull && areAllFieldsNullable(dt)
-      case dt: StructType => areAllFieldsNullable(dt)
-      case dt: StructField => dt.nullable
+      case dt: ArrayType => isExpectedNullabilityForAll(dt, expectedNullability)
+      case dt: StructType => allFieldsContainNullability(dt, expectedNullability)
     }
   }
 }

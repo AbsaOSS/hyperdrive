@@ -20,7 +20,7 @@ import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
-class TestTestAllNullableParquetStreamWriterObject extends FlatSpec with BeforeAndAfterEach {
+class TestAllNullableParquetStreamWriterObject extends FlatSpec with BeforeAndAfterEach {
 
   private val configStub: Configuration = new BaseConfiguration()
 

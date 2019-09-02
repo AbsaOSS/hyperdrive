@@ -16,7 +16,7 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 import SparkUtils._
@@ -25,24 +25,25 @@ import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils._
 class TestSparkUtils extends FunSuite {
 
   private val spark = SparkSession.builder().appName(classOf[TestSparkUtils].getSimpleName).master("local").getOrCreate()
+  spark.sparkContext.setLogLevel("ERROR")
 
   test(testName = "set fields to nullable") {
 
     val nestedType1 = new StructType()
-      .add(StructField("a", IntegerType, false))
-      .add(StructField("b", LongType, false))
+      .add(StructField("a", IntegerType, nullable = false))
+      .add(StructField("b", LongType, nullable = false))
 
     val nestedType2 = new StructType()
-      .add(StructField("c", ArrayType(nestedType1, false), false))
+      .add(StructField("c", ArrayType(nestedType1, containsNull = false), nullable = false))
 
     val schema = new StructType()
-      .add(StructField("d", StringType, false))
-      .add(StructField("e", ArrayType(nestedType2, false), false))
+      .add(StructField("d", StringType, nullable = false))
+      .add(StructField("e", ArrayType(nestedType2, containsNull = false), nullable = false))
 
     val nonNullableDf = spark.createDataFrame(spark.emptyDataFrame.rdd, schema)
-    assert(!areAllFieldsNullable(schema))
+    assert(areAllFieldsNonNullable(schema))
 
     val nullableDf = setAllColumnsNullable(nonNullableDf)
-    assert(!areAllFieldsNullable(schema))
+    assert(areAllFieldsNullable(nullableDf.schema))
   }
 }

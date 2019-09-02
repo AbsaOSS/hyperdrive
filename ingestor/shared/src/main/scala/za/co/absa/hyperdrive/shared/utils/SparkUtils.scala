@@ -22,31 +22,36 @@ import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 object SparkUtils {
 
   def setAllColumnsNullable(df: DataFrame): DataFrame = {
-    val newSchema = getNullableSchema(df.schema)
+    val newSchema = setSchemaNullability(df.schema, desiredNullability = true)
     df.sparkSession.createDataFrame(df.rdd, newSchema)
   }
 
-  private def getNullableSchema(schema: StructType): StructType = {
+  def setAllColumnsNonNullable(df: DataFrame): DataFrame = {
+    val newSchema = setSchemaNullability(df.schema, desiredNullability = false)
+    df.sparkSession.createDataFrame(df.rdd, newSchema)
+  }
+
+  private def setSchemaNullability(schema: StructType, desiredNullability: Boolean): StructType = {
     StructType(schema.fields.map(field =>
       field.dataType match {
         case dt: StructType =>
-          StructField(field.name, getNullableSchema(dt), nullable = true, field.metadata)
+          StructField(field.name, setSchemaNullability(dt, desiredNullability), nullable = desiredNullability, field.metadata)
         case dt: ArrayType =>
-          StructField(field.name, getNullableArray(dt), nullable = true, field.metadata)
+          StructField(field.name, setArraySchemaNullability(dt, desiredNullability), nullable = desiredNullability, field.metadata)
         case dt =>
-          StructField(field.name, dt, nullable = true, field.metadata)
+          StructField(field.name, dt, nullable = desiredNullability, field.metadata)
       }
     ))
   }
 
-  private def getNullableArray(arrayType: ArrayType): ArrayType = {
+  private def setArraySchemaNullability(arrayType: ArrayType, desiredNullability: Boolean): ArrayType = {
     arrayType.elementType match {
       case dt: ArrayType =>
-        ArrayType(getNullableArray(dt), containsNull = true)
+        ArrayType(setArraySchemaNullability(dt, desiredNullability), containsNull = desiredNullability)
       case dt: StructType =>
-        ArrayType(getNullableSchema(dt), containsNull = true)
+        ArrayType(setSchemaNullability(dt, desiredNullability), containsNull = desiredNullability)
       case dt =>
-        ArrayType(dt, containsNull = true)
+        ArrayType(dt, containsNull = desiredNullability)
     }
   }
 }
