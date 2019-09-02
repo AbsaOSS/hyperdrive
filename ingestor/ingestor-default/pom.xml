@@ -13,12 +13,12 @@
     <artifactId>ingestor-default</artifactId>
 
     <dependencies>
+        <!--Hyperdrive-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>api</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>shared</artifactId>
