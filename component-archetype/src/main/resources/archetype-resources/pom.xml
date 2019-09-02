@@ -32,6 +32,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!--Versions-->
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
+        <scala.version>${scala.version}</scala.version>
+        <scala.maven.plugin.version>${scala.maven.plugin.version}</scala.maven.plugin.version>
+        <hyperdrive.version>${project.version}</hyperdrive.version>
     </properties>
 
     <dependencies>
@@ -39,7 +42,7 @@
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>api</artifactId>
-            <version>${project.version}</version>
+            <version>\${hyperdrive.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -52,9 +55,9 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>${scala.maven.plugin.version}</version>
+                <version>\${scala.maven.plugin.version}</version>
                 <configuration>
-                    <scalaVersion>${scala.version}</scalaVersion>
+                    <scalaVersion>\${scala.version}</scalaVersion>
                 </configuration>
                 <executions>
                     <execution>
@@ -83,11 +86,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven.jar.plugin.version}</version>
+                <version>\${maven.jar.plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <hyperdriveVersion>${project.version}</hyperdriveVersion>
+                            <hyperdriveVersion>${hyperdrive.version}</hyperdriveVersion>
                         </manifestEntries>
                     </archive>
                 </configuration>
