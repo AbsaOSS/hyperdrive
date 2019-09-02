@@ -45,6 +45,8 @@
     </dependencies>
 
     <build>
+            <sourceDirectory>src/main/scala</sourceDirectory>
+            <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
             <!-- the Maven Scala plugin will compile Scala source files -->
             <plugin>

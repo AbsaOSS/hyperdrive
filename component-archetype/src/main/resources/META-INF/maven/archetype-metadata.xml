@@ -29,6 +29,12 @@
             <includes>
                 <include>**/*.scala</include>
             </includes>
+       </fileSet>
+       <fileSet filtered="true" packaged="true">
+            <directory>src/test/scala</directory>
+            <includes>
+                <include>**/*.scala</include>
+            </includes>
         </fileSet>
     </fileSets>
 </archetype-descriptor>
