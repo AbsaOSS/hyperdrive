@@ -26,6 +26,11 @@
     <artifactId>hyperdrive</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
+    <name>hyperdrive</name>
+    <description>Hyperdrive is a configurable and scalable ingestion platform that allows data movement and
+        transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
+    </description>
+    <url>https://github.com/AbsaOSS/hyperdrive</url>
 
     <modules>
         <module>driver</module>
@@ -37,4 +42,46 @@
         <module>ingestor/shared</module>
     </modules>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:git:git://github.com/AbsaOSS/hyperdrive.git</connection>
+        <developerConnection>scm:git:ssh://github.com:AbsaOSS/hyperdrive.git</developerConnection>
+        <url>https://github.com/AbsaOSS/hyperdrive/tree/master</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>ABSA Group Limited</name>
+        <url>https://www.absa.africa</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>felipemmelo</id>
+            <name>Felipe Melo</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/felipemmelo</url>
+        </developer>
+    </developers>
+
+    <properties>
+        <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
+    </properties>
 </project>

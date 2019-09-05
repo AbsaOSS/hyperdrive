@@ -83,6 +83,9 @@
         <!--Configurations-->
         <commons.configuration2.version>2.4</commons.configuration2.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
+
+        <!--Deployment Plugins-->
+        <gpg.plugin.version>1.6</gpg.plugin.version>
     </properties>
 
     <dependencies>
@@ -319,6 +322,36 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Plugins for deployment -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${gpg.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 </project>
