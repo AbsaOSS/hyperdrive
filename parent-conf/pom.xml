@@ -32,6 +32,7 @@
     <artifactId>parent-conf</artifactId>
 
     <repositories>
+        <!-- Used for ABRiS-->
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
@@ -72,12 +73,6 @@
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
-
-        <!--Junit-->
-        <junit.jupiter.version>5.3.0</junit.jupiter.version>
-
-        <!--Apache Curator-->
-        <apache.curator.version>4.2.0</apache.curator.version>
 
         <!--Shade Maven plug-in-->
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
@@ -183,11 +178,6 @@
             <!--Spark-->
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
-                <version>${spark.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
             </dependency>
@@ -220,11 +210,6 @@
             </dependency>
 
             <!--Kafka-->
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka-clients</artifactId>
-                <version>${kafka.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
@@ -260,18 +245,6 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.vintage</groupId>
-                <artifactId>junit-vintage-engine</artifactId>
-                <version>${junit.jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-test</artifactId>
-                <version>${apache.curator.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
