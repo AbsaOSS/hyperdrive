@@ -24,23 +24,29 @@ This is a Maven archetype for creating custom Hyperdrive components.
 Creating a custom Hyperdrive components project
 -----------------------------------------------
 
-You can generate a skeleton project by executing the following command:
-
+Download the artifact to your local maven repository
 ```
-% mvn archetype:generate \
+mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:1.0.0 
+```
+
+Update the local archetype catalog
+```
+mvn archetype:crawl
+```
+
+Generate a skeleton project by executing the following command
+```
+mvn archetype:generate \
     -DarchetypeGroupId=za.co.absa.hyperdrive \
     -DarchetypeArtifactId=component-archetype \
-    -DarchetypeVersion=<hyperdrive-version> \
+    -DarchetypeVersion=1.0.0 \
     -DgroupId=<groupId> \
     -DartifactId=<artifactId> \
-    -Dversion=<component-version> \
-    -DoutputDirectory=<target-directory>
+    -Dversion=<artifact-version> 
 ```
-- `<hyperdrive-version>` is the version of this archetype, (currently 1.0.0-SNAPSHOT)
 - `<groupId>` is your group id, e.g. com.acme,
 - `<artifactId>` is the name for your artifact, e.g. mytransformer,
 - `<artifact-version>` is the version number of the artifact, e.g. 1.0-SNAPSHOT and
-- `<target-directory>` should point to the directory where the project for the custom component should be created, e.g. /tmp/mytransformer
 
 Implementing a Hyperdrive component
 -----------------------------------
