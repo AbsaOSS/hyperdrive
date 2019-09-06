@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~
   ~ Copyright 2019 ABSA Group Limited
@@ -24,21 +25,9 @@
         <artifactId>parent-conf</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../parent-conf/pom.xml</relativePath>
+        <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>shared</artifactId>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${nexus.staging.plugin.version}</version>
-                <configuration>
-                    <skipNexusStagingDeployMojo>${skip.internal.modules.deployment}</skipNexusStagingDeployMojo>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <artifactId>api</artifactId>
+    <packaging>jar</packaging>
 </project>

@@ -37,9 +37,9 @@
         <module>parent-conf</module>
         <module>component-archetype</module>
 
-        <module>ingestor/api</module>
-        <module>ingestor/ingestor-default</module>
-        <module>ingestor/shared</module>
+        <module>api</module>
+        <module>ingestor-default</module>
+        <module>shared</module>
     </modules>
 
     <distributionManagement>
