@@ -22,7 +22,7 @@ import java.util.jar.{Attributes, JarEntry, JarOutputStream, Manifest}
 
 object JarTestUtils {
 
-  def createJar(baseDir: File, jarName: String, content: List[File]): File = {
+  def createJar(baseDir: File, jarName: String, content: Map[File, String]): File = {
     val jarFile = new File(baseDir, jarName)
     addEntries(jarFile, createManifest(), content)
     jarFile
@@ -36,33 +36,21 @@ object JarTestUtils {
     manifest
   }
 
-  private def addEntries(destJarFile: File, manifest: Manifest, content: List[File]): Unit = {
-    val target = new JarOutputStream(new FileOutputStream(destJarFile.getAbsolutePath), manifest)
-    content.foreach(entry => add(entry, target))
+  private def addEntries(destJarFile: File, manifest: Manifest, content: Map[File, String]): Unit = {
+    val outputJar = new JarOutputStream(new FileOutputStream(destJarFile.getAbsolutePath), manifest)
+    content.foreach(entry => add(entry._1, entry._2, outputJar))
+    outputJar.close();
   }
 
   @throws[IOException]
-  private def add(source: File, target: JarOutputStream): Unit = {
+  private def add(source: File, targetPath: String, outputJar: JarOutputStream): Unit = {
     if (source.isDirectory) {
-      var name = source.getPath.replace("\\", "/")
-      if (!name.isEmpty) {
-        if (!name.endsWith("/")) {
-          name += "/"
-        }
-
-        val entry = new JarEntry(name)
-        entry.setTime(source.lastModified())
-
-        target.putNextEntry(entry)
-        target.closeEntry()
-      }
-
-      source.listFiles().foreach(file => add(file, target))
+      throw new UnsupportedOperationException("Adding directories to jars is not supported")
     }
     else {
-      val entry = new JarEntry(source.getPath.replace("\\", "/"))
+      val entry = new JarEntry(targetPath.replace("\\", "/"))
       entry.setTime(source.lastModified())
-      target.putNextEntry(entry)
+      outputJar.putNextEntry(entry)
 
       val in = new BufferedInputStream(new FileInputStream(source))
 
@@ -70,11 +58,11 @@ object JarTestUtils {
 
       var count = in.read(buffer)
       while (count != -1) {
-        target.write(buffer, 0, count)
+        outputJar.write(buffer, 0, count)
         count = in.read(buffer)
       }
 
-      target.closeEntry()
+      outputJar.closeEntry()
       in.close()
     }
   }
