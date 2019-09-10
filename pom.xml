@@ -36,6 +36,7 @@
         <module>driver</module>
         <module>parent-conf</module>
         <module>component-archetype</module>
+        <module>component-scanner</module>
 
         <module>api</module>
         <module>ingestor-default</module>
