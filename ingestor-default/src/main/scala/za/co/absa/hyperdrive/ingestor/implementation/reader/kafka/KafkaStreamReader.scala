@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_KEYSTORE_LOCATION, KEY_KEYSTORE_PASSWORD, KEY_KEY_PASSWORD, KEY_SECURITY_PROTOCOL, KEY_TOPIC, KEY_TRUSTSTORE_LOCATION, KEY_TRUSTSTORE_PASSWORD, rootComponentConfKey, rootFactoryOptionalConfKey, rootFactoryOptionalKafkaKey}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootComponentConfKey, rootFactoryOptionalConfKey}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow, getSeqOrThrow}
 
 private[reader] object KafkaStreamReaderProps {
@@ -110,28 +110,8 @@ object KafkaStreamReader extends StreamReaderFactory {
     brokers.mkString(",")
   }
 
-  private def getPredefinedExtraOptions(configuration: Configuration): Map[String,String] = {
-    val securityKeys = Seq(KEY_SECURITY_PROTOCOL, KEY_TRUSTSTORE_LOCATION, KEY_TRUSTSTORE_PASSWORD, KEY_KEYSTORE_LOCATION, KEY_KEYSTORE_PASSWORD, KEY_KEY_PASSWORD)
-
-    val extraConfs = securityKeys.foldLeft(Map[String,String]()) {
-      case (map,securityKey) =>
-        getOrNone(securityKey, configuration) match {
-          case Some(value) => map + (tweakKeyName(securityKey) -> value)
-          case None => map
-        }
-    }
-
-    if (extraConfs.isEmpty || extraConfs.size == securityKeys.size) {
-      extraConfs
-    }
-    else {
-      logger.warn(s"Assuming no security settings, since some appear to be missing: {${findMissingKeys(securityKeys, extraConfs)}}")
-      Map[String,String]()
-    }
-  }
-
   private def getExtraOptions(configuration: Configuration): Map[String,String] = {
-    val optionalKeys = getKeysFromPrefix(configuration, rootFactoryOptionalKafkaKey)
+    val optionalKeys = getKeysFromPrefix(configuration, rootFactoryOptionalConfKey)
 
     val extraConfs = optionalKeys.foldLeft(Map[String,String]()) {
       case (map,securityKey) =>
