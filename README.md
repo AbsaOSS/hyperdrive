@@ -19,6 +19,7 @@ It is composed of two main modules: triggers and ingestors.
 
 The triggers define when ingestions must happen, the ingestor defines how.
 
+The trigger is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger
 
 ## Motivation
 In environments composed of multiple and diverse data sources, getting access to all of them as well as creating a data lake is quite a challenging task.
@@ -96,16 +97,12 @@ The built-in components have the following capabilities:
 Both, Hyperdrive trigger and ingestor are extensible.
 
 ### Ingestor
-Each component (except for the ```driver```) is located in a separate Maven module. Each of these modules is composed of an abstract class defining the component API, a factory trait to define factories for each of the components, implementations for the component API and factory, and an abstract factory, located in the package ```factories```, that will create the concrete factory based on the configurations.
+Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
+- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `OffsetManager`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
+- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `OffsetManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
+- The implemented components have to be packaged to a jar file, which can then be added to the classpath of the driver. To use a component, it has to be configured as described under [Usage](#usage)
 
-To extend a component, it is necessary to:
-
-1. Extend the component's abstract class definition.
-2. Create a factory for the extension.
-3. Specify the configurations it needs and add them to ```za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys``` under the module ```shared```.
-4. Add the component factory to the abstract factory under the package ```factories```.
-
-After that, the new module will be able to be seamlessly invoked from the driver.
+After that, the new component will be able to be seamlessly invoked from the driver.
 
 ### Trigger
 *Coming soon.*
