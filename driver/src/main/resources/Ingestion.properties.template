@@ -37,6 +37,7 @@ reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
 #reader.option.kafka.ssl.keystore.location=path/to/your/keystore.jks
 #reader.option.kafka.ssl.keystore.password=your_keystore_password
 #reader.option.kafka.ssl.key.password=your_ssl_password
+#reader.option.failOnDataLoss=false
 
 # Offset management(checkpointing) settings
 manager.checkpoint.base.location=/tmp/checkpoint-location
