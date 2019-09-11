@@ -35,13 +35,14 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
   private val keystorePassword = "we-are-very-secretive"
   private val keyPassword = "arent-we?"
 
-  private val securityConfsMap = Map[String,String](
+  private val extraOptions = Map[String,String](
     KEY_SECURITY_PROTOCOL -> securityProtocol,
     KEY_KEYSTORE_LOCATION -> keystoreLocation,
     KEY_KEYSTORE_PASSWORD -> keystorePassword,
     KEY_TRUSTSTORE_LOCATION -> truststoreLocation,
     KEY_TRUSTSTORE_PASSWORD -> truststorePassword,
-    KEY_KEY_PASSWORD -> keyPassword)
+    KEY_KEY_PASSWORD -> keyPassword,
+    s"$rootFactoryOptionalConfKey.failOnDataLoss" -> "false")
 
   behavior of KafkaStreamReader.getClass.getSimpleName
 
@@ -86,7 +87,7 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
     assert(brokers == kafkaStreamReader.brokers)
 
     import kafkaStreamReader.extraConfs
-    securityConfsMap.foreach {case(key,value) => assert(value == extraConfs(removeOptionalComponentFromKey(key)))}
+    extraOptions.foreach {case(key,value) => assert(value == extraConfs(removeOptionalComponentFromKey(key)))}
   }
 
   private def stubProperty(key: String, value: String): Unit = configStub.addProperty(key, value)
@@ -96,7 +97,7 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
   private def stubBrokers(): Unit = stubProperty(KEY_BROKERS, brokers)
 
   private def stubSecurity(keysToIgnore: Set[String] = Set[String]()): Unit = {
-    securityConfsMap
+    extraOptions
       .filterKeys(!keysToIgnore.contains(_))
       .foreach {case(key,value) => stubProperty(key, value)}
   }

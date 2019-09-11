@@ -34,7 +34,8 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     "ssl.truststore.password" -> "ourlittlesecret",
     "ssl.keystore.location"   -> "just/another/path",
     "ssl.keystore.password"   -> "knock-knock",
-    "ssl.key.password"        -> "you-shall-not-pass")
+    "ssl.key.password"        -> "you-shall-not-pass",
+    "failOnDataLoss"          -> "false")
 
   behavior of "KafkaStreamReader"
 
