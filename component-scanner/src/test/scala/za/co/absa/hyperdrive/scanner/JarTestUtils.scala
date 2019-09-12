@@ -22,6 +22,11 @@ import java.util.jar.{Attributes, JarEntry, JarOutputStream, Manifest}
 
 object JarTestUtils {
 
+  def createJar(baseDir: File, jarName: String, filenames: List[String]): File = {
+    val content = filenames.map(filename => new File(getClass.getClassLoader.getResource(filename).toURI) -> filename).toMap
+    JarTestUtils.createJar(baseDir, jarName, content)
+  }
+
   def createJar(baseDir: File, jarName: String, content: Map[File, String]): File = {
     val jarFile = new File(baseDir, jarName)
     addEntries(jarFile, createManifest(), content)
