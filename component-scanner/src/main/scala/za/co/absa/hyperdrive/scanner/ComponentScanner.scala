@@ -55,11 +55,22 @@ object ComponentScanner {
   private def findAllJarsInDirectory(directory: File): List[File] = {
     if (!directory.exists()) throw new IllegalArgumentException(s"Directory $directory does not exist")
     if (!directory.isDirectory) throw new IllegalArgumentException(s"Argument $directory is not a directory")
-    directory
+    findAllJarsInDirectoryRecursively(directory)
+  }
+
+  private def findAllJarsInDirectoryRecursively(directory: File): List[File] = {
+    val jarsInSubdirectories = directory
+        .listFiles()
+        .filter(_.isDirectory)
+        .flatMap(findAllJarsInDirectoryRecursively)
+
+    val jars = directory
       .listFiles()
       .filter(_.isFile)
       .filter(_.getName.endsWith(".jar"))
       .toList
+
+    jars ++ jarsInSubdirectories
   }
 
   private def findComponentClasses(factoryType: ru.TypeSymbol, file: File): List[ComponentInfo] = {

@@ -28,6 +28,7 @@ class TestComponentScanner extends FlatSpec with Matchers {
   behavior of "ComponentScanner"
 
   val DUMMYJARPATH = "za/co/absa/hyperdrive/scanner/dummyjar/"
+  val DUMMYPACKAGE = "za.co.absa.hyperdrive.scanner.dummyjar."
 
   it should "list API components in the same jar" in {
     // given
@@ -55,11 +56,11 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
     // then
     val expectedJarPath = baseDir.getAbsolutePath + "/jar1.jar"
-    readers should contain only ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne", expectedJarPath)
-    managers should contain only ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyOffsetManager$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyOffsetManager", expectedJarPath)
-    decoders should contain only ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamDecoder$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamDecoder", expectedJarPath)
-    transformers should contain only ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamTransformer$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamTransformer", expectedJarPath)
-    writers should contain only ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterOne", expectedJarPath)
+    readers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", expectedJarPath)
+    managers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyOffsetManager$$", s"${DUMMYPACKAGE}DummyOffsetManager", expectedJarPath)
+    decoders should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamDecoder$$", s"${DUMMYPACKAGE}DummyStreamDecoder", expectedJarPath)
+    transformers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamTransformer$$", s"${DUMMYPACKAGE}DummyStreamTransformer", expectedJarPath)
+    writers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamWriterOne$$", s"${DUMMYPACKAGE}DummyStreamWriterOne", expectedJarPath)
 
     // cleanup
     new Directory(baseDir).deleteRecursively()
@@ -89,12 +90,12 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
     // then
     readers should contain theSameElementsAs List(
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar2.jar"))
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderTwo$$", s"${DUMMYPACKAGE}DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar2.jar"))
 
     writers should contain theSameElementsAs List(
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterOne", baseDir.getAbsolutePath + "/jar1.jar"),
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterTwo$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamWriterTwo", baseDir.getAbsolutePath + "/jar2.jar"))
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamWriterOne$$", s"${DUMMYPACKAGE}DummyStreamWriterOne", baseDir.getAbsolutePath + "/jar1.jar"),
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamWriterTwo$$", s"${DUMMYPACKAGE}DummyStreamWriterTwo", baseDir.getAbsolutePath + "/jar2.jar"))
 
     // cleanup
     new Directory(baseDir).deleteRecursively()
@@ -116,8 +117,8 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
     // then
     readers should contain theSameElementsAs List(
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar1.jar"))
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderTwo$$", s"${DUMMYPACKAGE}DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar1.jar"))
 
     // cleanup
     new Directory(baseDir).deleteRecursively()
@@ -141,12 +142,52 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
     // then
     readers should contain theSameElementsAs List(
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
-      ComponentInfo("za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo$", "za.co.absa.hyperdrive.scanner.dummyjar.DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar1.jar"))
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", baseDir.getAbsolutePath + "/jar1.jar"),
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderTwo$$", s"${DUMMYPACKAGE}DummyStreamReaderTwo", baseDir.getAbsolutePath + "/jar1.jar"))
 
     // cleanup
     new Directory(baseDir).deleteRecursively()
   }
+
+  it should "return an empty list if the given directory contains only jar files without class files" in {
+    // given
+    val baseDirPath = Files.createTempDirectory("jarswithoutclassfiles")
+    val baseDir = new File(baseDirPath.toUri)
+    createTestJar(List(), baseDirPath, "jar1.jar")
+
+    // when
+    val readers = ComponentScanner.getStreamReaderComponents(baseDir).get
+
+    // then
+    readers shouldBe empty
+
+    // cleanup
+    new Directory(baseDir).deleteRecursively()
+  }
+
+  it should "list components of jars in subdirectories" in {
+    // given
+    val baseDirPath = Files.createTempDirectory("subdirectoriesjars")
+    val baseDir = new File(baseDirPath.toUri)
+    val subDirPath1 = Files.createDirectories(baseDirPath.resolve("subdir1").resolve("subdir2"))
+    val subDirPath2 = Files.createDirectories(baseDirPath.resolve("subdir1").resolve("subdir3"))
+    Files.createDirectories(baseDirPath.resolve("subdir4"))
+    
+    createTestJar(List(s"${DUMMYJARPATH}DummyStreamReaderOne$$.class"), subDirPath1, "jar1.jar")
+    createTestJar(List(s"${DUMMYJARPATH}DummyStreamReaderTwo$$.class"), subDirPath2, "jar2.jar")
+
+    // when
+    val readers = ComponentScanner.getStreamReaderComponents(baseDir).get
+
+    // then
+    readers should contain theSameElementsAs List(
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", subDirPath1.toAbsolutePath.toString + "/jar1.jar"),
+      ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderTwo$$", s"${DUMMYPACKAGE}DummyStreamReaderTwo", subDirPath2.toAbsolutePath.toString + "/jar2.jar"))
+
+    // cleanup
+    new Directory(baseDir).deleteRecursively()
+  }
+
 
   it should "return a failure if the given directory does not exist" in {
     // given
@@ -175,6 +216,9 @@ class TestComponentScanner extends FlatSpec with Matchers {
     result.isFailure shouldBe true
     result.failed.get.getClass shouldBe classOf[IllegalArgumentException]
     result.failed.get.getMessage should fullyMatch regex "Argument .*anyFile.*tmp is not a directory"
+
+    // cleanup
+    anyFile.delete()
   }
 
   it should "return a failure if a class file in any jar is invalid" in {
