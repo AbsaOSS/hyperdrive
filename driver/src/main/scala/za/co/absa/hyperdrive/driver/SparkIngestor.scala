@@ -65,30 +65,8 @@ object SparkIngestor {
             streamTransformer: StreamTransformer,
             streamWriter: StreamWriter): Unit= {
 
-    if (spark == null) {
-      throw new IllegalArgumentException("Received NULL SparkSession instance.")
-    }
-
-    if (streamReader == null) {
-      throw new IllegalArgumentException("Received NULL StreamReader instance.")
-    }
-
-    if (offsetManager == null) {
-      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
-    }
-
-    if (decoder == null) {
-      throw new IllegalArgumentException("Received NULL StreamDecoder instance.")
-    }
-
-    if (streamTransformer == null) {
-      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
-    }
-
-    if (streamWriter == null) {
-      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
-    }
-
+    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
+    
     val ingestionId = generateIngestionId
 
     logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
@@ -115,6 +93,37 @@ object SparkIngestor {
     }
 
     logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+  }
+
+  private def validateInput(spark: SparkSession,
+                            streamReader: StreamReader,
+                            offsetManager: OffsetManager,
+                            decoder: StreamDecoder,
+                            streamTransformer: StreamTransformer,
+                            streamWriter: StreamWriter): Unit = {
+    if (spark == null) {
+      throw new IllegalArgumentException("Received NULL SparkSession instance.")
+    }
+
+    if (streamReader == null) {
+      throw new IllegalArgumentException("Received NULL StreamReader instance.")
+    }
+
+    if (offsetManager == null) {
+      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
+    }
+
+    if (decoder == null) {
+      throw new IllegalArgumentException("Received NULL StreamDecoder instance.")
+    }
+
+    if (streamTransformer == null) {
+      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
+    }
+
+    if (streamWriter == null) {
+      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
+    }
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString
