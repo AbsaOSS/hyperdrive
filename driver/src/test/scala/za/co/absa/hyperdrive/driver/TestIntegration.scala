@@ -43,7 +43,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamRead
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
-import za.co.absa.hyperdrive.shared.utils.TempDir
+import za.co.absa.hyperdrive.testutils.TempDir
 
 @Ignore
 class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {

@@ -28,7 +28,7 @@ import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
-import za.co.absa.hyperdrive.shared.utils.TempDir
+import za.co.absa.hyperdrive.testutils.TempDir
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
 

@@ -20,7 +20,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 import SparkUtils._
-import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils._
+import za.co.absa.hyperdrive.testutils.SparkTestUtils._
 
 class TestSparkUtils extends FunSuite {
 

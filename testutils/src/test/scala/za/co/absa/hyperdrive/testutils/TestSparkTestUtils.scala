@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.testutils
 
 import org.apache.spark.sql.types._
 import org.scalatest.FunSpec
@@ -40,7 +40,7 @@ class TestSparkTestUtils extends FunSpec {
 
   describe("areAllFieldsNonNullable") {
 
-    import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils.areAllFieldsNonNullable
+    import SparkTestUtils.areAllFieldsNonNullable
 
     it("should check the nullability of the outermost fields") {
       assert(!areAllFieldsNonNullable(flatTypeTrueNullability))
@@ -59,7 +59,7 @@ class TestSparkTestUtils extends FunSpec {
 
   describe("areAllFieldsNullable") {
 
-    import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils.areAllFieldsNullable
+    import SparkTestUtils.areAllFieldsNullable
 
     it("should check the nullability of the outermost fields") {
       assert(areAllFieldsNullable(flatTypeTrueNullability))

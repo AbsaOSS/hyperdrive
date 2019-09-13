@@ -23,7 +23,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.shared.test.utils.SparkTestUtils._
+import za.co.absa.hyperdrive.testutils.SparkTestUtils._
 
 class TestAllNullableParquetStreamWriter extends FunSuite with BeforeAndAfterEach with MockitoSugar {
 
