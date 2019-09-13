@@ -31,6 +31,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
+import za.co.absa.hyperdrive.driver.data.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -42,7 +43,6 @@ import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamRead
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
-import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.shared.utils.TempDir
 
 @Ignore

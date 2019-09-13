@@ -16,7 +16,7 @@
  *
  */
 
-package za.co.absa.hyperdrive.shared.data
+package za.co.absa.hyperdrive.driver.data
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericFixed

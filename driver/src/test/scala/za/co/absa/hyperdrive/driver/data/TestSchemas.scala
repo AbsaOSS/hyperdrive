@@ -16,7 +16,7 @@
  *
  */
 
-package za.co.absa.hyperdrive.shared.data
+package za.co.absa.hyperdrive.driver.data
 
 /**
  * Provides several Avro schemas.
