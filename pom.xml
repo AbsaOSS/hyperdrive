@@ -86,4 +86,30 @@
     <properties>
         <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.commonjava.maven.plugins</groupId>
+                <artifactId>directory-maven-plugin</artifactId>
+                <version>0.1</version>
+                <executions>
+                    <execution>
+                        <id>directories</id>
+                        <goals>
+                            <goal>directory-of</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <property>root.dir</property>
+                            <project>
+                                <groupId>za.co.absa.hyperdrive</groupId>
+                                <artifactId>hyperdrive</artifactId>
+                            </project>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
