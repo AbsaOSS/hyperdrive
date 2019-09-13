@@ -64,7 +64,7 @@ object SparkIngestor {
             streamWriter: StreamWriter): Unit= {
 
     validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
-    
+
     val ingestionId = generateIngestionId
 
     logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")

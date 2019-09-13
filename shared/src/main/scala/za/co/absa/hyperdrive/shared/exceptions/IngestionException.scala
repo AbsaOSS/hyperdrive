@@ -31,6 +31,6 @@ class IngestionException(message: String) extends Exception(message) {
   }
 
   def this() {
-    this(null: String)
+    this(null: String) // scalastyle:ignore null
   }
 }

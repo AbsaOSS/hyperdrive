@@ -25,7 +25,7 @@ object ConfigUtils {
   def getOrThrow(key: String, configuration: Configuration, errorMessage: String = ""): String = {
     configuration.getString(key) match {
       case value: String => value
-      case null => throw new IllegalArgumentException(errorMessage)
+      case _ => throw new IllegalArgumentException(errorMessage)
     }
   }
 
