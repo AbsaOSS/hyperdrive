@@ -29,7 +29,7 @@ set -e
 
 # Find root directory
 cd "$(dirname "${BASH_SOURCE[0]}")"
-cd ../../../../../
+cd ../../../../
 ROOT_DIR="$(pwd)"
 
 if [[ ${ROOT_DIR} != *"hyperdrive" ]]; then
@@ -38,7 +38,7 @@ if [[ ${ROOT_DIR} != *"hyperdrive" ]]; then
 fi
 
 # Set directory and file names
-MODULE_ROOT_DIR="${ROOT_DIR}/ingestor/shared/"
+MODULE_ROOT_DIR="${ROOT_DIR}/shared/"
 PACKAGE="za/co/absa/hyperdrive/shared/utils/"
 SRC_TEST_DIR="${MODULE_ROOT_DIR}/src/test/scala/"
 RESOURCE_TEST_DIR="${MODULE_ROOT_DIR}/src/test/resources/"
@@ -73,7 +73,7 @@ cat > "${SCALA_SRC_FILE_ABS}" <<-END
 
 package za.co.absa.hyperdrive.shared.utils
 
-import za.co.absa.hyperdrive.shared.utils.TestClassLoaderUtilsTestTrait
+import za.co.absa.hyperdrive.shared.utils.classloaderutils.TestClassLoaderUtilsTestTrait
 
 object TestClassLoaderUtilsSingletonInstanceOther extends TestClassLoaderUtilsTestTrait {
 }

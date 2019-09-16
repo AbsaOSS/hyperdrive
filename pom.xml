@@ -41,6 +41,7 @@
         <module>api</module>
         <module>ingestor-default</module>
         <module>shared</module>
+        <module>testutils</module>
     </modules>
 
     <distributionManagement>
@@ -84,5 +85,32 @@
 
     <properties>
         <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
+        <directory.maven.plugin.version>0.1</directory.maven.plugin.version>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.commonjava.maven.plugins</groupId>
+                <artifactId>directory-maven-plugin</artifactId>
+                <version>${directory.maven.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>directories</id>
+                        <goals>
+                            <goal>directory-of</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <property>root.dir</property>
+                            <project>
+                                <groupId>za.co.absa.hyperdrive</groupId>
+                                <artifactId>hyperdrive</artifactId>
+                            </project>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

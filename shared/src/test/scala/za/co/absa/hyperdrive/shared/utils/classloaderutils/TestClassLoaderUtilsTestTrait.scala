@@ -15,8 +15,8 @@
  *   limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.shared.utils.classloaderutils
 
-object TestClassLoaderUtilsNotInstanceOf {
+trait TestClassLoaderUtilsTestTrait {
 
 }
