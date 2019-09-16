@@ -57,6 +57,7 @@
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
         <scala.compat.version>2.11</scala.compat.version>
         <specs.version>2.4.16</specs.version>
+        <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
 
         <!--Log4J2-->
         <log4j.version>2.11.1</log4j.version>
@@ -320,7 +321,7 @@
             <plugin>
                 <groupId>org.scalastyle</groupId>
                 <artifactId>scalastyle-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>${scalastyle.maven.version}</version>
                 <configuration>
                     <verbose>false</verbose>
                     <failOnViolation>true</failOnViolation>

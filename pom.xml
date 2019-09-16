@@ -85,6 +85,7 @@
 
     <properties>
         <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
+        <directory.maven.plugin.version>0.1</directory.maven.plugin.version>
     </properties>
 
     <build>
@@ -92,7 +93,7 @@
             <plugin>
                 <groupId>org.commonjava.maven.plugins</groupId>
                 <artifactId>directory-maven-plugin</artifactId>
-                <version>0.1</version>
+                <version>${directory.maven.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>directories</id>
