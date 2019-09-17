@@ -24,6 +24,7 @@ pipeline {
     agent {
         label "${hyperdriveSlaveLabel}"
     }
+    
     tools {
         jdk "${toolVersionJava}"
         maven "${toolVersionMaven}"
