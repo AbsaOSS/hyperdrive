@@ -88,6 +88,7 @@
         <!--Deployment Plugins-->
         <gpg.plugin.version>1.6</gpg.plugin.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     </properties>
 
     <dependencies>
@@ -399,6 +400,14 @@
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>${maven.release.plugin.version}</version>
+                        <configuration>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
                         </configuration>
                     </plugin>
                 </plugins>
