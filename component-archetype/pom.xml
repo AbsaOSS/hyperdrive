@@ -49,6 +49,13 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
+                <includes>
+                    <include>archetype-resources/.gitignore</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
                 <excludes>
                     <exclude>archetype-resources/pom.xml</exclude>
                 </excludes>
@@ -69,6 +76,7 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>${maven.resources.plugin.version}</version>
                 <configuration>
+                    <addDefaultExcludes>false</addDefaultExcludes> <!-- To include .gitignore -->
                     <escapeString>\</escapeString>
                 </configuration>
             </plugin>

@@ -24,6 +24,12 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         name="archetype">
     <fileSets>
+        <fileSet filtered="false" packaged="false">
+            <directory></directory>
+            <includes>
+                    <include>.gitignore</include>
+            </includes>
+        </fileSet>
         <fileSet filtered="true" packaged="true">
             <directory>src/main/scala</directory>
             <includes>
