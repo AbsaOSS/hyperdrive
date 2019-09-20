@@ -19,11 +19,11 @@
 
 # Pipeline settings
 component.ingestor=spark
-component.reader=KafkaStreamReader
-component.decoder=ConfluentAvroKafkaStreamDecoder
-component.manager=CheckpointOffsetManager
-component.transformer=ColumnSelectorStreamTransformer
-component.writer=ParquetStreamWriter
+component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
+component.decoder=za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
+component.manager=za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
+component.transformer=za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
+component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AllNullableParquetStreamWriter
 
 # Spark settings
 ingestor.spark.app.name=ingestor-app-pane
@@ -31,12 +31,13 @@ ingestor.spark.app.name=ingestor-app-pane
 # Source(Kafka) settings
 reader.kafka.topic=souce-payload-topic
 reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
-#reader.kafka.security.protocol=SSL
-#reader.kafka.ssl.truststore.location=path/to/your/truststore.jks
-#reader.kafka.ssl.truststore.password=your_truststore_password
-#reader.kafka.ssl.keystore.location=path/to/your/keystore.jks
-#reader.kafka.ssl.keystore.password=your_keystore_password
-#reader.kafka.ssl.key.password=your_ssl_password
+#reader.option.kafka.security.protocol=SSL
+#reader.option.kafka.ssl.truststore.location=path/to/your/truststore.jks
+#reader.option.kafka.ssl.truststore.password=your_truststore_password
+#reader.option.kafka.ssl.keystore.location=path/to/your/keystore.jks
+#reader.option.kafka.ssl.keystore.password=your_keystore_password
+#reader.option.kafka.ssl.key.password=your_ssl_password
+#reader.option.failOnDataLoss=false
 
 # Offset management(checkpointing) settings
 manager.checkpoint.base.location=/tmp/checkpoint-location
@@ -46,6 +47,11 @@ decoder.avro.schema.registry.url=http://localhost:8081
 decoder.avro.value.schema.id=latest
 # options = {topic.name, record.name, topic.record.name}
 decoder.avro.value.schema.naming.strategy=topic.name
+
+# for the case when the naming strategy is either record.name or topic.record.name
+#decoder.avro.value.schema.record.name = recordName
+#decoder.avro.value.schema.record.namespace = recordNamespace
+
 # options = {RETAIN_SELECTED_COLUMN_ONLY, RETAIN_ORIGINAL_SCHEMA}
 decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
 

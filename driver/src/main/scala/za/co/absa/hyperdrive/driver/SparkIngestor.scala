@@ -1,19 +1,17 @@
 /*
- *
  * Copyright 2019 ABSA Group Limited
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package za.co.absa.hyperdrive.driver
@@ -22,12 +20,12 @@ import java.util.UUID
 
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.transformer.StreamTransformer
-import za.co.absa.hyperdrive.decoder.StreamDecoder
-import za.co.absa.hyperdrive.writer.StreamWriter
 
 import scala.util.control.NonFatal
 
@@ -48,12 +46,12 @@ object SparkIngestor {
     * IF this method is invoked to ingest from a continuous source (e.g. a topic that is receiving data no-stop), it WILL
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
-    * @param spark [[SparkSession]] instance.
-    * @param streamReader [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
-    * @param decoder [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
-    * @param streamTransformer [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
-    * @param streamWriter [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
+    * @param spark             [[SparkSession]] instance.
+    * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
+    * @param offsetManager     [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
+    * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
+    * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
   @throws(classOf[IllegalArgumentException])
   @throws(classOf[IngestionStartException])
@@ -65,29 +63,7 @@ object SparkIngestor {
             streamTransformer: StreamTransformer,
             streamWriter: StreamWriter): Unit= {
 
-    if (spark == null) {
-      throw new IllegalArgumentException("Received NULL SparkSession instance.")
-    }
-
-    if (streamReader == null) {
-      throw new IllegalArgumentException("Received NULL StreamReader instance.")
-    }
-
-    if (offsetManager == null) {
-      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
-    }
-
-    if (decoder == null) {
-      throw new IllegalArgumentException("Received NULL StreamDecoder instance.")
-    }
-
-    if (streamTransformer == null) {
-      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
-    }
-
-    if (streamWriter == null) {
-      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
-    }
+    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
 
     val ingestionId = generateIngestionId
 
@@ -115,6 +91,37 @@ object SparkIngestor {
     }
 
     logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+  }
+
+  private def validateInput(spark: SparkSession,
+                            streamReader: StreamReader,
+                            offsetManager: OffsetManager,
+                            decoder: StreamDecoder,
+                            streamTransformer: StreamTransformer,
+                            streamWriter: StreamWriter): Unit = {
+    if (spark == null) {
+      throw new IllegalArgumentException("Received NULL SparkSession instance.")
+    }
+
+    if (streamReader == null) {
+      throw new IllegalArgumentException("Received NULL StreamReader instance.")
+    }
+
+    if (offsetManager == null) {
+      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
+    }
+
+    if (decoder == null) {
+      throw new IllegalArgumentException("Received NULL StreamDecoder instance.")
+    }
+
+    if (streamTransformer == null) {
+      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
+    }
+
+    if (streamWriter == null) {
+      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
+    }
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString

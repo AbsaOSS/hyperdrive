@@ -17,13 +17,11 @@
   ~
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -32,9 +30,13 @@
     <artifactId>parent-conf</artifactId>
 
     <repositories>
+        <!-- Used for ABRiS-->
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
         </repository>
     </repositories>
 
@@ -50,9 +52,9 @@
         <scala.version>2.11.8</scala.version>
         <scalatest.version>3.0.5</scalatest.version>
         <scalatest.maven.version>1.0</scalatest.maven.version>
-        <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
         <scala.compat.version>2.11</scala.compat.version>
         <specs.version>2.4.16</specs.version>
+        <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
 
         <!--Log4J2-->
         <log4j.version>2.11.1</log4j.version>
@@ -69,12 +71,6 @@
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
-
-        <!--Junit-->
-        <junit.jupiter.version>5.3.0</junit.jupiter.version>
-
-        <!--Apache Curator-->
-        <apache.curator.version>4.2.0</apache.curator.version>
 
         <!--Shade Maven plug-in-->
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
@@ -180,11 +176,6 @@
             <!--Spark-->
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-yarn_${scala.compat.version}</artifactId>
-                <version>${spark.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
             </dependency>
@@ -217,11 +208,6 @@
             </dependency>
 
             <!--Kafka-->
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka-clients</artifactId>
-                <version>${kafka.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
@@ -260,18 +246,6 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.junit.vintage</groupId>
-                <artifactId>junit-vintage-engine</artifactId>
-                <version>${junit.jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-test</artifactId>
-                <version>${apache.curator.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.kafka</groupId>
                 <artifactId>spring-kafka-test</artifactId>
                 <version>${spring.kafka.test.version}</version>
@@ -306,12 +280,6 @@
                             <goal>testCompile</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>doc-jar</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
 
@@ -339,6 +307,28 @@
                         <id>test</id>
                         <goals>
                             <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.scalastyle</groupId>
+                <artifactId>scalastyle-maven-plugin</artifactId>
+                <version>${scalastyle.maven.version}</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <failOnViolation>true</failOnViolation>
+                    <failOnWarning>false</failOnWarning>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
+                    <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
+                    <configLocation>${root.dir}/scalastyle-config.xml</configLocation>
+                    <outputFile>${project.basedir}/target/scalastyle-output.xml</outputFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>

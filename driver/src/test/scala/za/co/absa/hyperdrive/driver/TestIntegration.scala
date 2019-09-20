@@ -31,19 +31,19 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
-import za.co.absa.hyperdrive.decoder.StreamDecoder
-import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
-import za.co.absa.hyperdrive.reader.StreamReader
-import za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.driver.data.ComplexRecordsGenerator
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
-import za.co.absa.hyperdrive.shared.data.ComplexRecordsGenerator
-import za.co.absa.hyperdrive.shared.utils.TempDir
-import za.co.absa.hyperdrive.transformer.StreamTransformer
-import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.writer.StreamWriter
-import za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory
+import za.co.absa.hyperdrive.testutils.TempDir
 
 @Ignore
 class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
@@ -97,11 +97,11 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
 
     // Components
     configuration.addProperty(HyperdriveComponentsKeys.KEY_INGESTOR, "spark")
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_READER, StreamReaderAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_MANAGER, OffsetManagerAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_DECODER, StreamDecoderAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_TRANSFORMER, StreamTransformerAbstractFactory.getAvailableFactories.head)
-    configuration.addProperty(HyperdriveComponentsKeys.KEY_WRITER, StreamWriterAbstractFactory.getAvailableFactories.head)
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_READER, "za.co.absa.hyperdrive.ingestor.implementation.reader.factories.kafka.KafkaStreamReaderFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_MANAGER, "za.co.absa.hyperdrive.ingestor.implementation.manager.factories.checkpoint.CheckpointOffsetManagerFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_DECODER, "za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.avro.confluent.ConfluentAvroKafkaStreamDecoderFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_TRANSFORMER, "za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.column.selection.ColumnSelectorStreamTransformerFactory")
+    configuration.addProperty(HyperdriveComponentsKeys.KEY_WRITER, "za.co.absa.hyperdrive.ingestor.implementation.writer.factories.parquet.ParquetStreamWriterFactory")
 
     // StreamReader
     configuration.addProperty(KafkaStreamReaderKeys.KEY_TOPIC, defaultTopic)

@@ -1,18 +1,17 @@
 /*
- *  Copyright 2019 ABSA Group Limited
+ * Copyright 2019 ABSA Group Limited
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package za.co.absa.hyperdrive.driver
@@ -20,18 +19,17 @@ package za.co.absa.hyperdrive.driver
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.decoder.StreamDecoder
-import za.co.absa.hyperdrive.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.driver.drivers.CommandLineIngestionDriver.logger
-import za.co.absa.hyperdrive.manager.offset.OffsetManager
-import za.co.absa.hyperdrive.manager.offset.factories.OffsetManagerAbstractFactory
-import za.co.absa.hyperdrive.reader.StreamReader
-import za.co.absa.hyperdrive.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.IngestorKeys
-import za.co.absa.hyperdrive.transformer.StreamTransformer
-import za.co.absa.hyperdrive.transformer.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.writer.StreamWriter
-import za.co.absa.hyperdrive.writer.factories.StreamWriterAbstractFactory
 
 private[driver] class IngestionDriver {
 
