@@ -54,7 +54,6 @@
         <scala.version>2.11.8</scala.version>
         <scalatest.version>3.0.5</scalatest.version>
         <scalatest.maven.version>1.0</scalatest.maven.version>
-        <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
         <scala.compat.version>2.11</scala.compat.version>
         <specs.version>2.4.16</specs.version>
         <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
@@ -84,11 +83,6 @@
         <!--Configurations-->
         <commons.configuration2.version>2.4</commons.configuration2.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
-
-        <!--Deployment Plugins-->
-        <gpg.plugin.version>1.6</gpg.plugin.version>
-        <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
-        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     </properties>
 
     <dependencies>
@@ -343,76 +337,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>deploy</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>net.alchim31.maven</groupId>
-                        <artifactId>scala-maven-plugin</artifactId>
-                        <version>${scala.maven.plugin.version}</version>
-                        <configuration>
-                            <scalaVersion>${scala.version}</scalaVersion>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>doc-jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${gpg.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus.staging.plugin.version}</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>${maven.release.plugin.version}</version>
-                        <configuration>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <releaseProfiles>deploy</releaseProfiles>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
