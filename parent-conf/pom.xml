@@ -408,6 +408,7 @@
                         <version>${maven.release.plugin.version}</version>
                         <configuration>
                             <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <releaseProfiles>deploy</releaseProfiles>
                         </configuration>
                     </plugin>
                 </plugins>
