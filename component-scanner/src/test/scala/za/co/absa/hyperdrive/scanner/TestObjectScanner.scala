@@ -18,7 +18,7 @@
 package za.co.absa.hyperdrive.scanner
 
 import java.io.File
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
 
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactory

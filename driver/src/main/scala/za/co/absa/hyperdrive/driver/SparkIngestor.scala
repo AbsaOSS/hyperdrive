@@ -85,7 +85,7 @@ object SparkIngestor {
       ingestionQuery.stop()
     } catch {
       case NonFatal(e) =>
-        throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. The was no error in the query plan, but something when wrong. " +
+        throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. There was no error in the query plan, but something when wrong. " +
           s"Pay attention to this exception since the query has been started, which might lead to duplicate data or similar issues. " +
           s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }

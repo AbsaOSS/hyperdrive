@@ -22,6 +22,8 @@ import java.util.jar.{Attributes, JarEntry, JarOutputStream, Manifest}
 
 object JarTestUtils {
 
+  val BUFFER_SIZE = 1024
+
   def createJar(baseDir: File, jarName: String, filenames: List[String]): File = {
     val content = filenames.map(filename => new File(getClass.getClassLoader.getResource(filename).toURI) -> filename).toMap
     JarTestUtils.createJar(baseDir, jarName, content)
@@ -44,7 +46,7 @@ object JarTestUtils {
   private def addEntries(destJarFile: File, manifest: Manifest, content: Map[File, String]): Unit = {
     val outputJar = new JarOutputStream(new FileOutputStream(destJarFile.getAbsolutePath), manifest)
     content.foreach(entry => add(entry._1, entry._2, outputJar))
-    outputJar.close();
+    outputJar.close()
   }
 
   @throws[IOException]
@@ -59,7 +61,7 @@ object JarTestUtils {
 
       val in = new BufferedInputStream(new FileInputStream(source))
 
-      val buffer = new Array[Byte](1024)
+      val buffer = new Array[Byte](BUFFER_SIZE)
 
       var count = in.read(buffer)
       while (count != -1) {

@@ -18,6 +18,8 @@ package za.co.absa.hyperdrive.testutils
 
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 
+import scala.annotation.tailrec
+
 object SparkTestUtils {
 
   def areAllFieldsNullable(schema: StructType): Boolean = {
@@ -40,6 +42,7 @@ object SparkTestUtils {
     }
   }
 
+  @tailrec
   private def isExpectedNullabilityForAll(arrayType: ArrayType, expectedNullability: Boolean): Boolean = {
     arrayType.elementType match {
       case dt: ArrayType => isExpectedNullabilityForAll(dt, expectedNullability)

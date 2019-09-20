@@ -17,6 +17,4 @@
 
 package za.co.absa.hyperdrive.shared.utils.classloaderutils
 
-object TestClassLoaderUtilsNotInstanceOf {
-
-}
+object TestClassLoaderUtilsNotInstanceOf

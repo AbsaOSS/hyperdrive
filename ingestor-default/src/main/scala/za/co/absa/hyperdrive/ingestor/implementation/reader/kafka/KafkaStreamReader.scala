@@ -140,7 +140,7 @@ object KafkaStreamReader extends StreamReaderFactory {
     }
   }
 
-  private def findMissingKeys(keys: Seq[String], map: Map[String,String]): Seq[String] = keys.filterNot(map.contains(_))
+  private def findMissingKeys(keys: Seq[String], map: Map[String,String]): Seq[String] = keys.filterNot(map.contains)
 
   private def tweakKeyName(key: String): String = {
     key.replace(s"$rootComponentConfKey.", "") // remove the component root configuration key
