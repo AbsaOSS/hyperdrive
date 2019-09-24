@@ -19,6 +19,4 @@ package za.co.absa.hyperdrive.scanner.dummyjar
 
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 
-trait DummyTrait extends StreamReader {
-
-}
+trait DummyTrait extends StreamReader

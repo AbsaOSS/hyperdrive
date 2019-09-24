@@ -35,7 +35,7 @@ object PropertiesIngestionDriver extends IngestionDriver {
   def main(args: Array[String]): Unit = {
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
-      throw new IllegalArgumentException("No properties file informed.")
+      throw new IllegalArgumentException("No properties file supplied.")
     }
 
     if (isInvalid(propertiesFile.get)) {

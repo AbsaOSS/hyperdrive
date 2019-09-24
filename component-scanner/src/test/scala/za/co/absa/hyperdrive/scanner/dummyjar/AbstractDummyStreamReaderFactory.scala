@@ -19,4 +19,4 @@ package za.co.absa.hyperdrive.scanner.dummyjar
 
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactory
 
-abstract class AbstractDummyStreamReaderFactory extends StreamReaderFactory {}
+abstract class AbstractDummyStreamReaderFactory extends StreamReaderFactory

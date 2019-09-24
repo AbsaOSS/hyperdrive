@@ -17,6 +17,4 @@
 
 package za.co.absa.hyperdrive.shared.utils.classloaderutils
 
-object TestClassLoaderUtilsSingletonInstanceOf extends TestClassLoaderUtilsTestTrait {
-
-}
+object TestClassLoaderUtilsSingletonInstanceOf extends TestClassLoaderUtilsTestTrait

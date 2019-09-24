@@ -17,6 +17,4 @@
 
 package za.co.absa.hyperdrive.shared.utils.classloaderutils
 
-class TestClassLoaderUtilsNoSingleton {
-
-}
+class TestClassLoaderUtilsNoSingleton
