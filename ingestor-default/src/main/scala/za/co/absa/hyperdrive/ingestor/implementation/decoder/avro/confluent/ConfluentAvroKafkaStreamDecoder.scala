@@ -55,8 +55,9 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
     val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
     logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
 
-    import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro(column = "value", None, Some(schemaRegistryFullSettings))(retentionPolicy)
+    import za.co.absa.abris.avro.functions.from_confluent_avro
+    import org.apache.spark.sql.functions.col
+    streamReader.load().select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data).select("data.*")
   }
 }
 
