@@ -13,6 +13,14 @@
     limitations under the License.
 
 # Hyperdrive - A Lambda Fast-to-Batch Ingestion Framework for Spark
+
+### Build Status
+| master | develop |
+| ------------- | ------------- |
+| [![Build Status](https://opensource.bigusdatus.com/jenkins/buildStatus/icon?job=Absa-OSS-Projects%2Fhyperdrive%2Fmaster)](https://opensource.bigusdatus.com/jenkins/job/Absa-OSS-Projects/job/hyperdrive/job/master/) | [![Build Status](https://opensource.bigusdatus.com/jenkins/buildStatus/icon?job=Absa-OSS-Projects%2Fhyperdrive%2Fdevelop)](https://opensource.bigusdatus.com/jenkins/job/Absa-OSS-Projects/job/hyperdrive/job/develop/) | 
+
+## What is Hyperdrive?
+
 Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
 
 It is composed of two main modules: triggers and ingestors.
