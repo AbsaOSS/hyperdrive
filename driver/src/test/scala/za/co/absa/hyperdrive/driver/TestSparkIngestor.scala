@@ -23,6 +23,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.finalizer.IngestionFinalizer
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
@@ -37,6 +38,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   private val streamDecoder: StreamDecoder = mock[StreamDecoder]
   private val streamTransformer: StreamTransformer = mock[StreamTransformer]
   private val streamWriter: StreamWriter = mock[StreamWriter]
+  private val ingestionFinalizer: IngestionFinalizer = mock[IngestionFinalizer]
 
   private val nullMockedDataStream: DataStreamReader = null
   private val dataFrame: DataFrame = mock[DataFrame]
@@ -61,7 +63,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null Spark session" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(spark = null, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+      SparkIngestor.ingest(spark = null, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("spark"))
@@ -70,7 +72,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null StreamReader" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader = null, offsetManager, streamDecoder, streamTransformer, streamWriter)
+      SparkIngestor.ingest(sparkSession, streamReader = null, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("stream"))
@@ -79,7 +81,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null OffsetManager" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager = null, streamDecoder, streamTransformer, streamWriter)
+      SparkIngestor.ingest(sparkSession, streamReader, offsetManager = null, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("offset"))
@@ -88,7 +90,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null AvroDecoder" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, decoder = null, streamTransformer, streamWriter)
+      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, decoder = null, streamTransformer, streamWriter, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("decoder"))
@@ -96,7 +98,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null StreamTransformer" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer = null, streamWriter)
+      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer = null, streamWriter, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("stream"))
@@ -105,36 +107,45 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   it should "throw on null StreamWriter" in {
     val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter = null)
+      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter = null, ingestionFinalizer)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
     assert(throwable.getMessage.toLowerCase.contains("stream"))
     assert(throwable.getMessage.toLowerCase.contains("writer"))
   }
 
+  it should "throw on null IngestionFinalizer" in {
+    val throwable = intercept[IllegalArgumentException](
+      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer = null)
+    )
+    assert(throwable.getMessage.toLowerCase.contains("null"))
+    assert(throwable.getMessage.toLowerCase.contains("ingestion"))
+    assert(throwable.getMessage.toLowerCase.contains("finalizer"))
+  }
+
   it should "throw IngestionStartException if stream reader fails during setup" in {
     when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
     when(streamReader.read(sparkSession)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "throw IngestionStartException if offset manager fails during setup" in {
     when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
     when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "throw IngestionStartException if format decoder fails during setup" in {
     when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
     when(streamDecoder.decode(nullMockedDataStream)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "throw IngestionStartException if stream transformer fails during setup" in {
     when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "throw IngestionStartException if stream writer fails during setup" in {
@@ -142,7 +153,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
     when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
     when(streamWriter.write(dataFrame, offsetManager)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "throw IngestionException if ingestion fails during execution" in {
@@ -150,16 +161,16 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
     when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
     when(streamingQuery.stop()).thenThrow(classOf[IllegalStateException])
-    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
   it should "invoke the components in correct order" in {
     prepareMocks()
 
     // order in which the components should be invoked
-    val inOrderCheck = inOrder(streamReader, sparkSession, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    val inOrderCheck = inOrder(streamReader, sparkSession, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
 
-    SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
 
     val nullMockedDataStream: DataStreamReader = null
 

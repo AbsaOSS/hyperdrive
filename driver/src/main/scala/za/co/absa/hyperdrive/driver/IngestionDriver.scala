@@ -19,11 +19,13 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.finalizer.IngestionFinalizer
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.finalizer.factories.IngestionFinalizerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
@@ -44,9 +46,10 @@ private[driver] class IngestionDriver {
     val streamDecoder = getStreamDecoder(configuration)
     val streamTransformer = getStreamTransformer(configuration)
     val streamWriter = getStreamWriter(configuration)
+    val ingestionFinalizer = getIngestionFinalizer(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer)
   }
 
   private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
@@ -60,6 +63,8 @@ private[driver] class IngestionDriver {
   private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
+
+  private def getIngestionFinalizer(conf: Configuration): IngestionFinalizer = IngestionFinalizerAbstractFactory.build(conf)
 
   private def printConfiguration(configuration: Configuration): Unit = {
     import scala.collection.JavaConverters._
