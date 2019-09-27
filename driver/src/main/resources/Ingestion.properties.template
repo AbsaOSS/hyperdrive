@@ -23,7 +23,7 @@ component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.Kafk
 component.decoder=za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
 component.manager=za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 component.transformer=za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
-component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AllNullableParquetStreamWriter
+component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
 # Spark settings
 ingestor.spark.app.name=ingestor-app-pane
