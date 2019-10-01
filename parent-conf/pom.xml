@@ -43,7 +43,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--ABRiS-->
-        <abris.version>3.0.1</abris.version>
+        <abris.version>3.0.2</abris.version>
 
         <!--Scala-->
         <scala.version>2.11.8</scala.version>
@@ -64,7 +64,7 @@
         <spark.sql.kafka.version>2.4.2</spark.sql.kafka.version>
 
         <!--Spark-->
-        <spark.version>2.4.0</spark.version>
+        <spark.version>2.4.4</spark.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -148,7 +148,7 @@
             <!--ABRiS-->
             <dependency>
                 <groupId>za.co.absa</groupId>
-                <artifactId>abris_2.11</artifactId>
+                <artifactId>abris_${scala.compat.version}</artifactId>
                 <version>${abris.version}</version>
                 <exclusions>
                     <exclusion>

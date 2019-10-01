@@ -57,7 +57,10 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
 
     import za.co.absa.abris.avro.functions.from_confluent_avro
     import org.apache.spark.sql.functions.col
-    streamReader.load().select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data).select("data.*")
+    streamReader
+      .load()
+      .select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data)
+      .select("data.*")
   }
 }
 
