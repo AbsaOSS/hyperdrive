@@ -24,6 +24,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.finalizer.factories.IngestionFinalizerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
@@ -38,6 +39,7 @@ private[driver] class IngestionDriver {
 
   def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
+    applyDefaults(configuration)
     printConfiguration(configuration)
 
     val spark = getSparkSession(configuration)
@@ -72,5 +74,11 @@ private[driver] class IngestionDriver {
       .getKeys
       .asScala
       .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
+  }
+
+  private def applyDefaults(configuration: Configuration): Unit = {
+    DefaultConfiguration.values.foreach {
+      case (key, value) => if (!configuration.containsKey(key)) configuration.addProperty(key, value)
+    }
   }
 }
