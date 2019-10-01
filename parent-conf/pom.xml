@@ -67,6 +67,8 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
+        <testcontainers.kafka.version>1.12.3</testcontainers.kafka.version>
+        <kafka.avro.serializer.version>5.2.2</kafka.avro.serializer.version>
 
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
@@ -159,6 +161,18 @@
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-core_${scala.compat.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
         </dependency>
     </dependencies>
 
@@ -283,6 +297,26 @@
                 <version>${spring.kafka.test.version}</version>
                 <scope>compile</scope>
             </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${kafka.avro.serializer.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>kafka</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
