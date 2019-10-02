@@ -82,7 +82,10 @@
                             </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver</mainClass>
+                                    <manifestEntries>
+                                        <Main-Class>za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver</Main-Class>
+                                        <Implementation-Version>${buildNumber}</Implementation-Version>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                             <filters>
