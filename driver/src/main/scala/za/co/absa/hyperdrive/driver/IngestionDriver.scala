@@ -77,8 +77,9 @@ private[driver] class IngestionDriver {
   }
 
   private def applyDefaults(configuration: Configuration): Unit = {
-    DefaultConfiguration.values.foreach {
-      case (key, value) => if (!configuration.containsKey(key)) configuration.addProperty(key, value)
-    }
+    DefaultConfiguration.values
+      .filter{case (key, _) => !configuration.containsKey(key)}
+      .foreach{case (key, value) => configuration.addProperty(key, value)}
+
   }
 }
