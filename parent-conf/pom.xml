@@ -61,7 +61,7 @@
         <kafka.version>2.1.1</kafka.version>
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <spark.sql.kafka.version>2.4.2</spark.sql.kafka.version>
+        <spark.sql.kafka.version>2.4.4</spark.sql.kafka.version>
 
         <!--Spark-->
         <spark.version>2.4.4</spark.version>
