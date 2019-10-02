@@ -19,6 +19,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
+import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 object CommandLineIngestionDriver extends IngestionDriver {
 
@@ -28,6 +29,8 @@ object CommandLineIngestionDriver extends IngestionDriver {
     if (args.isEmpty) {
       throw new IllegalArgumentException("No configuration provided.")
     }
+
+    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
     logger.info(s"Going to load ${args.length} configurations from command line.")
     val configuration = parseConfiguration(args)

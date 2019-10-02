@@ -23,6 +23,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
+import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 /**
   * This driver launches ingestion by loading the configurations from a properties file.
@@ -36,6 +37,7 @@ object PropertiesIngestionDriver extends IngestionDriver {
     if (propertiesFile.isEmpty) {
       throw new IllegalArgumentException("No properties file supplied.")
     }
+    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
     if (isInvalid(propertiesFile.get)) {
       throw new IllegalArgumentException(s"Invalid properties file: '${propertiesFile.get}'.")
