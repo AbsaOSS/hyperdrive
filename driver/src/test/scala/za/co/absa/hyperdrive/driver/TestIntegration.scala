@@ -30,11 +30,13 @@ import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.driver.data.ComplexRecordsGenerator
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
+import za.co.absa.hyperdrive.ingestor.api.finalizer.IngestionFinalizer
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.finalizer.factories.IngestionFinalizerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
@@ -68,6 +70,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private var decoder: StreamDecoder = _
   private var transformer: StreamTransformer = _
   private var writer: StreamWriter = _
+  private var finalizer: IngestionFinalizer = _
 
   private lazy val SCHEMA_REGISTRY_ACCESS_SETTINGS = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "http://localhost:8081",
@@ -144,6 +147,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
     decoder = getStreamDecoder
     transformer = getStreamTransformer
     writer = getStreamWriter
+    finalizer = getIngestionFinalizer
   }
 
   private def setupDefaultInfrastructure(): Unit = {
@@ -170,7 +174,7 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
       schemaRegistrySettings,
       spark)(encoder)
 
-    SparkIngestor.ingest(spark, reader, manager, decoder, transformer, writer)
+    SparkIngestor.ingest(spark, reader, manager, decoder, transformer, writer, finalizer)
   }
 
   private def getSparkSession: SparkSession = SparkSession.builder().master("local[*]").appName("IntegrationTest").getOrCreate()
@@ -184,6 +188,8 @@ class TestIntegration extends FlatSpec with BeforeAndAfterAll with BeforeAndAfte
   private def getStreamTransformer: StreamTransformer = StreamTransformerAbstractFactory.build(configuration)
 
   private def getStreamWriter: StreamWriter = StreamWriterAbstractFactory.build(configuration)
+
+  private def getIngestionFinalizer: IngestionFinalizer = IngestionFinalizerAbstractFactory.build(configuration)
 
   private def produceRandomRecords(howMany: Int): List[Row] = ComplexRecordsGenerator.generateUnparsedRows(howMany)
 
