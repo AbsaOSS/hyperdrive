@@ -15,6 +15,9 @@
 
 package za.co.absa.hyperdrive.driver
 
+import java.nio.file.{Files, Paths}
+import java.util.UUID
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -57,6 +60,9 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
       streamingQuery)
     when(streamReader.getSourceName).thenReturn("test-source")
     when(streamWriter.getDestination).thenReturn("test-destination")
+    val sparkContext = mock[SparkContext]
+    when(sparkContext.hadoopConfiguration).thenReturn(configuration)
+    when(sparkSession.sparkContext).thenReturn(sparkContext)
   }
 
   behavior of SparkIngestor.getClass.getName
@@ -156,6 +162,30 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
   }
 
+  it should "delete destination directory and throw IngestionException if ingestion fails" in {
+    val destination = Files.createTempDirectory("test")
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
+    when(streamingQuery.processAllAvailable()).thenThrow(classOf[NullPointerException])
+    when(streamWriter.getDestination).thenReturn(destination.toUri.getPath)
+    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
+    assert(!Files.exists(destination))
+  }
+
+  it should "not delete destination directory if it has not been empty before if ingestion fails" in {
+    val destination = Files.createTempDirectory("test")
+    val filepath = destination.resolve("someFile.txt")
+    Files.createFile(filepath)
+    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
+    when(streamingQuery.processAllAvailable()).thenThrow(classOf[NullPointerException])
+    when(streamWriter.getDestination).thenReturn(destination.toUri.getPath)
+    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter, ingestionFinalizer))
+    assert(Files.exists(filepath))
+  }
+
   it should "throw IngestionException if ingestion fails during execution" in {
     when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
@@ -185,11 +215,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   }
 
   private def prepareMocks(): Unit = {
-    val sparkContext = mock[SparkContext]
-    when(sparkContext.hadoopConfiguration).thenReturn(configuration)
-
-    when(sparkSession.sparkContext).thenReturn(sparkContext)
-
     when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
     when(streamReader.getSourceName).thenReturn("mocked_topic")
 
