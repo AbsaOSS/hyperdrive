@@ -14,7 +14,8 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
@@ -38,6 +39,10 @@
     </repositories>
 
     <properties>
+        <!--Enforced versions-->
+        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
+        <avro.version>1.9.1</avro.version> <!--Same as Abris uses-->
+
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -81,6 +86,19 @@
     </properties>
 
     <dependencies>
+        <!--Enforced dependency versions-->
+        <!--Jackson Databind-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!--Avro-->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
+        <!--END Enforced dependency versions-->
+
         <!--Spark-->
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -145,6 +163,21 @@
     <dependencyManagement>
 
         <dependencies>
+            <!--Enforced dependency versions-->
+            <!--Jackson Databind-->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${fasterxml.jackson.databind.version}</version>
+            </dependency>
+            <!--Avro-->
+            <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>${avro.version}</version>
+            </dependency>
+            <!--END Enforced dependency versions-->
+
             <!--ABRiS-->
             <dependency>
                 <groupId>za.co.absa</groupId>
