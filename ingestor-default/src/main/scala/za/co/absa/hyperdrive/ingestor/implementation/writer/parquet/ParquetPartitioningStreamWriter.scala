@@ -34,10 +34,6 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, repor
   private val COL_DATE = "hyperdrive_date"
   private val COL_VERSION = "hyperdrive_version"
 
-  if (StringUtils.isBlank(destination)) {
-    throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
-  }
-
   override protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
     val spark = dataFrame.sparkSession
     val initialVersion = 1

@@ -31,9 +31,9 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   private val baseDir = Files.createTempDirectory("testparquetpartitioning").toUri.toString
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-  behavior of "ParquetStreamWriter"
+  behavior of "ParquetPartitioningStreamWriter"
 
-  it should "write partitioned by date and version=1 where destination is empty" in {
+  it should "write partitioned by date and version=1 where destination directory is empty" in {
     // given
     val testDir = s"$baseDir/${UUID.randomUUID().toString}"
     val destinationDir = s"$testDir/destination"
