@@ -20,6 +20,7 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys._
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.KEY_STARTING_OFFSETS
 
 class TestCheckpointOffsetManagerObject extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
@@ -53,6 +54,18 @@ class TestCheckpointOffsetManagerObject extends FlatSpec with BeforeAndAfterEach
     val manager = CheckpointOffsetManager(configStub).asInstanceOf[CheckpointOffsetManager]
     assert(topic == manager.topic)
     assert(checkpointLocation == manager.checkpointBaseLocation)
+    assert(manager.startingOffsets.isEmpty)
+  }
+
+  it should "use the given startingOffsets value" in {
+    stubTopic()
+    stubCheckpointLocation()
+    stubProperty(KEY_STARTING_OFFSETS, "latest")
+
+    val manager = CheckpointOffsetManager(configStub).asInstanceOf[CheckpointOffsetManager]
+    assert(topic == manager.topic)
+    assert(checkpointLocation == manager.checkpointBaseLocation)
+    assert("latest" == manager.startingOffsets.get)
   }
 
   private def stubProperty(key: String, value: String): Unit = when(configStub.getString(key)).thenReturn(value)
