@@ -17,11 +17,10 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 

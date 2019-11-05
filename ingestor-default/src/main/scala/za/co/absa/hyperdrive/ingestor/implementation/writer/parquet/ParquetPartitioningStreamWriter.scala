@@ -19,7 +19,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.FileStreamSink
 import org.apache.spark.sql.functions.{lit, to_date}
