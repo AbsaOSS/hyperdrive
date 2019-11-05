@@ -57,12 +57,13 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
 
     val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
 
-    if (startingOffsets.isDefined) {
-      logger.info(s"Setting starting offsets for topic '$topic' = ${startingOffsets.get}.")
-      streamReader.option(WORD_STARTING_OFFSETS, startingOffsets.get)
-    } else {
-      logger.info(s"No offsets to set for topic '$topic'.")
-      streamReader
+    startingOffsets match {
+      case Some(startOffset) =>
+        logger.info(s"Setting starting offsets for topic '$topic' = $startOffset.")
+        streamReader.option(WORD_STARTING_OFFSETS, startOffset)
+      case _ =>
+        logger.info(s"No offsets to set for topic '$topic'.")
+        streamReader
     }
   }
 
