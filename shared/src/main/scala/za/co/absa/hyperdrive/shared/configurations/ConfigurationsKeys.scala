@@ -84,4 +84,9 @@ object ConfigurationsKeys {
     val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
     val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.extra.conf"
   }
+
+  object ParquetPartitioningStreamWriterKeys {
+    val rootFactoryConfKey = s"${ParquetStreamWriterKeys.rootFactoryConfKey}.partitioning"
+    val KEY_REPORT_DATE = s"$rootFactoryConfKey.report.date"
+  }
 }
