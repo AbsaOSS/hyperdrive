@@ -22,16 +22,17 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 private[manager] object CheckpointOffsetManagerProps {
-  val STARTING_OFFSETS_KEY      = "startingOffsets"
-  val CHECKPOINT_LOCATION_KEY   = "checkpointLocation"
+  val CHECKPOINT_LOCATION_KEY = "checkpointLocation"
   val STARTING_OFFSETS_EARLIEST = "earliest"
 }
 
-private[manager] class CheckpointOffsetManager(val topic: String, val checkpointBaseLocation: String) extends OffsetManager(topic) {
+private[manager] class CheckpointOffsetManager(val topic: String, val checkpointBaseLocation: String,
+                                               val startingOffsets: Option[String]) extends OffsetManager(topic) {
 
   import CheckpointOffsetManagerProps._
 
@@ -56,12 +57,13 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
 
     val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
 
-    if (startingOffsets.isDefined) {
-      logger.info(s"Setting starting offsets for topic '$topic' = ${startingOffsets.get}.")
-      streamReader.option(STARTING_OFFSETS_KEY, startingOffsets.get)
-    } else {
-      logger.info(s"No offsets to set for topic '$topic'.")
-      streamReader
+    startingOffsets match {
+      case Some(startOffset) =>
+        logger.info(s"Setting starting offsets for topic '$topic' = $startOffset.")
+        streamReader.option(WORD_STARTING_OFFSETS, startOffset)
+      case _ =>
+        logger.info(s"No offsets to set for topic '$topic'.")
+        streamReader
     }
   }
 
@@ -85,7 +87,7 @@ private[manager] class CheckpointOffsetManager(val topic: String, val checkpoint
       Option.empty
     }
     else {
-      Option(STARTING_OFFSETS_EARLIEST)
+      if (startingOffsets.isDefined) startingOffsets else Option(STARTING_OFFSETS_EARLIEST)
     }
   }
 
@@ -102,14 +104,16 @@ object CheckpointOffsetManager extends OffsetManagerFactory {
   override def apply(config: Configuration): OffsetManager = {
     val topic = getTopic(config)
     val checkpointBaseLocation = getCheckpointLocation(config)
+    val startingOffsets = getStartingOffsets(config)
 
     LogManager.getLogger.info(s"Going to create CheckpointOffsetManager instance using: topic='$topic', checkpoint base location='$checkpointBaseLocation'")
 
-    new CheckpointOffsetManager(topic, checkpointBaseLocation)
+    new CheckpointOffsetManager(topic, checkpointBaseLocation, startingOffsets)
   }
 
   private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Could not find topic. Is '$KEY_TOPIC' defined?")
 
   private def getCheckpointLocation(configuration: Configuration): String = getOrThrow(KEY_CHECKPOINT_BASE_LOCATION, configuration, errorMessage = s"Could not find checkpoint base location. Is '$KEY_CHECKPOINT_BASE_LOCATION' defined?")
 
+  private def getStartingOffsets(configuration: Configuration): Option[String] = getOrNone(KEY_STARTING_OFFSETS, configuration)
 }

@@ -19,7 +19,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.finalizer.factories.Ingesti
 import za.co.absa.hyperdrive.ingestor.implementation.finalizer.noop.NoOpFinalizer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.{ColumnSelectorStreamTransformerKeys, KafkaStreamReaderKeys}
 
 /**
  * This class provides default values for configuration keys which are necessary to run the ingestor.

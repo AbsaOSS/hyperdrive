@@ -49,6 +49,8 @@ object ConfigurationsKeys {
     val KEY_KEYSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.keystore.location"
     val KEY_KEYSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.keystore.password"
     val KEY_KEY_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.key.password"
+    val WORD_STARTING_OFFSETS = "startingOffsets"
+    val KEY_STARTING_OFFSETS = s"$rootFactoryOptionalKafkaKey.$WORD_STARTING_OFFSETS"
   }
 
   object ColumnSelectorStreamTransformerKeys {

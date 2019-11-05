@@ -19,8 +19,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import org.apache.commons.configuration2.Configuration
+
+import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.execution.streaming.FileStreamSink
+import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -50,7 +52,7 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, repor
   }
 
   private def findNextVersion(spark: SparkSession, initialVersion: Int): Int = {
-    if (!FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration)) {
+    if (noCommittedParquetFilesExist(spark)) {
       initialVersion
     } else {
       import spark.implicits._
@@ -63,6 +65,11 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, repor
 
       if (versions.nonEmpty) versions.max + 1 else initialVersion
     }
+  }
+
+  private def noCommittedParquetFilesExist(spark: SparkSession): Boolean = {
+    val fileCatalog = new MetadataLogFileIndex(spark, new Path(destination), None)
+    !FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration) || fileCatalog.allFiles().isEmpty
   }
 }
 

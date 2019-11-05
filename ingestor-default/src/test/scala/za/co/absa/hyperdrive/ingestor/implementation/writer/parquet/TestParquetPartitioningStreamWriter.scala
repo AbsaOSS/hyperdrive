@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import java.nio.file.Files
-import java.util.UUID
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -27,28 +26,28 @@ import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.Checkpoi
 import za.co.absa.hyperdrive.testutils.SparkTestBase
 
 class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
-
+  import spark.implicits._
   private val baseDir = Files.createTempDirectory("testparquetpartitioning").toUri.toString
+  private val destinationDir = s"$baseDir/destination"
+  private val checkpointDir = s"$baseDir/checkpoint"
+
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
   behavior of "ParquetPartitioningStreamWriter"
 
-  it should "write partitioned by date and version=1 where destination directory is empty" in {
-    // given
-    val testDir = s"$baseDir/${UUID.randomUUID().toString}"
-    val destinationDir = s"$testDir/destination"
-    val checkpointDir = s"$testDir/checkpoint"
+  before {
     fs.mkdirs(new Path(destinationDir))
     fs.mkdirs(new Path(checkpointDir))
+  }
 
+  it should "write partitioned by date and version=1 where destination directory is empty" in {
+    // given
     val config = new BaseConfiguration()
-    config.addProperty("reader.kafka.topic", "testparquetpartitioning")
-    config.addProperty("manager.checkpoint.base.location", checkpointDir)
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
-
-    val offsetManager = CheckpointOffsetManager(config)
     val underTest = ParquetPartitioningStreamWriter(config)
+
+    val offsetManager = createCheckpointOffsetManager()
     val df = getDummyReadStream().toDF()
 
     // when
@@ -57,32 +56,23 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
 
     // then
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
-    import spark.implicits._
     spark.read.parquet(destinationDir)
       .select("value").map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.range(0, 100)
   }
 
   it should "write to partition version=2 when version=1 already exists for the same date" in {
     // given
-    val testDir = s"$baseDir/${UUID.randomUUID().toString}"
-    val destinationDir = s"$testDir/destination"
-    val checkpointDir = s"$testDir/checkpoint"
-    fs.mkdirs(new Path(destinationDir))
-    fs.mkdirs(new Path(checkpointDir))
-
     val config = new BaseConfiguration()
-    config.addProperty("reader.kafka.topic", "testparquetpartitioning")
-    config.addProperty("manager.checkpoint.base.location", checkpointDir)
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
+    val underTest = ParquetPartitioningStreamWriter(config)
 
     val previousDayConfig = new BaseConfiguration()
     previousDayConfig.addProperty("writer.parquet.destination.directory", destinationDir)
     previousDayConfig.addProperty("writer.parquet.partitioning.report.date", "2020-02-28")
-
-    val offsetManager = CheckpointOffsetManager(config)
     val previousDayWriter = ParquetPartitioningStreamWriter(previousDayConfig)
-    val underTest = ParquetPartitioningStreamWriter(config)
+
+    val offsetManager = createCheckpointOffsetManager()
 
     // when
     val stream = getDummyReadStream()
@@ -99,7 +89,6 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=2")) shouldBe true
 
-    import spark.implicits._
     val df = spark.read.parquet(destinationDir)
     df.select("value")
       .filter(df("hyperdrive_date") === lit("2020-02-29"))
@@ -113,12 +102,40 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
       .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.range(3000, 3100)
   }
 
+  it should "not throw if there is an empty commit in the destination" in {
+    // given
+    val config = new BaseConfiguration()
+    config.addProperty("writer.parquet.destination.directory", destinationDir)
+    config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
+    val underTest = ParquetPartitioningStreamWriter(config)
+    val offsetManager = createCheckpointOffsetManager()
+
+    val emptyStream = MemoryStream[Int](1, spark.sqlContext)
+
+    // when
+    underTest.write(emptyStream.toDF(), offsetManager).processAllAvailable()
+    emptyStream.addData(List.range(0, 100))
+    underTest.write(emptyStream.toDF(), offsetManager).processAllAvailable()
+
+    // then
+    fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
+    fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=2")) shouldBe false
+    val df = spark.read.parquet(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")
+    df.count() shouldBe 100
+  }
+
   after {
     fs.delete(new Path(baseDir), true)
   }
 
+  private def createCheckpointOffsetManager() = {
+    val config = new BaseConfiguration()
+    config.addProperty("reader.kafka.topic", "testparquetpartitioning")
+    config.addProperty("manager.checkpoint.base.location", checkpointDir)
+    CheckpointOffsetManager(config)
+  }
+
   private def getDummyReadStream() = {
-    import spark.implicits._
     val input = MemoryStream[Int](1, spark.sqlContext)
     input.addData(List.range(0, 100))
     input
