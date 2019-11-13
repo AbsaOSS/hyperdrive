@@ -295,12 +295,6 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.springframework.kafka</groupId>
-                <artifactId>spring-kafka-test</artifactId>
-                <version>${spring.kafka.test.version}</version>
-                <scope>compile</scope>
-            </dependency>
-            <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${kafka.avro.serializer.version}</version>
