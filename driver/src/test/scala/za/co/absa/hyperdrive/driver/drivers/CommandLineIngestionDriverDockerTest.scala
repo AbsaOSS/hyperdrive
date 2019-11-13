@@ -32,8 +32,7 @@ case class SchemaRegistryContainer(dockerImageName: String) extends GenericConta
 /**
  * This e2e test requires a Docker installation on the executing machine.
  */
-
-class TestIntegrationCommandLineIngestionDriver extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val baseDirPath = Files.createTempDirectory("hyperdriveE2eTest")

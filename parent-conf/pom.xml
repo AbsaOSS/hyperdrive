@@ -87,6 +87,9 @@
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
+
+        <!--Other properties-->
+        <skip.docker.tests>true</skip.docker.tests>
     </properties>
 
     <dependencies>
@@ -376,10 +379,23 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>test</id>
+                        <id>unit-tests</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <suffixes>(?&lt;!DockerTest)</suffixes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>docker-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <suffixes>(?&lt;=DockerTest)</suffixes>
+                            <skipTests>${skip.docker.tests}</skipTests>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -424,4 +440,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>all-tests</id>
+            <properties>
+                <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+        </profile>
+    </profiles>
 </project>
