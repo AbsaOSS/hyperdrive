@@ -53,7 +53,7 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
   }
 
   private def startSchemaRegistry(network: Network): SchemaRegistryContainer = {
-    val kafkaBrokerUrlInsideDocker = "PLAINTEXT://" + kafka.getNetworkAliases.get(0) + ":9092";
+    val kafkaBrokerUrlInsideDocker = "PLAINTEXT://" + kafka.getNetworkAliases.get(0) + ":9092"
     val schemaRegistry =
       SchemaRegistryContainer(s"confluentinc/cp-schema-registry:$confluentPlatformVersion")
         .withExposedPorts(schemaRegistryPort)
@@ -88,14 +88,15 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
   it should "execute the whole pipeline" in {
     // given
     val topic = "e2etest"
-    val schemaString = "{\"type\": \"record\", \"name\": \"" + topic + "\", \"fields\": [" +
-      "{\"type\": \"string\", \"name\": \"field1\"}, " +
-      "{\"type\": \"int\", \"name\": \"field2\"}" +
-      "]}"
+    val numberOfRecords = 50
+    val schemaString = raw"""{"type": "record", "name": "$topic", "fields": [
+      {"type": "string", "name": "field1"},
+      {"type": "int", "name": "field2"}
+      ]}"""
     val schema = new Parser().parse(schemaString)
 
     val producer = createProducer()
-    for (i <- 0 until 50) {
+    for (i <- 0 until numberOfRecords) {
       val record = new GenericData.Record(schema)
       record.put("field1", "hello")
       record.put("field2", i)
@@ -143,14 +144,14 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
 
     // then
     val df = spark.read.parquet(destinationDir)
-    df.count shouldBe 50L
+    df.count shouldBe numberOfRecords
     import spark.implicits._
     df.columns should contain theSameElementsAs List("hyperdrive_date", "hyperdrive_version", "field1", "field2")
     df.select("field1").distinct()
       .map(_ (0).asInstanceOf[String]).collect() should contain theSameElementsAs List("hello")
 
     df.select("field2")
-      .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.range(0, 50)
+      .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.range(0, numberOfRecords)
   }
 
   after {
