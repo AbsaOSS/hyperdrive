@@ -38,7 +38,7 @@ pipeline {
         stage ('Build') {
             steps {
                 configFileProvider([configFile(fileId: "${mavenSettingsId}", variable: 'MAVEN_SETTINGS_XML')]) {
-                    sh "mvn -s $MAVEN_SETTINGS_XML clean verify --no-transfer-progress"
+                    sh "mvn -s $MAVEN_SETTINGS_XML clean verify --no-transfer-progress -Pall-tests"
                 }
             }
         }

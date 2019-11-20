@@ -67,6 +67,8 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
+        <testcontainers.kafka.version>1.12.3</testcontainers.kafka.version>
+        <kafka.avro.serializer.version>5.2.2</kafka.avro.serializer.version>
 
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
@@ -85,6 +87,9 @@
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
+
+        <!--Other properties-->
+        <skip.docker.tests>true</skip.docker.tests>
     </properties>
 
     <dependencies>
@@ -159,6 +164,18 @@
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-core_${scala.compat.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
         </dependency>
     </dependencies>
 
@@ -278,11 +295,25 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.springframework.kafka</groupId>
-                <artifactId>spring-kafka-test</artifactId>
-                <version>${spring.kafka.test.version}</version>
-                <scope>compile</scope>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${kafka.avro.serializer.version}</version>
+                <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>kafka</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -342,10 +373,23 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>test</id>
+                        <id>unit-tests</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <suffixes>(?&lt;!DockerTest)</suffixes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>docker-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <suffixes>(?&lt;=DockerTest)</suffixes>
+                            <skipTests>${skip.docker.tests}</skipTests>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -390,4 +434,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>all-tests</id>
+            <properties>
+                <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+        </profile>
+    </profiles>
 </project>
