@@ -64,9 +64,6 @@ Defines transformations to be applied to the decoded DataFrame, e.g. dropping co
 #### Writers
 Defines where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
 
-#### Finalizers
-Defines finalization / clean-up tasks after the ingestion has been finished.
-
 #### Drivers
 Configures the whole pipeline after receiving the configuration specification, e.g. a properties file.
 
@@ -100,8 +97,6 @@ The built-in components have the following capabilities:
 - *decoder* - decodes the payload as Confluent Avro, retrieving the schema from the specified Schema Registry.
 - *transformer* - selects all columns from the decoded DataFrame.
 - *writer* - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's ```processAllAvailable``` method on the stream writer.
-- *finalizer* - no operation is carried out.
-
 
 ### Trigger
 *Coming soon.*
@@ -111,8 +106,8 @@ Both, Hyperdrive trigger and ingestor are extensible.
 
 ### Ingestor
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
-- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `OffsetManager`, `StreamDecoder`, `StreamTransformer`, `StreamWriter` or `IngestionFinalizer` 
-- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `OffsetManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory`, `StreamWriterFactory` or `IngestionFinalizerFactory`
+- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `OffsetManager`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
+- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `OffsetManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
 - The implemented components have to be packaged to a jar file, which can then be added to the classpath of the driver. To use a component, it has to be configured as described under [Usage](#usage)
 
 After that, the new component will be able to be seamlessly invoked from the driver.
