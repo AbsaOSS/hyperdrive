@@ -295,10 +295,10 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${kafka.avro.serializer.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
