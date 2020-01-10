@@ -12,7 +12,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# Hyperdrive - A Lambda Fast-to-Batch Ingestion Framework for Spark
+# Hyperdrive - An extensible streaming ingestion pipeline on top of Apache Spark
 
 ### Build Status
 | master | develop |
@@ -21,90 +21,31 @@
 
 ## What is Hyperdrive?
 
-Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
+Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from streaming sources with exactly-once fault-tolerance semantics by using Apache Spark Structured Streaming.
 
-It is composed of two main modules: triggers and ingestors.
-
-The triggers define when ingestions must happen, the ingestor defines how.
-
-The trigger is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger
-
+In Hyperdrive, each ingestion is defined by the five components reader, manager, decoder, transformer and writer. This separation allows to adapt to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
 ## Motivation
-In environments composed of multiple and diverse data sources, getting access to all of them as well as creating a data lake is quite a challenging task.
+Similar to batch processing, data ingestion pipelines are needed to process streaming data sources. While solutions for data pipelines exist, exactly-once fault-tolerance in streaming processing is an intricate problem and cannot be solved with the same strategies that exist for batch processing.
 
-On top of that, the need for near real time has become a trend. In some cases, reacting to end-of-day files in batch way is simply not acceptable anymore. 
-
-One approach that has been gathering momentum to unify those worlds is to use the so called Lambda Architecture (http://lambda-architecture.net/), by defining two layers, fast and batch, and how they should play together. However, there are two main issues. 
-
-First, for large organizations, it is simply not possible to have all source systems to implement their own Lambdas, due to technical, organizational, priority or political issues - or all of those together.
-
-Second, the ingestion from fast into batch layer is not yet standardized in the industry. Parameters such as periodicity might be source-dependent, which makes it harder to create a silver bullet solution that is resource-savvy.
-
-From that, if the task of deciding when and what to ingest is put on data producers' shoulders, it becomes possible to create a general solution for ingestion. This is what Hyperdrive is intended to be.
+This is the gap the Hyperdrive aims to fill, by leveraging the exactly-once guarantee of Spark's Structured Streaming and by providing a flexible data pipeline. 
 
 ## Architecture
-Hyperdrive separates the framework in two independent components: ingestors and triggers. For the rest of this document, an ingestion will mean data movement from the fast into the batch layer, with or without transformations.
+The data ingestion pipeline of Hyperdrive consists of five components: readers, managers, decoders, transformers, writers.
+- **Readers** define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
+- **Managers** define extra configurations for readers and writers, e.g. Kafka offset settings.
+- **Decoders** define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
+- **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns
+- **Writers** define where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
 
-### Ingestors
+### Built-in components
+- `KafkaStreamReader` - Connects to a secure Kafka broker.
+- `CheckpointOffsetManager` - defines checkpoints for the stream reader and writer.
+- `ConfluentAvroKafkaStreamDecoder` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This decoder is capable of seamlessly handling whatever schemas the payload messages are using.
+- `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
+- `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's ```processAllAvailable``` method on the stream writer.
+- `ParquetPartitioningStreamWriter` - writes the DataFrame as Parquet, partitioned by the ingestion date and an auto-incremented version number.
 
-Ingestors define how an ingestion must happen. To do that, it defines 6 components: readers, managers, decoders, transformers, writers and drivers.
-
-#### Readers
-Readers define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
-
-#### Managers
-Managers define extra configurations for readers and writers, e.g. Kafka offset settings.
-
-#### Decoders
-Decoders define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
-
-#### Transformers
-Defines transformations to be applied to the decoded DataFrame, e.g. dropping columns
-
-#### Writers
-Defines where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
-
-#### Drivers
-Configures the whole pipeline after receiving the configuration specification, e.g. a properties file.
-
-
-### Triggers
-Triggers define when an ingestion should be executed and how it should be requested.
-
-To do this, they need need to define triggering policies, capacity management, Spark job watching capabilities and failure recovery features.
-
-Triggering policies are configurable. For watching jobs and recovering from failures, triggers use Spark Launchers provided by Spark itself, databases to persist the state, and YARN REST apis to connect to the cluster after a failure. For capacity management, triggers can be configured to not allow more than a given number of parallel ingestions.
-
-
-## Usage
-To use Hyperdrive, it is first necessary to configure the trigger and the ingestor.
-
-### Ingestor
-To use Hyperdrive Ingestor, it is necessary to first configure it. The template located at ```driver/src/resources/Ingestion.properties.template``` exemplifies the configurations.
-
-The settings starting with ```component.``` define which components should implement each of the responsibilities described in [Ingestors](#ingestors).
-
-Settings starting with ```reader.``` will be used by [readers](#readers), the ones starting with ```manager.``` will configure [managers](#managers), and so on, for each component. 
-
-For now, there is a Hyperdrive driver located at ```za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver```, in the ```driver``` module. Upon running ```mvn clean package``` at the root level of the project, a runnable JAR will be generated under ```target``` in the driver module. You can invoke that JAR via ```spark-submit```.
-
-Due to Spark-Kafka integration issues, it will **only work with Spark 2.3+**.
-
-The built-in components have the following capabilities:
-
-- *reader* - Connects to a secure Kafka broker.
-- *manager* - defines checkpoints for the stream reader and writer.
-- *decoder* - decodes the payload as Confluent Avro, retrieving the schema from the specified Schema Registry.
-- *transformer* - selects all columns from the decoded DataFrame.
-- *writer* - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's ```processAllAvailable``` method on the stream writer.
-
-### Trigger
-*Coming soon.*
-
-## Extensions
-Both, Hyperdrive trigger and ingestor are extensible.
-
-### Ingestor
+### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
 - A custom component has to be a class which extends either of the abstract classes `StreamReader`, `OffsetManager`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
 - The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `OffsetManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
@@ -112,15 +53,101 @@ Custom components can be implemented using the [Component Archetype](component-a
 
 After that, the new component will be able to be seamlessly invoked from the driver.
 
-### Trigger
-*Coming soon.*
+## Usage
+Hyperdrive has to be executed with Spark. Due to Spark-Kafka integration issues, it will **only work with Spark 2.3+**.
 
-## Features
+### How to run
+```
+git clone git@github.com:AbsaOSS/hyperdrive.git
+mvn clean package
+```
 
-Hyperdrive defines a notification topic that serves as a trigger for ingestions.
+Given a configuration file has already been created, hyperdrive can be executed as follows:
+```
+spark-submit driver/target/driver*.jar config.properties
+```
 
-The structure of the messages in the notification topic takes into account the payload topic to be offloaded into HDFS, the starting offsets, the number of messages to be processed, the destination directory, etc. 
+Alternatively, configuration properties can also be passed as command-line arguments
+```
+spark-submit driver/target/driver*.jar \
+  component.ingestor=spark \
+  component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader \
+  # more properties ...
+```
 
-Hyperdrive supports Schema Registry connection and Confluent Avro messages (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), which makes it capable of seamlessly handling whatever schemas the payload messages are using.
+### Configuration
+The configuration file may be created from the template located at `driver/src/resources/Ingestion.properties.template`.
 
-There is also a load balancer that controls the number of active Spark ingestor jobs at a given time.
+`CommandLineIngestionDriverDockerTest` may be consulted for a working pipeline configuration.
+
+#### General settings
+##### Pipeline settings
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `component.ingestor`    | Yes |  Defines the ingestion pipeline. Only `spark` is currently supported. |
+| `component.reader`      | Yes |  Fully qualified name of reader component, e.g.`za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader` |
+| `component.manager`     | Yes |  Fully qualified name of manager component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager` |
+| `component.decoder`     | Yes |  Fully qualified name of decoder component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder` |
+| `component.transformer` | Yes |  Fully qualified name of transformer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer` |
+| `component.writer`      | Yes |  Fully qualified name of writer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter` |
+
+##### Spark settings
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
+
+#### Settings for built-in components
+##### KafkaStreamReader
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `reader.kafka.topic` | Yes | The name of the kafka topic to ingest data from. Equivalent to Spark property `subscribe` |
+| `reader.kafka.brokers` | Yes | List of kafka broker URLs . Equivalent to Spark property `kafka.bootstrap.servers` |
+
+Any additional properties for kafka can be added with the prefix `reader.option.`. E.g. the property `kafka.security.protocol` can be added as `reader.option.kafka.security.protocol`
+
+See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
+
+##### CheckpointOffsetManager
+**Caution**: Currently, the `CheckpointOffsetManager` requires the property `reader.kafka.topic` to be set
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `manager.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location is resolved to `{manager.checkpoint.base.location}/{topic}`, where `topic` is `reader.kafka.topic` |
+
+##### ConfluentAvroKafkaStreamDecoder
+The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `decoder.avro.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
+| `decoder.avro.value.schema.id=latest` | Yes | The schema id. Use `latest` or explicitly provide a number. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_ID` |
+| `decoder.avro.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
+| `decoder.avro.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
+| `decoder.avro.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+
+For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
+
+##### ColumnSelectorStreamTransformer
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.columns.to.select` | Yes |  Comma-separated list of columns to select. `*` can be used to select all columns. Only existing columns using column names may be selected (i.e. expressions cannot be constructed) |
+
+##### ParquetStreamWriter
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
+
+##### ParquetPartitioningStreamWriter
+The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns `hyperdrive_date` and `hyperdrive_version`. `hyperdrive_date` is the ingestion date (or a user-defined date), while `hyperdrive_version` is a number automatically incremented with every ingestion, starting at 1.
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
+Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
+
+### Workflow Manager
+Hyperdrive ingestions may be triggered using the Workflow Manager, which is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger
+
+A key feature of the Workflow Manager are triggers, which define when an ingestion should be executed and how it should be requested. The workflow manager supports cron-based triggers as well as triggers that listen to a notification topic.
