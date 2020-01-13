@@ -20,7 +20,6 @@ import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
@@ -37,7 +36,6 @@ class TestStreamDecoderAbstractFactory extends FlatSpec with MockitoSugar {
     when(configStub.getString(KEY_SCHEMA_REGISTRY_URL)).thenReturn("http://localhost:8081")
     when(configStub.getString(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID)).thenReturn("latest")
     when(configStub.getString(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY)).thenReturn(SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-    when(configStub.getString(KEY_SCHEMA_RETENTION_POLICY)).thenReturn(SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA.toString)
 
     assert(StreamDecoderAbstractFactory.build(configStub).isInstanceOf[ConfluentAvroKafkaStreamDecoder])
   }

@@ -26,7 +26,6 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaS
 class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val topic = "topic"
-  private val schemaRetentionPolicy = "RETAIN_SELECTED_COLUMN_ONLY"
   private val schemaRegistryURL = "http://localhost:8081"
   private val schemaRegistryValueNamingStrategy = "topic.name"
   private val schemaRegistryValueSchemaId = "latest"
@@ -45,27 +44,9 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
 
   it should "throw if topic is not informed" in {
     stubSchemaRegistrySettings(schemaRegistrySettings)
-    stubSchemaRetentionPolicy()
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
-  }
-
-  it should "throw if retention policy is missing" in {
-    stubTopic()
-    stubSchemaRegistrySettings(schemaRegistrySettings)
-
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
-    assert(throwable.getMessage.toLowerCase.contains("retention"))
-  }
-
-  it should "throw if invalid retention policy specified" in {
-    stubTopic()
-    stubSchemaRegistrySettings(schemaRegistrySettings)
-    stubSchemaRetentionPolicy(policy = "invalid-retention-policy")
-
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
-    assert(throwable.getMessage.toLowerCase.contains("retention"))
   }
 
   it should "throw if schema registry configurations are missing" in {
@@ -78,7 +59,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
           case(configKey,expectedTokenInError) =>
             beforeEach()
             stubTopic()
-            stubSchemaRetentionPolicy()
             stubSchemaRegistrySettings(schemaRegistrySettings, Set(configKey))
 
             val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
@@ -93,7 +73,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
@@ -108,7 +87,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
@@ -122,7 +100,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
@@ -137,7 +114,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(configStub))
@@ -146,13 +122,11 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
 
   it should "create avro stream decoder instance with topic naming strategy" in {
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(schemaRegistrySettings)
 
     val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
-    assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
     assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
     assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
     assert(schemaRegistrySettings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
@@ -167,13 +141,11 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
-    assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
     assert(settings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
     assert(settings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
     assert(settings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
@@ -190,13 +162,11 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
     )
 
     stubTopic()
-    stubSchemaRetentionPolicy()
     stubSchemaRegistrySettings(settings)
 
     val decoder = ConfluentAvroKafkaStreamDecoder(configStub).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
 
     assert(topic == decoder.topic)
-    assert(schemaRetentionPolicy == decoder.retentionPolicy.toString)
     assert(settings(KEY_SCHEMA_REGISTRY_URL) == decoder.schemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL))
     assert(settings(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_ID))
     assert(settings(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY) == decoder.schemaRegistrySettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
@@ -207,8 +177,6 @@ class TestConfluentConfluentAvroKafkaStreamDecoderObject extends FlatSpec with B
   private def stubProperty(key: String, value: String): Unit = when(configStub.getString(key)).thenReturn(value)
 
   private def stubTopic(): Unit = stubProperty(KEY_TOPIC, topic)
-
-  private def stubSchemaRetentionPolicy(policy: String = schemaRetentionPolicy): Unit = stubProperty(KEY_SCHEMA_RETENTION_POLICY, policy)
 
   private def stubSchemaRegistrySettings(settings: Map[String,String], keysToExclude: Set[String] = Set[String]()): Unit = {
     settings

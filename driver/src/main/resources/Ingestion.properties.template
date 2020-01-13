@@ -52,9 +52,6 @@ decoder.avro.value.schema.naming.strategy=topic.name
 #decoder.avro.value.schema.record.name = recordName
 #decoder.avro.value.schema.record.namespace = recordNamespace
 
-# options = {RETAIN_SELECTED_COLUMN_ONLY, RETAIN_ORIGINAL_SCHEMA}
-decoder.avro.schema.retention.policy=RETAIN_SELECTED_COLUMN_ONLY
-
 # Transformations(Enceladus) settings
 # comma separated list of columns to select
 transformer.columns.to.select=*
