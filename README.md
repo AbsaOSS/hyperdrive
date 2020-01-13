@@ -23,7 +23,7 @@
 
 Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from streaming sources with exactly-once fault-tolerance semantics by using Apache Spark Structured Streaming.
 
-In Hyperdrive, each ingestion is defined by the five components reader, manager, decoder, transformer and writer. This separation allows to adapt to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
+In Hyperdrive, each ingestion is defined by the five components reader, manager, decoder, transformer and writer. This separation allows adapting to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
 ## Motivation
 Similar to batch processing, data ingestion pipelines are needed to process streaming data sources. While solutions for data pipelines exist, exactly-once fault-tolerance in streaming processing is an intricate problem and cannot be solved with the same strategies that exist for batch processing.
 
@@ -34,15 +34,15 @@ The data ingestion pipeline of Hyperdrive consists of five components: readers, 
 - **Readers** define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
 - **Managers** define extra configurations for readers and writers, e.g. Kafka offset settings.
 - **Decoders** define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
-- **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns
+- **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns.
 - **Writers** define where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
 
 ### Built-in components
-- `KafkaStreamReader` - Connects to a secure Kafka broker.
+- `KafkaStreamReader` - connects to a secure Kafka broker.
 - `CheckpointOffsetManager` - defines checkpoints for the stream reader and writer.
 - `ConfluentAvroKafkaStreamDecoder` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This decoder is capable of seamlessly handling whatever schemas the payload messages are using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
-- `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's ```processAllAvailable``` method on the stream writer.
+- `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's `processAllAvailable` method on the stream writer.
 - `ParquetPartitioningStreamWriter` - writes the DataFrame as Parquet, partitioned by the ingestion date and an auto-incremented version number.
 
 ### Custom components
@@ -57,7 +57,7 @@ After that, the new component will be able to be seamlessly invoked from the dri
 Hyperdrive has to be executed with Spark. Due to Spark-Kafka integration issues, it will **only work with Spark 2.3+**.
 
 ### How to run
-```
+```bash
 git clone git@github.com:AbsaOSS/hyperdrive.git
 mvn clean package
 ```
@@ -108,7 +108,7 @@ Any additional properties for kafka can be added with the prefix `reader.option.
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
 
 ##### CheckpointOffsetManager
-**Caution**: Currently, the `CheckpointOffsetManager` requires the property `reader.kafka.topic` to be set
+**Caution**: Currently, the `CheckpointOffsetManager` requires the property `reader.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
