@@ -54,7 +54,7 @@ Custom components can be implemented using the [Component Archetype](component-a
 After that, the new component will be able to be seamlessly invoked from the driver.
 
 ## Usage
-Hyperdrive has to be executed with Spark. Due to Spark-Kafka integration issues, it will **only work with Spark 2.3+**.
+Hyperdrive has to be executed with Spark. Due to Spark-Kafka integration issues, it will **only work with Spark 2.3 and higher**.
 
 ### How to run
 ```bash
@@ -136,6 +136,7 @@ For detailed information on the subject name strategy, please take a look at the
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+
 Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
 
 ##### ParquetPartitioningStreamWriter
@@ -145,6 +146,7 @@ The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns 
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
+
 Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
 
 ### Workflow Manager
