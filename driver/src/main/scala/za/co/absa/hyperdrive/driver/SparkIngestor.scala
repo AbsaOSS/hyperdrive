@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.finalizer.IngestionFinalizer
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
@@ -59,14 +58,13 @@ object SparkIngestor {
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
-             streamReader: StreamReader,
-             offsetManager: OffsetManager,
-             decoder: StreamDecoder,
-             streamTransformer: StreamTransformer,
-             streamWriter: StreamWriter,
-             ingestionFinalizer: IngestionFinalizer): Unit = {
+            streamReader: StreamReader,
+            offsetManager: OffsetManager,
+            decoder: StreamDecoder,
+            streamTransformer: StreamTransformer,
+            streamWriter: StreamWriter): Unit= {
 
-    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter, ingestionFinalizer)
+    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
 
     val ingestionId = generateIngestionId
 
@@ -87,7 +85,6 @@ object SparkIngestor {
     try {
       ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
       ingestionQuery.stop()
-      ingestionFinalizer.finalize(ingestionQuery)
     } catch {
       case NonFatal(e) =>
         if(destinationEmptyBefore) {
@@ -106,8 +103,7 @@ object SparkIngestor {
                             offsetManager: OffsetManager,
                             decoder: StreamDecoder,
                             streamTransformer: StreamTransformer,
-                            streamWriter: StreamWriter,
-                            ingestionFinalizer: IngestionFinalizer): Unit = {
+                            streamWriter: StreamWriter): Unit = {
     if (spark == null) {
       throw new IllegalArgumentException("Received NULL SparkSession instance.")
     }
@@ -130,10 +126,6 @@ object SparkIngestor {
 
     if (streamWriter == null) {
       throw new IllegalArgumentException("Received NULL StreamWriter instance.")
-    }
-
-    if (ingestionFinalizer == null) {
-      throw new IllegalArgumentException("Received NULL IngestionFinalizer instance.")
     }
   }
 

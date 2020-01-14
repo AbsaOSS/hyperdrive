@@ -112,7 +112,6 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
       "component.manager" -> "za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager",
       "component.transformer" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter",
-      "component.finalizer" -> "za.co.absa.hyperdrive.ingestor.implementation.finalizer.noop.NoOpFinalizer",
 
       // Spark settings
       "ingestor.spark.app.name" -> "ingestor-app",

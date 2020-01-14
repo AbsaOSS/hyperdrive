@@ -15,11 +15,9 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation
 
-import za.co.absa.hyperdrive.ingestor.implementation.finalizer.factories.IngestionFinalizerAbstractFactory
-import za.co.absa.hyperdrive.ingestor.implementation.finalizer.noop.NoOpFinalizer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.{ColumnSelectorStreamTransformerKeys, KafkaStreamReaderKeys}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys
 
 /**
  * This class provides default values for configuration keys which are necessary to run the ingestor.
@@ -29,7 +27,6 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.{ColumnSel
 object DefaultConfiguration {
   val values: Map[String, String] = Map(
     StreamTransformerAbstractFactory.componentConfigKey -> ColumnSelectorStreamTransformer.getClass.getName,
-    ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT -> "*",
-    IngestionFinalizerAbstractFactory.componentConfigKey -> NoOpFinalizer.getClass.getName
+    ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT -> "*"
   )
 }
