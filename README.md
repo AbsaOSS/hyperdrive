@@ -120,7 +120,7 @@ The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/Abs
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `decoder.avro.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
-| `decoder.avro.value.schema.id=latest` | Yes | The schema id. Use `latest` or explicitly provide a number. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_ID` |
+| `decoder.avro.value.schema.id` | Yes | The schema id. Use `latest` or explicitly provide a number. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_ID` |
 | `decoder.avro.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
 | `decoder.avro.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
 | `decoder.avro.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
