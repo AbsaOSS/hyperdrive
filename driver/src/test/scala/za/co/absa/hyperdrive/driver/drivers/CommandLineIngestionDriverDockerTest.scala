@@ -127,7 +127,6 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
       "decoder.avro.schema.registry.url" -> schemaRegistryUrl,
       "decoder.avro.value.schema.id" -> "latest",
       "decoder.avro.value.schema.naming.strategy" -> "topic.name",
-      "decoder.avro.schema.retention.policy" -> "RETAIN_SELECTED_COLUMN_ONLY",
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
