@@ -22,9 +22,8 @@ import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
-
-import scala.util.{Failure, Success, Try}
 
 private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Option[Map[String, String]]) extends StreamWriter(destination) {
 
@@ -74,34 +73,7 @@ object AbstractParquetStreamWriter {
 
   def getDestinationDirectory(configuration: Configuration): String = getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
 
-  def getExtraOptions(configuration: Configuration): Option[Map[String, String]] = {
-    import scala.collection.JavaConverters._
-    val extraOptions = configuration.getKeys(KEY_EXTRA_CONFS_ROOT)
-      .asScala
-      .map(key => getKeyValueConf(key, configuration))
-
-    if (extraOptions.nonEmpty) {
-      Some(extraOptions.toMap)
-    } else {
-      None
-    }
-  }
-
-  private def getKeyValueConf(key: String, configuration: Configuration): (String, String) = {
-    Try(parseConf(configuration.getString(key.toString))) match {
-      case Success(keyValue) => keyValue
-      case Failure(exception) => throw new IllegalArgumentException(s"Invalid extra configuration for stream writer: '$key'", exception)
-    }
-  }
-
-  private def parseConf(option: String): (String, String) = {
-    val keyValue = option.split("=")
-    if (keyValue.length == 2) {
-      (keyValue.head.trim(), keyValue.tail.head.trim())
-    } else {
-      throw new IllegalArgumentException(s"Invalid option: '$option'")
-    }
-  }
+  def getExtraOptions(configuration: Configuration): Option[Map[String, String]] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 }
 
 
