@@ -84,7 +84,7 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
     assert(topic == kafkaStreamReader.topic)
     assert(brokers == kafkaStreamReader.brokers)
 
-    import kafkaStreamReader.extraConfs
+    val extraConfs = kafkaStreamReader.extraConfs.get
     extraOptions.foreach {case(key,value) => assert(value == extraConfs(removeOptionalComponentFromKey(key)))}
   }
 

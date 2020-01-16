@@ -15,37 +15,36 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.reader.factories
 
-import org.apache.commons.configuration2.Configuration
-import org.mockito.Mockito._
+import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
-class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
-
-  private val configStub: Configuration = mock[Configuration]
+class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamReaderAbstractFactory.getClass.getSimpleName
 
-  override def beforeEach(): Unit = reset(configStub)
-
   it should "create KafkaStreamReader" in {
-    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(KafkaStreamReader.getClass.getName)
-    when(configStub.getString(KEY_TOPIC)).thenReturn("topic")
-    when(configStub.getStringArray(KEY_BROKERS)).thenReturn(Array("http://localhost:9092"))
+    val config = new BaseConfiguration()
+    config.addProperty(StreamReaderAbstractFactory.componentConfigKey, KafkaStreamReader.getClass.getName)
+    config.addProperty(KEY_TOPIC, "topic")
+    config.addProperty(KEY_BROKERS, "http://localhost:9092")
 
-    assert(StreamReaderAbstractFactory.build(configStub).isInstanceOf[KafkaStreamReader])
+    assert(StreamReaderAbstractFactory.build(config).isInstanceOf[KafkaStreamReader])
   }
 
   it should "throw if reader parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
-    when(configStub.getString(StreamReaderAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](StreamReaderAbstractFactory.build(configStub))
-    assert(throwable.getMessage.contains(invalidFactoryName))
+    val config = new BaseConfiguration()
+    config.addProperty(StreamReaderAbstractFactory.componentConfigKey, invalidFactoryName)
+
+    val throwable = intercept[IllegalArgumentException](StreamReaderAbstractFactory.build(config))
+
+    throwable.getMessage should include(invalidFactoryName)
   }
 
   it should "throw if stream reader parameter is absent" in {
-    assertThrows[IllegalArgumentException](StreamReaderAbstractFactory.build(configStub))
+    assertThrows[IllegalArgumentException](StreamReaderAbstractFactory.build(new BaseConfiguration()))
   }
 }
