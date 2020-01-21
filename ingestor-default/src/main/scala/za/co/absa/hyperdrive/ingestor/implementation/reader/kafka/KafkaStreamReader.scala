@@ -39,7 +39,7 @@ private[reader] object KafkaStreamReaderProps {
  * @param brokers    String containing the brokers
  * @param extraConfs Extra configurations, e.g. SSL params.
  */
-private[reader] class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Option[Map[String, String]]) extends StreamReader {
+private[reader] class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Map[String, String]) extends StreamReader {
 
   private val logger = LogManager.getLogger()
 
@@ -75,12 +75,7 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
       .option(TOPIC_SUBSCRIPTION_KEY, topic)
       .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
-    extraConfs match {
-      case Some(options) => options.foldLeft(streamReader) {
-        case (previousStreamReader, (newConfKey, newConfValue)) => previousStreamReader.option(newConfKey, newConfValue)
-      }
-      case None => streamReader
-    }
+    streamReader.options(extraConfs)
   }
 
   override def getSourceName: String = s"Kafka topic: $topic"
@@ -108,12 +103,7 @@ object KafkaStreamReader extends StreamReaderFactory {
     brokers.mkString(",")
   }
 
-  private def getExtraOptions(configuration: Configuration): Option[Map[String, String]] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
+  private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
 
-  private def filterKeysContaining(mapOpt: Option[Map[String, String]], exclusionToken: String): Map[String, String] = {
-    mapOpt match {
-      case Some(map) => map.filterKeys(!_.contains(exclusionToken))
-      case None => Map()
-    }
-  }
+  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) =  map.filterKeys(!_.contains(exclusionToken))
 }

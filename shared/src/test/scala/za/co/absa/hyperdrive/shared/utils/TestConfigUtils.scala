@@ -15,7 +15,7 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
-import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -117,7 +117,7 @@ class TestConfigUtils extends FlatSpec with Matchers {
     val properties = ConfigUtils.getPropertySubset(config, "some.prefix")
 
     // then
-    properties.get should contain theSameElementsAs Map(
+    properties should contain theSameElementsAs Map(
       "some.category.key1" -> "value1",
       "some.category.key2" -> "value2",
       "-key-three" -> "value3")
@@ -131,6 +131,16 @@ class TestConfigUtils extends FlatSpec with Matchers {
     val properties = ConfigUtils.getPropertySubset(config, "some.prefix")
 
     // then
-    properties shouldBe None
+    properties shouldBe empty
+  }
+
+  "getPropertySubset" should "return an empty map if Configuration.subset returns null" in {
+    val config = new BaseConfiguration() {
+      override def subset(str: String) = null
+    }
+
+    val properties = ConfigUtils.getPropertySubset(config, "")
+
+    properties shouldBe empty
   }
 }

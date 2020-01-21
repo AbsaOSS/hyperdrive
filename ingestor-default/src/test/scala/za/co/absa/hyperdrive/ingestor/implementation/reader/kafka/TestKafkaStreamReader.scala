@@ -39,29 +39,29 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
 
   it should "throw on blank topic" in {
     assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(topic = null, validBrokers, Some(validExtraConfs))
+      new KafkaStreamReader(topic = null, validBrokers, validExtraConfs)
     )
     assertThrows[IllegalArgumentException]( // empty topic
-      new KafkaStreamReader(topic = "  ", validBrokers, Some(validExtraConfs))
+      new KafkaStreamReader(topic = "  ", validBrokers, validExtraConfs)
     )
   }
 
   it should "throw on blank brokers" in {
     assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(validTopic, brokers = null, Some(validExtraConfs))
+      new KafkaStreamReader(validTopic, brokers = null, validExtraConfs)
     )
     assertThrows[IllegalArgumentException]( // empty topic
-      new KafkaStreamReader(validTopic, brokers = "  ", Some(validExtraConfs))
+      new KafkaStreamReader(validTopic, brokers = "  ", validExtraConfs)
     )
   }
 
   it should "throw on null SparkSession" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, Some(validExtraConfs))
+    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
     assertThrows[IllegalArgumentException](reader.read(spark = null))
   }
 
   it should "throw if SparkSession is stopped" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, Some(validExtraConfs))
+    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
     val sparkContext = getMockedSparkContext(stopped = true)
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
@@ -73,15 +73,14 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, Some(validExtraConfs))
+    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
     verify(dataStreamReader).format(KafkaStreamReaderProps.STREAM_FORMAT_KAFKA_NAME)
     verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
-
-    validExtraConfs.foreach(pair => verify(dataStreamReader).option(pair._1, pair._2))
+    verify(dataStreamReader).options(validExtraConfs)
   }
 
   it should "set topic and brokers on SparkSession if no extra options informed" in {
@@ -89,19 +88,18 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, None)
+    val reader = new KafkaStreamReader(validTopic, validBrokers, Map[String,String]())
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
     verify(dataStreamReader).format(STREAM_FORMAT_KAFKA_NAME)
     verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
-
-    validExtraConfs.foreach(conf => verify(dataStreamReader, never()).option(conf._1, conf._2)) // verify never
+    verify(dataStreamReader, never()).options(validExtraConfs)
   }
 
   it should "include the topic in the source name" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, Some(validExtraConfs))
+    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
     assert(reader.getSourceName.toLowerCase.contains(validTopic))
   }
 

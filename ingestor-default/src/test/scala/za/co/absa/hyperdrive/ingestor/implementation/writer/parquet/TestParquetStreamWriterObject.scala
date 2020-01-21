@@ -40,7 +40,7 @@ class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAn
     val writer = ParquetStreamWriter(config).asInstanceOf[ParquetStreamWriter]
 
     writer.getDestination shouldBe "/tmp/destination/parquet"
-    writer.extraConfOptions.get should contain theSameElementsAs Map(
+    writer.extraConfOptions should contain theSameElementsAs Map(
       "key1" -> "value1",
       "key2" -> "value2"
     )
@@ -53,6 +53,6 @@ class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAn
     val writer = ParquetStreamWriter(config).asInstanceOf[ParquetStreamWriter]
 
     writer.getDestination shouldBe "/tmp/destination/parquet"
-    writer.extraConfOptions shouldBe None
+    writer.extraConfOptions shouldBe Map()
   }
 }
