@@ -137,7 +137,7 @@ For detailed information on the subject name strategy, please take a look at the
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 
-Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
 
 ##### ParquetPartitioningStreamWriter
 The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns `hyperdrive_date` and `hyperdrive_version`. `hyperdrive_date` is the ingestion date (or a user-defined date), while `hyperdrive_version` is a number automatically incremented with every ingestion, starting at 1.
@@ -147,7 +147,7 @@ The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns 
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
 
-Any additional properties for the `DataStreamWriter` can be added like this: `writer.parquet.extra.conf.1=key=value`
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
 
 ### Workflow Manager
 Hyperdrive ingestions may be triggered using the Workflow Manager, which is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger
