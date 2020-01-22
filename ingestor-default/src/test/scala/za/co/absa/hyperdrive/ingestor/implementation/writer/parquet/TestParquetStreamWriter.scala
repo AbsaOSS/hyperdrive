@@ -61,7 +61,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     assertThrows[IllegalArgumentException](writer.write(dataFrame, offsetManager = null))
   }
 
-  "aldsfjk" should "set format as 'parquet'" in {
+  it should "set format as 'parquet'" in {
     val dataStreamWriter = getDataStreamWriter
     val offsetManager = getOffsetManager(dataStreamWriter)
 
