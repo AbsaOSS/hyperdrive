@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 
-private[writer] class ParquetStreamWriter(destination: String, extraConfOptions: Option[Map[String, String]]) extends AbstractParquetStreamWriter(destination, extraConfOptions)
+private[writer] class ParquetStreamWriter(destination: String, extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, extraConfOptions)
 
 object ParquetStreamWriter extends StreamWriterFactory {
 

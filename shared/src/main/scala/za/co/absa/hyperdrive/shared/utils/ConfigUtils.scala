@@ -42,17 +42,16 @@ object ConfigUtils {
     }
   }
 
-  def getPropertySubset(configuration: Configuration, prefix: String): Option[Map[String, String]] = {
-    val subset = configuration.subset(prefix)
-    if (!subset.isEmpty) {
-      import scala.collection.JavaConverters._
-      val keys = subset.getKeys()
-      val properties = keys.asScala
-        .map(key => (key, getOrThrow(key, subset)))
-        .toMap
-      Some(properties)
-    } else {
-      None
+  def getPropertySubset(configuration: Configuration, prefix: String): Map[String, String] = {
+    val subset = Option(configuration.subset(prefix))
+    subset match {
+      case Some(subset) =>
+        import scala.collection.JavaConverters._
+        val keys = subset.getKeys()
+        keys.asScala
+          .map(key => (key, getOrThrow(key, subset)))
+          .toMap
+      case _ => Map()
     }
   }
 }

@@ -31,7 +31,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParq
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetPartitioningStreamWriterKeys._
 
 
-private[writer] class ParquetPartitioningStreamWriter(destination: String, reportDate: String, extraConfOptions: Option[Map[String, String]]) extends AbstractParquetStreamWriter(destination, extraConfOptions) {
+private[writer] class ParquetPartitioningStreamWriter(destination: String, reportDate: String, extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, extraConfOptions) {
   private val COL_DATE = "hyperdrive_date"
   private val COL_VERSION = "hyperdrive_version"
 

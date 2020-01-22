@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
-private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Option[Map[String, String]]) extends StreamWriter(destination) {
+private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter(destination) {
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
@@ -57,14 +57,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
       .outputMode(OutputMode.Append())
   }
 
-  protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Option[Map[String, String]]): DataStreamWriter[Row] = {
-    extraConfOptions match {
-      case Some(options) => options.foldLeft(outStream) {
-        case (previousOutStream, (optionKey, optionValue)) => previousOutStream.option(optionKey, optionValue)
-      }
-      case None => outStream
-    }
-  }
+  protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
   protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: OffsetManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream, configuration)
 }
@@ -73,7 +66,7 @@ object AbstractParquetStreamWriter {
 
   def getDestinationDirectory(configuration: Configuration): String = getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
 
-  def getExtraOptions(configuration: Configuration): Option[Map[String, String]] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
+  def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 }
 
 
