@@ -46,6 +46,17 @@ class TestConfigUtils extends FlatSpec with Matchers {
     throwable.getMessage shouldBe "some-error-message"
   }
 
+  "getOrThrow" should "throw an exception if key doesn't exist with default error message" in {
+    // given
+    val config = new BaseConfiguration()
+
+    // when
+    val throwable = intercept[IllegalArgumentException](ConfigUtils.getOrThrow("non-existent", config))
+
+    // then
+    throwable.getMessage shouldBe "No configuration property found for key non-existent"
+  }
+
   "getSeqOrThrow" should "return the value as an array if key exists" in {
     // given
     val config = new BaseConfiguration()
@@ -80,6 +91,17 @@ class TestConfigUtils extends FlatSpec with Matchers {
 
     // then
     throwable.getMessage shouldBe "some-error-message"
+  }
+
+  "getSeqOrThrow" should "throw an exception if key doesn't exist with default error message" in {
+    // given
+    val config = new BaseConfiguration()
+
+    // when
+    val throwable = intercept[IllegalArgumentException](ConfigUtils.getSeqOrThrow("non-existent", config))
+
+    // then
+    throwable.getMessage shouldBe "No configuration property found for key non-existent"
   }
 
   "getOrNone" should "return the value as an option if key exists" in {
