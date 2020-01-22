@@ -24,14 +24,18 @@ object ConfigUtils {
   def getOrThrow(key: String, configuration: Configuration, errorMessage: String = ""): String = {
     configuration.getString(key) match {
       case value: String => value
-      case _ => throw new IllegalArgumentException(errorMessage)
+      case _ =>
+        val resolvedMessage = if (errorMessage.isEmpty) s"No configuration property found for key $key" else errorMessage
+        throw new IllegalArgumentException(resolvedMessage)
     }
   }
 
   def getSeqOrThrow(key: String, configuration: Configuration, errorMessage: String = ""): Seq[String] = {
     configuration.getStringArray(key) match {
       case value if value.nonEmpty => value
-      case _ => throw new IllegalArgumentException(errorMessage)
+      case _ =>
+        val resolvedMessage = if (errorMessage.isEmpty) s"No configuration property found for key $key" else errorMessage
+        throw new IllegalArgumentException(resolvedMessage)
     }
   }
 
