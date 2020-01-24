@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#  Copyright 2019 ABSA Group Limited
+#  Copyright 2018 ABSA Group Limited
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ OUTPUT_JAR="${RESOURCE_TEST_DIR}/TestClassLoaderUtilsOther.jar"
 touch "${SCALA_SRC_FILE_ABS}"
 cat > "${SCALA_SRC_FILE_ABS}" <<-END
 /*
- *  Copyright 2019 ABSA Group Limited
+ *  Copyright 2018 ABSA Group Limited
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
