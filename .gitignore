@@ -50,5 +50,3 @@ dependency-reduced-pom.xml
 _testOutput
 output
 /keystore/
-
-*.properties

@@ -1,27 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Copyright 2018 ABSA Group Limited
   ~
-  ~ Copyright 2019 ABSA Group Limited
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~     http://www.apache.org/licenses/LICENSE-2.0
   ~
-  ~  Licensed under the Apache License, Version 2.0 (the "License");
-  ~  you may not use this file except in compliance with the License.
-  ~  You may obtain a copy of the License at
-  ~
-  ~      http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~  Unless required by applicable law or agreed to in writing, software
-  ~  distributed under the License is distributed on an "AS IS" BASIS,
-  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~  See the License for the specific language governing permissions and
-  ~  limitations under the License.
-  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>2.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -41,12 +38,16 @@
     </repositories>
 
     <properties>
+        <!--Enforced versions-->
+        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
+        <avro.version>1.9.1</avro.version> <!--Same as Abris uses-->
+
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--ABRiS-->
-        <abris.version>2.2.2</abris.version>
+        <abris.version>3.1.1</abris.version>
 
         <!--Scala-->
         <scala.version>2.11.8</scala.version>
@@ -64,10 +65,12 @@
         <kafka.version>2.1.1</kafka.version>
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <spark.sql.kafka.version>2.4.2</spark.sql.kafka.version>
+        <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
+        <testcontainers.kafka.version>1.12.3</testcontainers.kafka.version>
+        <kafka.avro.serializer.version>5.2.2</kafka.avro.serializer.version>
 
         <!--Spark-->
-        <spark.version>2.4.0</spark.version>
+        <spark.version>2.4.3</spark.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -81,9 +84,27 @@
         <!--Configurations-->
         <commons.configuration2.version>2.4</commons.configuration2.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
+
+        <buildnumber.maven.version>1.4</buildnumber.maven.version>
+
+        <!--Other properties-->
+        <skip.docker.tests>true</skip.docker.tests>
     </properties>
 
     <dependencies>
+        <!--Enforced dependency versions-->
+        <!--Jackson Databind-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!--Avro-->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
+        <!--END Enforced dependency versions-->
+
         <!--Spark-->
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -143,15 +164,42 @@
             <groupId>org.specs2</groupId>
             <artifactId>specs2-core_${scala.compat.version}</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
 
         <dependencies>
+            <!--Enforced dependency versions-->
+            <!--Jackson Databind-->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${fasterxml.jackson.databind.version}</version>
+            </dependency>
+            <!--Avro-->
+            <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>${avro.version}</version>
+            </dependency>
+            <!--END Enforced dependency versions-->
+
             <!--ABRiS-->
             <dependency>
                 <groupId>za.co.absa</groupId>
-                <artifactId>abris_2.11</artifactId>
+                <artifactId>abris_${scala.compat.version}</artifactId>
                 <version>${abris.version}</version>
                 <exclusions>
                     <exclusion>
@@ -246,15 +294,35 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.springframework.kafka</groupId>
-                <artifactId>spring-kafka-test</artifactId>
-                <version>${spring.kafka.test.version}</version>
-                <scope>compile</scope>
+                <!-- Cannot have scope test because it is used by abris -->
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${kafka.avro.serializer.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>kafka</artifactId>
+                <version>${testcontainers.kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <!-- the Maven Scala plugin will compile Scala source files -->
             <plugin>
@@ -304,10 +372,23 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>test</id>
+                        <id>unit-tests</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <suffixes>(?&lt;!DockerTest)</suffixes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>docker-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <suffixes>(?&lt;=DockerTest)</suffixes>
+                            <skipTests>${skip.docker.tests}</skipTests>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -333,6 +414,32 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>${buildnumber.maven.version}</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <shortRevisionLength>8</shortRevisionLength>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>all-tests</id>
+            <properties>
+                <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+        </profile>
+    </profiles>
 </project>

@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -23,12 +22,11 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.SchemaRetentionPolicy
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, KEY_SCHEMA_RETENTION_POLICY, KEY_TOPIC}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
-private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String], val retentionPolicy: SchemaRetentionPolicy) extends StreamDecoder {
+private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String]) extends StreamDecoder {
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException("Blank topic.")
@@ -42,10 +40,6 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
     throw new IllegalArgumentException("Empty Schema Registry settings received.")
   }
 
-  if (retentionPolicy == null) {
-    throw new IllegalArgumentException("Null SchemaRetentionPolicy instance received.")
-  }
-
   private val logger = LogManager.getLogger
 
   def decode(streamReader: DataStreamReader): DataFrame = {
@@ -56,8 +50,12 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
     val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
     logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
 
-    import za.co.absa.abris.avro.AvroSerDe._
-    streamReader.fromConfluentAvro(column = "value", None, Some(schemaRegistryFullSettings))(retentionPolicy)
+    import za.co.absa.abris.avro.functions.from_confluent_avro
+    import org.apache.spark.sql.functions.col
+    streamReader
+      .load()
+      .select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data)
+      .select("data.*")
   }
 }
 
@@ -66,11 +64,10 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
   override def apply(config: Configuration): StreamDecoder = {
     val topic = getTopic(config)
     val schemaRegistrySettings = getSchemaRegistrySettings(config)
-    val schemaRetentionPolicy = getSchemaRetentionPolicy(config)
 
-    LogManager.getLogger.info(s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', schema retention policy='$schemaRetentionPolicy', schema registry settings='$schemaRegistrySettings'.")
+    LogManager.getLogger.info(s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', schema registry settings='$schemaRegistrySettings'.")
 
-    new ConfluentAvroKafkaStreamDecoder(topic, schemaRegistrySettings, schemaRetentionPolicy)
+    new ConfluentAvroKafkaStreamDecoder(topic, schemaRegistrySettings)
   }
 
   private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
@@ -96,16 +93,6 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
       )
     } else {
       Map()
-    }
-  }
-
-  private def getSchemaRetentionPolicy(configuration: Configuration): SchemaRetentionPolicy = {
-    import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies._
-    val policyName = getOrThrow(KEY_SCHEMA_RETENTION_POLICY, configuration, errorMessage = s"Schema retention policy not informed. Is '$KEY_SCHEMA_RETENTION_POLICY' defined?")
-    policyName match {
-      case "RETAIN_ORIGINAL_SCHEMA"      => RETAIN_ORIGINAL_SCHEMA
-      case "RETAIN_SELECTED_COLUMN_ONLY" => RETAIN_SELECTED_COLUMN_ONLY
-      case _ => throw new IllegalArgumentException(s"Invalid schema retention policy name: '$policyName'.")
     }
   }
 

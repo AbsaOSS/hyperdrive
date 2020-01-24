@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -18,6 +17,7 @@ package za.co.absa.hyperdrive.driver
 
 import java.util.UUID
 
+import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
@@ -27,6 +27,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
 
+import scala.collection.AbstractIterator
 import scala.util.control.NonFatal
 
 /**
@@ -69,6 +70,7 @@ object SparkIngestor {
 
     logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
 
+    val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
       val configuredStreamReader = offsetManager.configureOffsets(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
@@ -85,7 +87,10 @@ object SparkIngestor {
       ingestionQuery.stop()
     } catch {
       case NonFatal(e) =>
-        throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. The was no error in the query plan, but something when wrong. " +
+        if(destinationEmptyBefore) {
+          cleanupDestination(spark, streamWriter.getDestination)
+        }
+        throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. There was no error in the query plan, but something when wrong. " +
           s"Pay attention to this exception since the query has been started, which might lead to duplicate data or similar issues. " +
           s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }
@@ -125,4 +130,26 @@ object SparkIngestor {
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString
+
+  private def isDestinationEmpty(spark: SparkSession, destinationDirectory: String): Boolean = {
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    val destinationPath = new Path(destinationDirectory)
+    !fs.exists(destinationPath) || !fs.listFiles(destinationPath, true).hasNext
+  }
+
+  private def cleanupDestination(spark: SparkSession, destinationDirectory: String): Unit = {
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    val destinationPath = new Path(destinationDirectory)
+
+    if(fs.exists(destinationPath)) {
+      val filesIterator = fs.listFiles(destinationPath, true)
+      val filesList = new AbstractIterator[LocatedFileStatus] {
+        override def hasNext: Boolean = filesIterator.hasNext
+        override def next: LocatedFileStatus = filesIterator.next
+      }.map(f => f.getPath).toList
+      logger.info(s"Deleting directory $destinationDirectory with ${filesList.size} files: ${filesList.mkString(", ")}")
+
+      fs.delete(destinationPath, true)
+    }
+  }
 }

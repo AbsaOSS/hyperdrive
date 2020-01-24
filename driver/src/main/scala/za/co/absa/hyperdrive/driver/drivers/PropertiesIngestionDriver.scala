@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -24,6 +23,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
+import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 /**
   * This driver launches ingestion by loading the configurations from a properties file.
@@ -35,8 +35,9 @@ object PropertiesIngestionDriver extends IngestionDriver {
   def main(args: Array[String]): Unit = {
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
-      throw new IllegalArgumentException("No properties file informed.")
+      throw new IllegalArgumentException("No properties file supplied.")
     }
+    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
     if (isInvalid(propertiesFile.get)) {
       throw new IllegalArgumentException(s"Invalid properties file: '${propertiesFile.get}'.")

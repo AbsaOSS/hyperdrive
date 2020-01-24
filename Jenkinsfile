@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ pipeline {
     agent {
         label "${hyperdriveSlaveLabel}"
     }
-    
+
     tools {
         jdk "${toolVersionJava}"
         maven "${toolVersionMaven}"
@@ -38,7 +38,7 @@ pipeline {
         stage ('Build') {
             steps {
                 configFileProvider([configFile(fileId: "${mavenSettingsId}", variable: 'MAVEN_SETTINGS_XML')]) {
-                    sh "mvn -s $MAVEN_SETTINGS_XML clean verify --no-transfer-progress"
+                    sh "mvn -s $MAVEN_SETTINGS_XML clean verify --no-transfer-progress -Pall-tests"
                 }
             }
         }

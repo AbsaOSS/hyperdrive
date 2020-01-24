@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,6 +16,8 @@
 package za.co.absa.hyperdrive.testutils
 
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
+
+import scala.annotation.tailrec
 
 object SparkTestUtils {
 
@@ -40,6 +41,7 @@ object SparkTestUtils {
     }
   }
 
+  @tailrec
   private def isExpectedNullabilityForAll(arrayType: ArrayType, expectedNullability: Boolean): Boolean = {
     arrayType.elementType match {
       case dt: ArrayType => isExpectedNullabilityForAll(dt, expectedNullability)

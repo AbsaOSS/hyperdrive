@@ -1,18 +1,16 @@
 /*
- *  Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
@@ -57,12 +55,6 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     )
   }
 
-  it should "throw on null parameters map" in {
-    assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(validTopic, validBrokers, extraConfs = null)
-    )
-  }
-
   it should "throw on null SparkSession" in {
     val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
     assertThrows[IllegalArgumentException](reader.read(spark = null))
@@ -88,8 +80,7 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     verify(dataStreamReader).format(KafkaStreamReaderProps.STREAM_FORMAT_KAFKA_NAME)
     verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
-
-    validExtraConfs.foreach(pair => verify(dataStreamReader).option(pair._1, pair._2))
+    verify(dataStreamReader).options(validExtraConfs)
   }
 
   it should "set topic and brokers on SparkSession if no extra options informed" in {
@@ -104,8 +95,7 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     verify(dataStreamReader).format(STREAM_FORMAT_KAFKA_NAME)
     verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
-
-    validExtraConfs.foreach(conf => verify(dataStreamReader, never()).option(conf._1, conf._2)) // verify never
+    verify(dataStreamReader, never()).options(validExtraConfs)
   }
 
   it should "include the topic in the source name" in {

@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -24,6 +23,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
@@ -37,6 +37,7 @@ private[driver] class IngestionDriver {
 
   def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
+    applyDefaults(configuration)
     printConfiguration(configuration)
 
     val spark = getSparkSession(configuration)
@@ -68,5 +69,12 @@ private[driver] class IngestionDriver {
       .getKeys
       .asScala
       .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
+  }
+
+  private def applyDefaults(configuration: Configuration): Unit = {
+    DefaultConfiguration.values
+      .filter{case (key, _) => !configuration.containsKey(key)}
+      .foreach{case (key, value) => configuration.addProperty(key, value)}
+
   }
 }

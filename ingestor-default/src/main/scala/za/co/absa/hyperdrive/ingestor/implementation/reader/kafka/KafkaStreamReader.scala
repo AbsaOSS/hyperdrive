@@ -1,10 +1,9 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,24 +21,25 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootComponentConfKey, rootFactoryOptionalConfKey}
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow, getSeqOrThrow}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
 
 private[reader] object KafkaStreamReaderProps {
-  val STREAM_FORMAT_KAFKA_NAME  = "kafka"
-  val BROKERS_SETTING_KEY       = "bootstrap.servers"
+  val STREAM_FORMAT_KAFKA_NAME = "kafka"
+  val BROKERS_SETTING_KEY = "bootstrap.servers"
   val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"
-  val TOPIC_SUBSCRIPTION_KEY    = "subscribe"
+  val TOPIC_SUBSCRIPTION_KEY = "subscribe"
 }
 
 /**
-  * Creates a stream reader from Kafka.
-  *
-  * @param topic String containing the topic
-  * @param brokers String containing the brokers
-  * @param extraConfs Extra configurations, e.g. SSL params.
-  */
-private[reader] class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Map[String,String]) extends StreamReader {
+ * Creates a stream reader from Kafka.
+ *
+ * @param topic      String containing the topic
+ * @param brokers    String containing the brokers
+ * @param extraConfs Extra configurations, e.g. SSL params.
+ */
+private[reader] class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Map[String, String]) extends StreamReader {
 
   private val logger = LogManager.getLogger()
 
@@ -51,16 +51,12 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
     throw new IllegalArgumentException(s"Invalid brokers: '$brokers'")
   }
 
-  if (extraConfs == null) {
-    throw new IllegalArgumentException("Null extra configurations.")
-  }
-
   /**
-    * Creates a [[DataStreamReader]] instance from a SparkSession
-    *
-    * IMPORTANT: this method does not check against malformed data (e.g. invalid broker protocols or certificate locations),
-    * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
-    */
+   * Creates a [[DataStreamReader]] instance from a SparkSession
+   *
+   * IMPORTANT: this method does not check against malformed data (e.g. invalid broker protocols or certificate locations),
+   * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
+   */
   override def read(spark: SparkSession): DataStreamReader = {
 
     import KafkaStreamReaderProps._
@@ -79,9 +75,7 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
       .option(TOPIC_SUBSCRIPTION_KEY, topic)
       .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
-    extraConfs.foldLeft(streamReader) {
-      case (previousStreamReader, (newConfKey, newConfValue)) => previousStreamReader.option(newConfKey, newConfValue)
-    }
+    streamReader.options(extraConfs)
   }
 
   override def getSourceName: String = s"Kafka topic: $topic"
@@ -109,46 +103,7 @@ object KafkaStreamReader extends StreamReaderFactory {
     brokers.mkString(",")
   }
 
-  private def getExtraOptions(configuration: Configuration): Map[String,String] = {
-    val optionalKeys = getKeysFromPrefix(configuration, rootFactoryOptionalConfKey)
+  private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
 
-    val extraConfs = optionalKeys.foldLeft(Map[String,String]()) {
-      case (map,securityKey) =>
-        getOrNone(securityKey, configuration) match {
-          case Some(value) => map + (tweakOptionKeyName(securityKey) -> value)
-          case None => map
-        }
-    }
-
-    if (extraConfs.isEmpty || extraConfs.size == optionalKeys.size) {
-      extraConfs
-    }
-    else {
-      logger.warn(s"Assuming no security settings, since some appear to be missing: {${findMissingKeys(optionalKeys, extraConfs)}}")
-      Map[String,String]()
-    }
-  }
-
-  private def getKeysFromPrefix(configuration: Configuration, prefix: String): Seq[String] = {
-    val optionalKeys = configuration.getKeys(prefix)
-
-    if (optionalKeys != null) {
-      import scala.collection.JavaConverters._
-      optionalKeys.asScala.toSeq
-    } else {
-      Seq[String]()
-    }
-  }
-
-  private def findMissingKeys(keys: Seq[String], map: Map[String,String]): Seq[String] = keys.filterNot(map.contains(_))
-
-  private def tweakKeyName(key: String): String = {
-    key.replace(s"$rootComponentConfKey.", "") // remove the component root configuration key
-  }
-
-  private def tweakOptionKeyName(key: String): String = {
-    key.replace(s"$rootFactoryOptionalConfKey.", "") // remove the component root.option configuration key
-  }
-
-  private def filterKeysContaining(map: Map[String,String], exclusionToken: String): Map[String,String] = map.filterKeys(!_.contains(exclusionToken))
+  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) =  map.filterKeys(!_.contains(exclusionToken))
 }
