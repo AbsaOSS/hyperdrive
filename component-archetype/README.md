@@ -26,7 +26,7 @@ Creating a custom Hyperdrive components project
 
 Download the artifact to your local maven repository
 ```
-mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:1.0.0 
+mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:2.0.0 
 ```
 
 Update the local archetype catalog
@@ -39,14 +39,14 @@ Generate a skeleton project by executing the following command
 mvn archetype:generate \
     -DarchetypeGroupId=za.co.absa.hyperdrive \
     -DarchetypeArtifactId=component-archetype \
-    -DarchetypeVersion=1.0.0 \
+    -DarchetypeVersion=2.0.0 \
     -DgroupId=<groupId> \
     -DartifactId=<artifactId> \
     -Dversion=<artifact-version> 
 ```
 - `<groupId>` is your group id, e.g. com.acme,
 - `<artifactId>` is the name for your artifact, e.g. mytransformer,
-- `<artifact-version>` is the version number of the artifact, e.g. 1.0-SNAPSHOT and
+- `<artifact-version>` is the version number of the artifact, e.g. 0.1.0-SNAPSHOT and
 
 Implementing a Hyperdrive component
 -----------------------------------
