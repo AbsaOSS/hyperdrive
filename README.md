@@ -64,12 +64,12 @@ mvn clean package
 
 Given a configuration file has already been created, hyperdrive can be executed as follows:
 ```
-spark-submit driver/target/driver*.jar config.properties
+spark-submit --class za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver driver/target/driver*.jar config.properties
 ```
 
 Alternatively, configuration properties can also be passed as command-line arguments
 ```
-spark-submit driver/target/driver*.jar \
+spark-submit --class za.co.absa.hyperdrive.driver.drivers.CommandLineIngestionDriver driver/target/driver*.jar \
   component.ingestor=spark \
   component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader \
   # more properties ...
