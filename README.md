@@ -108,14 +108,14 @@ Any additional properties for kafka can be added with the prefix `reader.option.
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
 
 ##### CheckpointOffsetManager
-**Caution**: Currently, the `CheckpointOffsetManager` requires the property `reader.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
-| `manager.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location is resolved to `{manager.checkpoint.base.location}/{topic}`, where `topic` is `reader.kafka.topic` |
+| `manager.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
 
 ##### ConfluentAvroKafkaStreamDecoder
 The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+**Caution**: The `ConfluentAvroKafkaStreamDecoder` requires the property `reader.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
