@@ -83,12 +83,11 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     assert(throwable.getMessage.toLowerCase.contains("reader"))
   }
 
-  it should "throw on null OffsetManager" in {
+  it should "throw on null StreamManager" in {
     val throwable = intercept[IllegalArgumentException](
       SparkIngestor.ingest(sparkSession, streamReader, streamManager = null, streamDecoder, streamTransformer, streamWriter)
     )
     assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("offset"))
     assert(throwable.getMessage.toLowerCase.contains("manager"))
   }
 
@@ -124,7 +123,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
-  it should "throw IngestionStartException if offset manager fails during setup" in {
+  it should "throw IngestionStartException if stream manager fails during setup" in {
     when(streamManager.configure(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
     when(streamManager.configure(nullMockedDataStream, configuration)).thenThrow(classOf[NullPointerException])
     assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))

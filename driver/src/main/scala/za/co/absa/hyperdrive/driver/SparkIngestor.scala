@@ -49,7 +49,7 @@ object SparkIngestor {
     *
     * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param streamManager     [[StreamManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param streamManager     [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -73,7 +73,7 @@ object SparkIngestor {
     val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = streamManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
+      val configuredStreamReader = streamManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
       streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
@@ -113,7 +113,7 @@ object SparkIngestor {
     }
 
     if (streamManager == null) {
-      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
+      throw new IllegalArgumentException("Received NULL StreamManager instance.")
     }
 
     if (decoder == null) {
