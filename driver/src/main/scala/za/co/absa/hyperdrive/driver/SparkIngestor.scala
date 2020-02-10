@@ -73,7 +73,7 @@ object SparkIngestor {
     val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = offsetManager.configureOffsets(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
+      val configuredStreamReader = offsetManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
       streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination

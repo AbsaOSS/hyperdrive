@@ -22,9 +22,9 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 
 class DummyStreamManager(topic: String) extends StreamManager(topic) {
-  override def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader = ???
+  override def configure(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader = ???
 
-  override def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row] = ???
+  override def configure(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row] = ???
 }
 
 object DummyStreamManager extends StreamManagerFactory {

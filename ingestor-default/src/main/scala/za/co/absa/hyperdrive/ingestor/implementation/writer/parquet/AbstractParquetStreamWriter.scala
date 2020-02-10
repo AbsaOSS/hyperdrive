@@ -59,7 +59,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
-  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream, configuration)
+  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configure(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {

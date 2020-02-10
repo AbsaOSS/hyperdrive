@@ -45,7 +45,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val dataStreamWriter = mock[DataStreamWriter[Row]]
 
     val offsetManager = mock[StreamManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, null)).thenReturn(dataStreamWriter)
+    when(offsetManager.configure(dataStreamWriter, null)).thenReturn(dataStreamWriter)
 
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
     assertThrows[IllegalArgumentException](writer.write(dataFrame = null, offsetManager))
@@ -90,7 +90,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val offsetManager = getOffsetManager(dataStreamWriter)
 
     invokeWriter(dataStreamWriter, offsetManager, Map())
-    verify(offsetManager).configureOffsets(dataStreamWriter, configuration)
+    verify(offsetManager).configure(dataStreamWriter, configuration)
   }
 
   it should "start DataStreamWriter" in {
@@ -142,7 +142,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
 
   private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): StreamManager = {
     val offsetManager = mock[StreamManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
+    when(offsetManager.configure(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
     offsetManager
   }
 }

@@ -125,8 +125,8 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   }
 
   it should "throw IngestionStartException if offset manager fails during setup" in {
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenThrow(classOf[NullPointerException])
+    when(offsetManager.configure(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
+    when(offsetManager.configure(nullMockedDataStream, configuration)).thenThrow(classOf[NullPointerException])
     assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
   }
 
@@ -194,7 +194,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     val nullMockedDataStream: DataStreamReader = null
 
     inOrderCheck.verify(streamReader).read(sparkSession)
-    inOrderCheck.verify(offsetManager).configureOffsets(nullMockedDataStream, configuration)
+    inOrderCheck.verify(offsetManager).configure(nullMockedDataStream, configuration)
     inOrderCheck.verify(streamDecoder).decode(nullMockedDataStream)
     inOrderCheck.verify(streamTransformer).transform(dataFrame)
     inOrderCheck.verify(streamWriter).write(dataFrame, offsetManager)
@@ -207,7 +207,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
     when(streamReader.getSourceName).thenReturn("mocked_topic")
 
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
+    when(offsetManager.configure(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
     when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
 

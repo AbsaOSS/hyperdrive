@@ -25,7 +25,7 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
   */
 abstract class StreamManager(topic: String) {
 
-  def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
+  def configure(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
 
-  def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row]
+  def configure(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row]
 }
