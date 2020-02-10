@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
-object OffsetManagerAbstractFactory {
+object StreamManagerAbstractFactory {
 
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.manager"

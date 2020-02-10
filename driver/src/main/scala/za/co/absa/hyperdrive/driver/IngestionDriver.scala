@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.StreamManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
@@ -55,7 +55,7 @@ private[driver] class IngestionDriver {
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getStreamManager(conf: Configuration): StreamManager = OffsetManagerAbstractFactory.build(conf)
+  private def getStreamManager(conf: Configuration): StreamManager = StreamManagerAbstractFactory.build(conf)
 
   private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 
