@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.manager.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, OffsetManagerFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -28,7 +28,7 @@ object OffsetManagerAbstractFactory {
   private val logger = LogManager.getLogger
   val componentConfigKey = "component.manager"
 
-  def build(config: Configuration): OffsetManager = {
+  def build(config: Configuration): StreamManager = {
 
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 

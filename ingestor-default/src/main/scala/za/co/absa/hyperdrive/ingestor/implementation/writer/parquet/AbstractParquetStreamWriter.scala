@@ -19,7 +19,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
@@ -31,7 +31,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
 
-  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery = {
+  def write(dataFrame: DataFrame, offsetManager: StreamManager): StreamingQuery = {
     if (dataFrame == null) {
       throw new IllegalArgumentException("Null DataFrame.")
     }
@@ -59,7 +59,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
-  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: OffsetManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream, configuration)
+  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {

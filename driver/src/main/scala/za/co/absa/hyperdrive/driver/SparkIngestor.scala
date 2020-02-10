@@ -21,7 +21,7 @@ import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -49,7 +49,7 @@ object SparkIngestor {
     *
     * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager     [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param offsetManager     [[StreamManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -58,11 +58,11 @@ object SparkIngestor {
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
-            streamReader: StreamReader,
-            offsetManager: OffsetManager,
-            decoder: StreamDecoder,
-            streamTransformer: StreamTransformer,
-            streamWriter: StreamWriter): Unit= {
+             streamReader: StreamReader,
+             offsetManager: StreamManager,
+             decoder: StreamDecoder,
+             streamTransformer: StreamTransformer,
+             streamWriter: StreamWriter): Unit= {
 
     validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
 
@@ -100,7 +100,7 @@ object SparkIngestor {
 
   private def validateInput(spark: SparkSession,
                             streamReader: StreamReader,
-                            offsetManager: OffsetManager,
+                            offsetManager: StreamManager,
                             decoder: StreamDecoder,
                             streamTransformer: StreamTransformer,
                             streamWriter: StreamWriter): Unit = {

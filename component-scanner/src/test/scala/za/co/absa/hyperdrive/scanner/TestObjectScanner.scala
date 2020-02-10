@@ -43,8 +43,8 @@ class TestObjectScanner extends FlatSpec with Matchers {
     val filenames = List(
       s"${DUMMYJARPATH}DummyStreamReaderOne.class",
       s"${DUMMYJARPATH}DummyStreamReaderOne$$.class",
-      s"${DUMMYJARPATH}DummyOffsetManager.class",
-      s"${DUMMYJARPATH}DummyOffsetManager$$.class",
+      s"${DUMMYJARPATH}DummyStreamManager.class",
+      s"${DUMMYJARPATH}DummyStreamManager$$.class",
       s"${DUMMYJARPATH}DummyStreamDecoder.class",
       s"${DUMMYJARPATH}DummyStreamDecoder$$.class",
       s"${DUMMYJARPATH}DummyStreamTransformer.class",
@@ -63,7 +63,7 @@ class TestObjectScanner extends FlatSpec with Matchers {
     // then
     val expectedJarPath = baseDir.getAbsolutePath + "/jar1.jar"
     readers should contain only ((s"${DUMMYPACKAGE}DummyStreamReaderOne$$", expectedJarPath))
-    managers should contain only ((s"${DUMMYPACKAGE}DummyOffsetManager$$", expectedJarPath))
+    managers should contain only ((s"${DUMMYPACKAGE}DummyStreamManager$$", expectedJarPath))
     decoders should contain only ((s"${DUMMYPACKAGE}DummyStreamDecoder$$", expectedJarPath))
     transformers should contain only ((s"${DUMMYPACKAGE}DummyStreamTransformer$$", expectedJarPath))
     writers should contain only ((s"${DUMMYPACKAGE}DummyStreamWriterOne$$", expectedJarPath))

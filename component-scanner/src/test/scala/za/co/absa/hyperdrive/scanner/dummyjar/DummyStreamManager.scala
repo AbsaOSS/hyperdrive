@@ -19,14 +19,14 @@ import org.apache.commons.configuration2
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, OffsetManagerFactory}
 
-class DummyOffsetManager(topic: String) extends OffsetManager(topic) {
+class DummyStreamManager(topic: String) extends StreamManager(topic) {
   override def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader = ???
 
   override def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row] = ???
 }
 
-object DummyOffsetManager extends OffsetManagerFactory {
-  override def apply(config: configuration2.Configuration): OffsetManager = ???
+object DummyStreamManager extends OffsetManagerFactory {
+  override def apply(config: configuration2.Configuration): StreamManager = ???
 }

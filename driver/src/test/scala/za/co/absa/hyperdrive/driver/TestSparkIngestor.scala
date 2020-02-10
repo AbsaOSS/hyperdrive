@@ -26,7 +26,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -36,7 +36,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   private val sparkSession: SparkSession = mock[SparkSession]
   private val streamReader: StreamReader = mock[StreamReader]
-  private val offsetManager: OffsetManager = mock[OffsetManager]
+  private val offsetManager: StreamManager = mock[StreamManager]
   private val streamDecoder: StreamDecoder = mock[StreamDecoder]
   private val streamTransformer: StreamTransformer = mock[StreamTransformer]
   private val streamWriter: StreamWriter = mock[StreamWriter]

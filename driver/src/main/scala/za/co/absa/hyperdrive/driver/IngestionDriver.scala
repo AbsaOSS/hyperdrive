@@ -19,7 +19,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -55,7 +55,7 @@ private[driver] class IngestionDriver {
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getOffsetManager(conf: Configuration): OffsetManager = OffsetManagerAbstractFactory.build(conf)
+  private def getOffsetManager(conf: Configuration): StreamManager = OffsetManagerAbstractFactory.build(conf)
 
   private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 

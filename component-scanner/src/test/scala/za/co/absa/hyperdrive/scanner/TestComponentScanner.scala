@@ -37,8 +37,8 @@ class TestComponentScanner extends FlatSpec with Matchers {
     val filenames = List(
       s"${DUMMYJARPATH}DummyStreamReaderOne.class",
       s"${DUMMYJARPATH}DummyStreamReaderOne$$.class",
-      s"${DUMMYJARPATH}DummyOffsetManager.class",
-      s"${DUMMYJARPATH}DummyOffsetManager$$.class",
+      s"${DUMMYJARPATH}DummyStreamManager.class",
+      s"${DUMMYJARPATH}DummyStreamManager$$.class",
       s"${DUMMYJARPATH}DummyStreamDecoder.class",
       s"${DUMMYJARPATH}DummyStreamDecoder$$.class",
       s"${DUMMYJARPATH}DummyStreamTransformer.class",
@@ -57,7 +57,7 @@ class TestComponentScanner extends FlatSpec with Matchers {
     // then
     val expectedJarPath = baseDir.getAbsolutePath + "/jar1.jar"
     readers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", expectedJarPath)
-    managers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyOffsetManager$$", s"${DUMMYPACKAGE}DummyOffsetManager", expectedJarPath)
+    managers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamManager$$", s"${DUMMYPACKAGE}DummyStreamManager", expectedJarPath)
     decoders should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamDecoder$$", s"${DUMMYPACKAGE}DummyStreamDecoder", expectedJarPath)
     transformers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamTransformer$$", s"${DUMMYPACKAGE}DummyStreamTransformer", expectedJarPath)
     writers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamWriterOne$$", s"${DUMMYPACKAGE}DummyStreamWriterOne", expectedJarPath)

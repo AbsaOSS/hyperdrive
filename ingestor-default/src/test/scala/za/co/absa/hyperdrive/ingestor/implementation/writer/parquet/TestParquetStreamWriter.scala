@@ -25,7 +25,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.testutils.TempDir
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
@@ -44,7 +44,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   it should "throw on null DataFrame" in {
     val dataStreamWriter = mock[DataStreamWriter[Row]]
 
-    val offsetManager = mock[OffsetManager]
+    val offsetManager = mock[StreamManager]
     when(offsetManager.configureOffsets(dataStreamWriter, null)).thenReturn(dataStreamWriter)
 
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
@@ -113,7 +113,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     verify(dataStreamWriter).options(extraConfs)
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager, extraOptions: Map[String,String]): Unit = {
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: StreamManager, extraOptions: Map[String,String]): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, extraOptions)
     writer.write(dataFrame, offsetManager)
@@ -140,8 +140,8 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     dataFrame
   }
 
-  private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): OffsetManager = {
-    val offsetManager = mock[OffsetManager]
+  private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): StreamManager = {
+    val offsetManager = mock[StreamManager]
     when(offsetManager.configureOffsets(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
     offsetManager
   }
