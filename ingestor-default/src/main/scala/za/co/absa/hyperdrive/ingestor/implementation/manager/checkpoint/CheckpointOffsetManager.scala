@@ -17,7 +17,6 @@ package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
@@ -33,7 +32,7 @@ private[manager] object CheckpointOffsetManagerProps {
 }
 
 private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
-                                               val startingOffsets: Option[String]) extends StreamManager("") {
+                                               val startingOffsets: Option[String]) extends StreamManager {
 
   import CheckpointOffsetManagerProps._
 

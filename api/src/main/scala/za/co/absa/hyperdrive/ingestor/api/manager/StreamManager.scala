@@ -23,7 +23,7 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
   * Base class for all OffsetManagers.
   *
   */
-abstract class StreamManager(topic: String) {
+abstract class StreamManager {
 
   def configure(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
 
