@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.manager.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 /**
@@ -33,7 +33,7 @@ object OffsetManagerAbstractFactory {
     logger.info(s"Going to load factory for configuration '$componentConfigKey'.")
 
     val factoryName = config.getString(componentConfigKey)
-    val factory = ClassLoaderUtils.loadSingletonClassOfType[OffsetManagerFactory](factoryName)
+    val factory = ClassLoaderUtils.loadSingletonClassOfType[StreamManagerFactory](factoryName)
     factory.apply(config)
   }
 }

@@ -20,7 +20,7 @@ import java.nio.file.Files
 
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactory
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManagerFactory
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactory
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactory
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactory
@@ -55,7 +55,7 @@ class TestObjectScanner extends FlatSpec with Matchers {
 
     // when
     val readers = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[StreamReaderFactory]).get
-    val managers = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[OffsetManagerFactory]).get
+    val managers = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[StreamManagerFactory]).get
     val decoders = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[StreamDecoderFactory]).get
     val transformers = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[StreamTransformerFactory]).get
     val writers = ObjectScanner.getObjectsInfo(baseDir, ru.symbolOf[StreamWriterFactory]).get

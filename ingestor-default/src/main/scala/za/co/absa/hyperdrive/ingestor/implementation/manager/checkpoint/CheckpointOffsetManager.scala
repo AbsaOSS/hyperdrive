@@ -21,7 +21,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow}
@@ -79,7 +79,7 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
   }
 }
 
-object CheckpointOffsetManager extends OffsetManagerFactory {
+object CheckpointOffsetManager extends StreamManagerFactory {
   override def apply(config: Configuration): StreamManager = {
     val checkpointLocation = getCheckpointLocation(config)
     val startingOffsets = getStartingOffsets(config)

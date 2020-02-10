@@ -17,6 +17,6 @@ package za.co.absa.hyperdrive.ingestor.api.manager
 
 import org.apache.commons.configuration2.Configuration
 
-trait OffsetManagerFactory {
+trait StreamManagerFactory {
   def apply(config: Configuration): StreamManager
 }
