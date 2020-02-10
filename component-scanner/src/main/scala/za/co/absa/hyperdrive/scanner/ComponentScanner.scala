@@ -34,7 +34,7 @@ object ComponentScanner {
 
   def getStreamReaderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamReaderFactory])
 
-  def getOffsetManagerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamManagerFactory])
+  def getStreamManagerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamManagerFactory])
 
   def getStreamDecoderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamDecoderFactory])
 

@@ -49,7 +49,7 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
     // when
     val readers = ComponentScanner.getStreamReaderComponents(baseDir).get
-    val managers = ComponentScanner.getOffsetManagerComponents(baseDir).get
+    val managers = ComponentScanner.getStreamManagerComponents(baseDir).get
     val decoders = ComponentScanner.getStreamDecoderComponents(baseDir).get
     val transformers = ComponentScanner.getStreamTransformerComponents(baseDir).get
     val writers = ComponentScanner.getStreamWriterComponents(baseDir).get

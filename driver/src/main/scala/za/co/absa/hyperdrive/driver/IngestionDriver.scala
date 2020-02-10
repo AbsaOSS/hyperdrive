@@ -42,20 +42,20 @@ private[driver] class IngestionDriver {
 
     val spark = getSparkSession(configuration)
     val streamReader = getStreamReader(configuration)
-    val offsetManager = getOffsetManager(configuration)
+    val streamManager = getStreamManager(configuration)
     val streamDecoder = getStreamDecoder(configuration)
     val streamTransformer = getStreamTransformer(configuration)
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    SparkIngestor.ingest(spark, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
   }
 
   private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getOffsetManager(conf: Configuration): StreamManager = OffsetManagerAbstractFactory.build(conf)
+  private def getStreamManager(conf: Configuration): StreamManager = OffsetManagerAbstractFactory.build(conf)
 
   private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 

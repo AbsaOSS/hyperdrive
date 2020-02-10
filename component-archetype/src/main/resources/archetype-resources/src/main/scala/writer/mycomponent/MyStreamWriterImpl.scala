@@ -31,7 +31,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 
 private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter(destination) {
 
-  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery = ???
+  def write(dataFrame: DataFrame, streamManager: OffsetManager): StreamingQuery = ???
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory {

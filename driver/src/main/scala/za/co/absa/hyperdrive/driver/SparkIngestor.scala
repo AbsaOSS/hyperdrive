@@ -49,7 +49,7 @@ object SparkIngestor {
     *
     * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager     [[StreamManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param streamManager     [[StreamManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -59,12 +59,12 @@ object SparkIngestor {
   @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
              streamReader: StreamReader,
-             offsetManager: StreamManager,
+             streamManager: StreamManager,
              decoder: StreamDecoder,
              streamTransformer: StreamTransformer,
              streamWriter: StreamWriter): Unit= {
 
-    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
+    validateInput(spark, streamReader, streamManager, decoder, streamTransformer, streamWriter)
 
     val ingestionId = generateIngestionId
 
@@ -73,10 +73,10 @@ object SparkIngestor {
     val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = offsetManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
+      val configuredStreamReader = streamManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
-      streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination
+      streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
     } catch {
       case NonFatal(e) =>
         throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)
@@ -100,7 +100,7 @@ object SparkIngestor {
 
   private def validateInput(spark: SparkSession,
                             streamReader: StreamReader,
-                            offsetManager: StreamManager,
+                            streamManager: StreamManager,
                             decoder: StreamDecoder,
                             streamTransformer: StreamTransformer,
                             streamWriter: StreamWriter): Unit = {
@@ -112,7 +112,7 @@ object SparkIngestor {
       throw new IllegalArgumentException("Received NULL StreamReader instance.")
     }
 
-    if (offsetManager == null) {
+    if (streamManager == null) {
       throw new IllegalArgumentException("Received NULL OffsetManager instance.")
     }
 

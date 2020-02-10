@@ -22,7 +22,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 
 class DummyStreamWriterTwo(destination: String) extends StreamWriter(destination) {
-  override def write(dataFrame: DataFrame, offsetManager: StreamManager): StreamingQuery = ???
+  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
 }
 
 object DummyStreamWriterTwo extends StreamWriterFactory {

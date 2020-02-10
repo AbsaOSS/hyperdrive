@@ -20,9 +20,6 @@ import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
-/**
-  * To add a new factory, simply append it to "factoryMap".
-  */
 object OffsetManagerAbstractFactory {
 
   private val logger = LogManager.getLogger

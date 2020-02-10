@@ -31,12 +31,12 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
 
-  def write(dataFrame: DataFrame, offsetManager: StreamManager): StreamingQuery = {
+  def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
     if (dataFrame == null) {
       throw new IllegalArgumentException("Null DataFrame.")
     }
 
-    if (offsetManager == null) {
+    if (streamManager == null) {
       throw new IllegalArgumentException("Null OffsetManager instance.")
     }
 
@@ -44,7 +44,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
     val streamWithOptions = addOptions(outStream, extraConfOptions)
 
-    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, offsetManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
+    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
 
     streamWithOptionsAndOffset.start(destination)
   }
@@ -59,7 +59,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
-  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configure(outStream, configuration)
+  protected def configureOffsets(outStream: DataStreamWriter[Row], streamManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = streamManager.configure(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {
