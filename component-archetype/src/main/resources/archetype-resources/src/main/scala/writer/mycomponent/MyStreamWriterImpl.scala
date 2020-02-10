@@ -29,9 +29,11 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
  * This is a stub for a custom implementation of a StreamWriter
  */
 
-private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter(destination) {
+private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter {
 
-  def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
+  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
+
+  override def getDestination: String = destination
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory {

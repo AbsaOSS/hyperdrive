@@ -23,9 +23,13 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
   * Base class for all StreamDecoders.
   *
   */
-abstract class StreamWriter(destination: String) {
+abstract class StreamWriter {
 
   def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery
 
-  def getDestination: String = destination
+  /**
+   *
+   * @return a string describing the destination, used for logging
+   */
+  def getDestination: String
 }

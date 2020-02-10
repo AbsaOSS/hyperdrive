@@ -25,13 +25,13 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
-private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter(destination) {
+private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter {
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
 
-  def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
+  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
     if (dataFrame == null) {
       throw new IllegalArgumentException("Null DataFrame.")
     }
@@ -48,6 +48,8 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
     streamWithOptionsAndOffset.start(destination)
   }
+
+  override def getDestination: String = destination
 
   protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
     dataFrame
