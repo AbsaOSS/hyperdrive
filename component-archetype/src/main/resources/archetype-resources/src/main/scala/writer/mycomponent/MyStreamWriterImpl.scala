@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 
 
 /**
@@ -31,7 +31,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 
 private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter(destination) {
 
-  def write(dataFrame: DataFrame, streamManager: OffsetManager): StreamingQuery = ???
+  def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory {

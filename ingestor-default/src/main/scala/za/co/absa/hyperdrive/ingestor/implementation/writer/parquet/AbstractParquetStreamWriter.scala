@@ -37,7 +37,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
     }
 
     if (streamManager == null) {
-      throw new IllegalArgumentException("Null OffsetManager instance.")
+      throw new IllegalArgumentException("Null StreamManager instance.")
     }
 
     val outStream = getOutStream(dataFrame)
