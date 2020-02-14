@@ -114,13 +114,6 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
         </dependency>
-
-        <!--ABRiS-->
-        <dependency>
-            <groupId>za.co.absa</groupId>
-            <artifactId>abris_${scala.compat.version}</artifactId>
-        </dependency>
-
         <!--Logging-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -145,12 +138,6 @@
             <artifactId>commons-configuration2</artifactId>
         </dependency>
 
-        <!--Spark/Kafka-->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-        </dependency>
-
         <!--Tests-->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -159,22 +146,6 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.compat.version}</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>kafka</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-avro-serializer</artifactId>
         </dependency>
     </dependencies>
 
@@ -282,22 +253,16 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.specs2</groupId>
-                <artifactId>specs2-core_${scala.compat.version}</artifactId>
-                <version>${specs.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${kafka.avro.serializer.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
@@ -311,8 +276,6 @@
                 <version>${testcontainers.kafka.version}</version>
                 <scope>test</scope>
             </dependency>
-
-
         </dependencies>
     </dependencyManagement>
 
