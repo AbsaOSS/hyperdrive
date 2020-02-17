@@ -32,7 +32,7 @@ This is the gap the Hyperdrive aims to fill, by leveraging the exactly-once guar
 ## Architecture
 The data ingestion pipeline of Hyperdrive consists of five components: readers, managers, decoders, transformers, writers.
 - **Readers** define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
-- **Managers** define extra configurations for readers and writers, e.g. Kafka offset settings.
+- **Managers** define extra configurations for readers and writers, e.g. checkpoint offset settings.
 - **Decoders** define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
 - **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns.
 - **Writers** define where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
@@ -47,8 +47,8 @@ The data ingestion pipeline of Hyperdrive consists of five components: readers, 
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
-- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `OffsetManager`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
-- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `OffsetManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
+- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `StreamManager`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
+- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `StreamManagerFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
 - The implemented components have to be packaged to a jar file, which can then be added to the classpath of the driver. To use a component, it has to be configured as described under [Usage](#usage)
 
 After that, the new component will be able to be seamlessly invoked from the driver.

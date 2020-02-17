@@ -25,7 +25,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.testutils.TempDir
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
@@ -44,11 +44,11 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   it should "throw on null DataFrame" in {
     val dataStreamWriter = mock[DataStreamWriter[Row]]
 
-    val offsetManager = mock[OffsetManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, null)).thenReturn(dataStreamWriter)
+    val streamManager = mock[StreamManager]
+    when(streamManager.configure(dataStreamWriter, null)).thenReturn(dataStreamWriter)
 
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
-    assertThrows[IllegalArgumentException](writer.write(dataFrame = null, offsetManager))
+    assertThrows[IllegalArgumentException](writer.write(dataFrame = null, streamManager))
   }
 
   it should "throw on null OffsetManager" in {
@@ -58,65 +58,65 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     when(dataFrame.writeStream).thenReturn(dataStreamWriter)
 
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
-    assertThrows[IllegalArgumentException](writer.write(dataFrame, offsetManager = null))
+    assertThrows[IllegalArgumentException](writer.write(dataFrame, streamManager = null))
   }
 
   it should "set format as 'parquet'" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).format("parquet")
   }
 
   it should "set Trigger.Once" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).trigger(Trigger.Once)
   }
 
   it should "set output mode as 'append'" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).outputMode(OutputMode.Append())
   }
 
   it should "invoke OffsetManager passing DataStreamWriter" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
-    verify(offsetManager).configureOffsets(dataStreamWriter, configuration)
+    invokeWriter(dataStreamWriter, streamManager, Map())
+    verify(streamManager).configure(dataStreamWriter, configuration)
   }
 
   it should "start DataStreamWriter" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
   }
 
   it should " include extra options in case they exist" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
+    val streamManager = getStreamManager(dataStreamWriter)
 
     val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
 
-    invokeWriter(dataStreamWriter, offsetManager, extraConfs)
+    invokeWriter(dataStreamWriter, streamManager, extraConfs)
     verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
 
     verify(dataStreamWriter).options(extraConfs)
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager, extraOptions: Map[String,String]): Unit = {
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager, extraOptions: Map[String,String]): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
     val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, extraOptions)
-    writer.write(dataFrame, offsetManager)
+    writer.write(dataFrame, streamManager)
   }
 
   private def getDataStreamWriter: DataStreamWriter[Row] = {
@@ -140,9 +140,9 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     dataFrame
   }
 
-  private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): OffsetManager = {
-    val offsetManager = mock[OffsetManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
-    offsetManager
+  private def getStreamManager(dataStreamWriter: DataStreamWriter[Row]): StreamManager = {
+    val streamManager = mock[StreamManager]
+    when(streamManager.configure(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
+    streamManager
   }
 }

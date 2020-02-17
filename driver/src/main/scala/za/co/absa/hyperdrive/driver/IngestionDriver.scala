@@ -19,13 +19,13 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
+import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.StreamManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
@@ -42,20 +42,20 @@ private[driver] class IngestionDriver {
 
     val spark = getSparkSession(configuration)
     val streamReader = getStreamReader(configuration)
-    val offsetManager = getOffsetManager(configuration)
+    val streamManager = getStreamManager(configuration)
     val streamDecoder = getStreamDecoder(configuration)
     val streamTransformer = getStreamTransformer(configuration)
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    SparkIngestor.ingest(spark, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
   }
 
   private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getOffsetManager(conf: Configuration): OffsetManager = OffsetManagerAbstractFactory.build(conf)
+  private def getStreamManager(conf: Configuration): StreamManager = StreamManagerAbstractFactory.build(conf)
 
   private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 

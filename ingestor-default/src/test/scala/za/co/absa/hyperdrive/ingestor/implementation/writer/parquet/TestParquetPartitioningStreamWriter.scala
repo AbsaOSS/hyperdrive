@@ -47,11 +47,11 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
     val underTest = ParquetPartitioningStreamWriter(config)
 
-    val offsetManager = createCheckpointOffsetManager()
+    val streamManager = createCheckpointOffsetManager()
     val df = getDummyReadStream().toDF()
 
     // when
-    val streamingQuery = underTest.write(df, offsetManager)
+    val streamingQuery = underTest.write(df, streamManager)
     streamingQuery.processAllAvailable()
 
     // then
@@ -72,18 +72,18 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     previousDayConfig.addProperty("writer.parquet.partitioning.report.date", "2020-02-28")
     val previousDayWriter = ParquetPartitioningStreamWriter(previousDayConfig)
 
-    val offsetManager = createCheckpointOffsetManager()
+    val streamManager = createCheckpointOffsetManager()
 
     // when
     val stream = getDummyReadStream()
-    previousDayWriter.write(stream.toDF(), offsetManager).processAllAvailable()
+    previousDayWriter.write(stream.toDF(), streamManager).processAllAvailable()
     stream.addData(List.range(1000, 1100))
-    previousDayWriter.write(stream.toDF(), offsetManager).processAllAvailable()
+    previousDayWriter.write(stream.toDF(), streamManager).processAllAvailable()
 
     stream.addData(List.range(2000, 2100))
-    underTest.write(stream.toDF(), offsetManager).processAllAvailable()
+    underTest.write(stream.toDF(), streamManager).processAllAvailable()
     stream.addData(List.range(3000, 3100))
-    underTest.write(stream.toDF(), offsetManager).processAllAvailable()
+    underTest.write(stream.toDF(), streamManager).processAllAvailable()
 
     // then
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
@@ -108,14 +108,14 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
     val underTest = ParquetPartitioningStreamWriter(config)
-    val offsetManager = createCheckpointOffsetManager()
+    val streamManager = createCheckpointOffsetManager()
 
     val emptyStream = MemoryStream[Int](1, spark.sqlContext)
 
     // when
-    underTest.write(emptyStream.toDF(), offsetManager).processAllAvailable()
+    underTest.write(emptyStream.toDF(), streamManager).processAllAvailable()
     emptyStream.addData(List.range(0, 100))
-    underTest.write(emptyStream.toDF(), offsetManager).processAllAvailable()
+    underTest.write(emptyStream.toDF(), streamManager).processAllAvailable()
 
     // then
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
