@@ -22,8 +22,6 @@ import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 
 class DummyStreamReaderTwo extends DummyTrait {
   override def read(spark: SparkSession): DataStreamReader = ???
-
-  override def getSourceName: String = ???
 }
 
 object DummyStreamReaderTwo extends AbstractDummyStreamReaderFactory {

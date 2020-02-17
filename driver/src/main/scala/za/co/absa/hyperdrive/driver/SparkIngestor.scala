@@ -68,9 +68,8 @@ object SparkIngestor {
 
     val ingestionId = generateIngestionId
 
-    logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+    logger.info(s"STARTING ingestion (id = $ingestionId)")
 
-    val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
       val configuredStreamReader = streamManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
@@ -87,15 +86,12 @@ object SparkIngestor {
       ingestionQuery.stop()
     } catch {
       case NonFatal(e) =>
-        if(destinationEmptyBefore) {
-          cleanupDestination(spark, streamWriter.getDestination)
-        }
         throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. There was no error in the query plan, but something when wrong. " +
           s"Pay attention to this exception since the query has been started, which might lead to duplicate data or similar issues. " +
           s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }
 
-    logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+    logger.info(s"FINISHED ingestion (id = $ingestionId)")
   }
 
   private def validateInput(spark: SparkSession,
@@ -130,26 +126,4 @@ object SparkIngestor {
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString
-
-  private def isDestinationEmpty(spark: SparkSession, destinationDirectory: String): Boolean = {
-    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val destinationPath = new Path(destinationDirectory)
-    !fs.exists(destinationPath) || !fs.listFiles(destinationPath, true).hasNext
-  }
-
-  private def cleanupDestination(spark: SparkSession, destinationDirectory: String): Unit = {
-    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val destinationPath = new Path(destinationDirectory)
-
-    if(fs.exists(destinationPath)) {
-      val filesIterator = fs.listFiles(destinationPath, true)
-      val filesList = new AbstractIterator[LocatedFileStatus] {
-        override def hasNext: Boolean = filesIterator.hasNext
-        override def next: LocatedFileStatus = filesIterator.next
-      }.map(f => f.getPath).toList
-      logger.info(s"Deleting directory $destinationDirectory with ${filesList.size} files: ${filesList.mkString(", ")}")
-
-      fs.delete(destinationPath, true)
-    }
-  }
 }

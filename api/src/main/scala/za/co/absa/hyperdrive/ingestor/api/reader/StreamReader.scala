@@ -25,5 +25,4 @@ import org.apache.spark.sql.streaming.DataStreamReader
   */
 abstract class StreamReader {
   def read(spark: SparkSession): DataStreamReader
-  def getSourceName: String
 }
