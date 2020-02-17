@@ -21,7 +21,7 @@ import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -49,7 +49,7 @@ object SparkIngestor {
     *
     * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager     [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param streamManager     [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -58,13 +58,13 @@ object SparkIngestor {
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
-            streamReader: StreamReader,
-            offsetManager: OffsetManager,
-            decoder: StreamDecoder,
-            streamTransformer: StreamTransformer,
-            streamWriter: StreamWriter): Unit= {
+             streamReader: StreamReader,
+             streamManager: StreamManager,
+             decoder: StreamDecoder,
+             streamTransformer: StreamTransformer,
+             streamWriter: StreamWriter): Unit= {
 
-    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
+    validateInput(spark, streamReader, streamManager, decoder, streamTransformer, streamWriter)
 
     val ingestionId = generateIngestionId
 
@@ -73,10 +73,10 @@ object SparkIngestor {
     val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = offsetManager.configureOffsets(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
+      val configuredStreamReader = streamManager.configure(inputStream, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
-      streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination
+      streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
     } catch {
       case NonFatal(e) =>
         throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)
@@ -100,7 +100,7 @@ object SparkIngestor {
 
   private def validateInput(spark: SparkSession,
                             streamReader: StreamReader,
-                            offsetManager: OffsetManager,
+                            streamManager: StreamManager,
                             decoder: StreamDecoder,
                             streamTransformer: StreamTransformer,
                             streamWriter: StreamWriter): Unit = {
@@ -112,8 +112,8 @@ object SparkIngestor {
       throw new IllegalArgumentException("Received NULL StreamReader instance.")
     }
 
-    if (offsetManager == null) {
-      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
+    if (streamManager == null) {
+      throw new IllegalArgumentException("Received NULL StreamManager instance.")
     }
 
     if (decoder == null) {

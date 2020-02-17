@@ -22,28 +22,28 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys._
 
-class TestOffsetManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
+class TestStreamManagerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val configStub = mock[Configuration]
 
-  behavior of OffsetManagerAbstractFactory.getClass.getSimpleName
+  behavior of StreamManagerAbstractFactory.getClass.getSimpleName
 
   override def beforeEach(): Unit = reset(configStub)
 
   it should "create CheckpointOffsetManager" in {
-    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManager.getClass.getName)
+    when(configStub.getString(StreamManagerAbstractFactory.componentConfigKey)).thenReturn(CheckpointOffsetManager.getClass.getName)
     when(configStub.getString(KEY_CHECKPOINT_BASE_LOCATION)).thenReturn("/tmp/checkpoint")
-    assert(OffsetManagerAbstractFactory.build(configStub).isInstanceOf[CheckpointOffsetManager])
+    assert(StreamManagerAbstractFactory.build(configStub).isInstanceOf[CheckpointOffsetManager])
   }
 
   it should "throw if manager parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
-    when(configStub.getString(OffsetManagerAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
-    val throwable = intercept[IllegalArgumentException](OffsetManagerAbstractFactory.build(configStub))
+    when(configStub.getString(StreamManagerAbstractFactory.componentConfigKey)).thenReturn(invalidFactoryName)
+    val throwable = intercept[IllegalArgumentException](StreamManagerAbstractFactory.build(configStub))
     assert(throwable.getMessage.contains(invalidFactoryName))
   }
 
   it should "throw if offset manager parameter is absent" in {
-    assertThrows[IllegalArgumentException](OffsetManagerAbstractFactory.build(configStub))
+    assertThrows[IllegalArgumentException](StreamManagerAbstractFactory.build(configStub))
   }
 }

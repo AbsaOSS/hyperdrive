@@ -15,17 +15,8 @@
 
 package za.co.absa.hyperdrive.ingestor.api.manager
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
+import org.apache.commons.configuration2.Configuration
 
-/**
-  * Base class for all OffsetManagers.
-  *
-  */
-abstract class OffsetManager(topic: String) {
-
-  def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
-
-  def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row]
+trait StreamManagerFactory {
+  def apply(config: Configuration): StreamManager
 }

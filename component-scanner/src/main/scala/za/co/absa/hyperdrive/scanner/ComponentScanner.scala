@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.scanner
 import java.io.File
 
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactory
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManagerFactory
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactory
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactory
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactory
@@ -34,7 +34,7 @@ object ComponentScanner {
 
   def getStreamReaderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamReaderFactory])
 
-  def getOffsetManagerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[OffsetManagerFactory])
+  def getStreamManagerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamManagerFactory])
 
   def getStreamDecoderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamDecoderFactory])
 

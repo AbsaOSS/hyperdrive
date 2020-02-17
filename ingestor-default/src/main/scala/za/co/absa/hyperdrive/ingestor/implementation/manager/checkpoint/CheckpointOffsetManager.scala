@@ -17,11 +17,10 @@ package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow}
@@ -33,7 +32,7 @@ private[manager] object CheckpointOffsetManagerProps {
 }
 
 private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
-                                               val startingOffsets: Option[String]) extends OffsetManager("") {
+                                               val startingOffsets: Option[String]) extends StreamManager {
 
   import CheckpointOffsetManagerProps._
 
@@ -43,7 +42,7 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
 
   private val logger = LogManager.getLogger
 
-  override def configureOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
+  override def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
     if (streamReader == null) {
       throw new IllegalArgumentException("Null DataStreamReader instance.")
     }
@@ -60,7 +59,7 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
     }
   }
 
-  override def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = {
+  override def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = {
     if (streamWriter == null) {
       throw new IllegalArgumentException("Null DataStreamWriter instance.")
     }
@@ -79,8 +78,8 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
   }
 }
 
-object CheckpointOffsetManager extends OffsetManagerFactory {
-  override def apply(config: Configuration): OffsetManager = {
+object CheckpointOffsetManager extends StreamManagerFactory {
+  override def apply(config: Configuration): StreamManager = {
     val checkpointLocation = getCheckpointLocation(config)
     val startingOffsets = getStartingOffsets(config)
 

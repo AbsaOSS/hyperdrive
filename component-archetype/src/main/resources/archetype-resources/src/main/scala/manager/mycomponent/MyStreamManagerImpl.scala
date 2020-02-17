@@ -21,24 +21,24 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{OffsetManager, OffsetManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
 
 /**
- * This is a stub for a custom implementation of a OffsetManager
+ * This is a stub for a custom implementation of a StreamManager
  */
 
-private[manager] class MyOffsetManagerImpl(topic: String) extends OffsetManager(topic) {
+private[manager] class MyStreamManagerImpl extends StreamManager {
 
-  def configureOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = ???
+  def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = ???
 
-  def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
+  def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
 }
 
-object MyOffsetManagerImpl extends OffsetManagerFactory {
+object MyStreamManagerImpl extends StreamManagerFactory {
   private val logger = LogManager.getLogger
 
-  override def apply(conf: Configuration): OffsetManager = {
-    logger.info("Building MyOffsetManagerImpl")
-    new MyOffsetManagerImpl("topic")
+  override def apply(conf: Configuration): StreamManager = {
+    logger.info("Building MyStreamManagerImpl")
+    new MyStreamManagerImpl()
   }
 }
