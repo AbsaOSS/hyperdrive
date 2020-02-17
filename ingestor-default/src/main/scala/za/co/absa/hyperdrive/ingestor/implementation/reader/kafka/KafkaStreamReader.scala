@@ -69,6 +69,8 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
       throw new IllegalStateException("SparkSession is stopped.")
     }
 
+    logger.info(s"Will read from topic $topic")
+
     val streamReader = spark
       .readStream
       .format(STREAM_FORMAT_KAFKA_NAME)
@@ -77,8 +79,6 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
 
     streamReader.options(extraConfs)
   }
-
-  override def getSourceName: String = s"Kafka topic: $topic"
 }
 
 object KafkaStreamReader extends StreamReaderFactory {

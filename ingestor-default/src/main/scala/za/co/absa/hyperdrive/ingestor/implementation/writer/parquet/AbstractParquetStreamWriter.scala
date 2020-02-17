@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
+import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
@@ -26,6 +27,7 @@ import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
 private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter {
+  private val logger = LogManager.getLogger
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
@@ -46,10 +48,11 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
     val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
 
+    logger.info(s"Writing to $destination")
     streamWithOptionsAndOffset.start(destination)
   }
 
-  override def getDestination: String = destination
+  def getDestination: String = destination
 
   protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
     dataFrame

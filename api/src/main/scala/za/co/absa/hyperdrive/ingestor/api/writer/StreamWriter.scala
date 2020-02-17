@@ -26,10 +26,4 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 abstract class StreamWriter {
 
   def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery
-
-  /**
-   *
-   * @return a string describing the destination, used for logging
-   */
-  def getDestination: String
 }

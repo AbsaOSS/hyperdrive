@@ -53,8 +53,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
       streamWriter,
       dataFrame,
       streamingQuery)
-    when(streamReader.getSourceName).thenReturn("test-source")
-    when(streamWriter.getDestination).thenReturn("test-destination")
     val sparkContext = mock[SparkContext]
     when(sparkContext.hadoopConfiguration).thenReturn(configuration)
     when(sparkSession.sparkContext).thenReturn(sparkContext)
@@ -177,13 +175,11 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   private def prepareMocks(): Unit = {
     when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
-    when(streamReader.getSourceName).thenReturn("mocked_topic")
 
     when(streamManager.configure(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
     when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
 
     when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
-    when(streamWriter.getDestination).thenReturn("mocked_destination")
   }
 }

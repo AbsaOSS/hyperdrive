@@ -21,10 +21,8 @@ import org.apache.spark.sql.streaming.StreamingQuery
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 
-class DummyStreamWriterTwo(destination: String) extends StreamWriter {
+class DummyStreamWriterTwo extends StreamWriter {
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
-
-  override def getDestination: String = destination
 }
 
 object DummyStreamWriterTwo extends StreamWriterFactory {

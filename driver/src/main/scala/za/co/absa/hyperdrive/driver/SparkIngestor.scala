@@ -68,7 +68,7 @@ object SparkIngestor {
 
     val ingestionId = generateIngestionId
 
-    logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+    logger.info(s"STARTING ingestion (id = $ingestionId)")
 
     val ingestionQuery = try {
       val inputStream = streamReader.read(spark) // gets the source stream
@@ -91,7 +91,7 @@ object SparkIngestor {
           s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }
 
-    logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+    logger.info(s"FINISHED ingestion (id = $ingestionId)")
   }
 
   private def validateInput(spark: SparkSession,

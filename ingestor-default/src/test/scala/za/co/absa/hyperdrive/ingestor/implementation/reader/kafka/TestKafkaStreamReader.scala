@@ -97,12 +97,7 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
     verify(dataStreamReader, never()).options(validExtraConfs)
   }
-
-  it should "include the topic in the source name" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
-    assert(reader.getSourceName.toLowerCase.contains(validTopic))
-  }
-
+  
   private def getMockedSparkContext(stopped: Boolean): SparkContext = {
     val sparkContext = mock[SparkContext]
     when(sparkContext.isStopped).thenReturn(stopped)
