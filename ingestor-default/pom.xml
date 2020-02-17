@@ -38,12 +38,31 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--ABRiS-->
+        <dependency>
+            <!-- Cannot have scope test because it is used by abris -->
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>abris_${scala.compat.version}</artifactId>
+        </dependency>
+        <!--Kafka-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+        </dependency>
+
+        <!--Tests-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>testutils</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
