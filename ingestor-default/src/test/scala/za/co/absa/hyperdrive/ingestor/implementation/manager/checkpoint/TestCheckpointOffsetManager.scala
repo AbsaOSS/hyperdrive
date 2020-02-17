@@ -31,7 +31,6 @@ import za.co.absa.hyperdrive.testutils.TempDir
 class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with  MockitoSugar {
 
   private var tempDir = TempDir.getNew
-  private val validTopic = "a-valid-topic"
   private val validConfiguration = new Configuration()
 
   override def beforeEach: Unit = tempDir = TempDir.getNew
@@ -40,28 +39,24 @@ class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with 
 
   behavior of "CheckpointingOffsetManager"
 
-  it should "throw on blank topic" in {
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(topic = null, tempDir.getAbsolutePath, None))
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(topic = "  ", tempDir.getAbsolutePath, None))
-  }
-
   it should "throw on blank checkpoint base location" in {
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(validTopic, checkpointBaseLocation = null, None))
+    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(checkpointLocation = null, None))
   }
 
   it should "throw on nonexistent checkpoint base location" in {
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(validTopic, checkpointBaseLocation = "  ", None))
+    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(checkpointLocation = "  ", None))
   }
 
   it should "throw on null DataStreamReader" in {
     val nullDataStreamReader: DataStreamReader = null
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, None)
+    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, None)
     assertThrows[IllegalArgumentException] (manager.configureOffsets(nullDataStreamReader, validConfiguration))
   }
 
   it should "set offsets to earliest if no checkpoint location exists" in {
     val dataStreamReader = mock[DataStreamReader]
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, None)
+    val nonExistent = tempDir.toPath.resolve("non-existent")
+    val manager = new CheckpointOffsetManager(checkpointLocation = nonExistent.toUri.getPath, None)
     manager.configureOffsets(dataStreamReader, validConfiguration)
 
     verify(dataStreamReader).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
@@ -69,44 +64,35 @@ class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with 
 
   it should "set offsets to user-defined property if no checkpoint location exists" in {
     val dataStreamReader = mock[DataStreamReader]
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, Some("latest"))
+    val nonExistent = tempDir.toPath.resolve("non-existent")
+    val manager = new CheckpointOffsetManager(checkpointLocation = nonExistent.toUri.getPath, Some("latest"))
     manager.configureOffsets(dataStreamReader, validConfiguration)
 
     verify(dataStreamReader).option(WORD_STARTING_OFFSETS, "latest")
   }
 
   it should "not set offsets if a checkpoint location exists" in {
-    new File(tempDir, validTopic).mkdirs() // creates checkpoint location for topic
+    tempDir.mkdirs() // creates checkpoint location for topic
 
     val dataStreamReader = mock[DataStreamReader]
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, Some("latest"))
+    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, Some("latest"))
     manager.configureOffsets(dataStreamReader, validConfiguration)
 
     verify(dataStreamReader, never()).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST) // should not set offset, since checkpoint location exists
   }
 
-  it should "resolve checkpoint location from topic" in {
-    new File(tempDir, "other-directory-name").mkdirs() // creates checkpoint location unrelated to the topic
-
-    val dataStreamReader = mock[DataStreamReader]
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, None)
-    manager.configureOffsets(dataStreamReader, validConfiguration)
-
-    verify(dataStreamReader).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST) // should set offsets as checkpoint exists but is unrelated to the topic
-  }
-
   it should "throw on null DataStreamWriter" in {
     val nullDataStreamWriter: DataStreamWriter[Row] = null
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, None)
+    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, None)
     assertThrows[IllegalArgumentException] (manager.configureOffsets(nullDataStreamWriter, validConfiguration))
   }
 
   it should "set checkpoint location" in {
     val dataStreamWriter = mock[DataStreamWriter[Row]]
-    val manager = new CheckpointOffsetManager(validTopic, checkpointBaseLocation = tempDir.getAbsolutePath, None)
+    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, None)
     manager.configureOffsets(dataStreamWriter, validConfiguration)
 
-    val expectedCheckpointLocationTopic = s"${tempDir.getAbsolutePath}/$validTopic"
+    val expectedCheckpointLocationTopic = tempDir.getAbsolutePath
     verify(dataStreamWriter).option(CHECKPOINT_LOCATION_KEY, expectedCheckpointLocationTopic)
   }
 }

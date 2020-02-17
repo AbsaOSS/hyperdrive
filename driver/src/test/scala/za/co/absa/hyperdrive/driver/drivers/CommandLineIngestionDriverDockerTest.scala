@@ -81,7 +81,6 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
   behavior of "CommandLineIngestionDriver"
 
   before {
-    fs.mkdirs(new Path(checkpointDir))
     fs.mkdirs(new Path(destinationDir))
   }
 
@@ -121,7 +120,7 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
       "reader.kafka.brokers" -> s"http://${kafka.getContainerIpAddress}:${kafka.getMappedPort(kafka.getExposedPorts.get(0))}",
 
       // Offset management(checkpointing) settings
-      "manager.checkpoint.base.location" -> checkpointDir,
+      "manager.checkpoint.base.location" -> (checkpointDir + "/${reader.kafka.topic}"),
 
       // Format(ABRiS) settings
       "decoder.avro.schema.registry.url" -> schemaRegistryUrl,
@@ -141,6 +140,8 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
     CommandLineIngestionDriver.main(driverConfigArray)
 
     // then
+    fs.exists(new Path(s"$checkpointDir/$topic")) shouldBe true
+
     val df = spark.read.parquet(destinationDir)
     df.count shouldBe numberOfRecords
     import spark.implicits._
