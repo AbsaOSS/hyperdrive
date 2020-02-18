@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selecti
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT
 
@@ -41,6 +42,14 @@ object ColumnSelectorStreamTransformer extends StreamTransformerFactory {
     LogManager.getLogger.info(s"Going to create ColumnSelectorStreamTransformer using: columns='$columns'")
     new ColumnSelectorStreamTransformer(columns)
   }
+
+  override def getName: String = "Column Selector Transformer"
+
+  override def getDescription: String = "This transformer selects only the given columns. Column expressions are not possible"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map(
+    KEY_COLUMNS_TO_SELECT -> PropertyMetadata("Columns to select", Some("Comma separated list of columns that should be selected. If empty, all columns are selected."), required = false)
+  )
 
   private def getColumnsAsSequence(configuration: Configuration): Seq[String] = {
     configuration.getStringArray(KEY_COLUMNS_TO_SELECT) match {

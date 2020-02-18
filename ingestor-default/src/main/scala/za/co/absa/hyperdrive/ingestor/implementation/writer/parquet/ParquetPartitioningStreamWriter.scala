@@ -19,16 +19,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import org.apache.commons.configuration2.Configuration
-
 import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetPartitioningStreamWriterKeys._
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
 
 private[writer] class ParquetPartitioningStreamWriter(destination: String, reportDate: String, extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, extraConfOptions) {
@@ -93,4 +94,15 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory {
       case _ => reportDateFormatter.format(LocalDate.now())
     }
   }
+
+  override def getName: String = "Parquet Partitioning Stream Writer"
+
+  override def getDescription: String = "This writer saves the ingested data in parquet format, partitioned by ingestion date and version. " +
+    "The version is incremented automatically for each ingestion on the same day"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map(
+    KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true)
+  )
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
 }

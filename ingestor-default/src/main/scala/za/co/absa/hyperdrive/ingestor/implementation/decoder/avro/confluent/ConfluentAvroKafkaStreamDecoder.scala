@@ -21,7 +21,8 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
+import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_SCHEMA_REGISTRY_URL, PARAM_VALUE_SCHEMA_ID, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
@@ -69,6 +70,19 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
 
     new ConfluentAvroKafkaStreamDecoder(topic, schemaRegistrySettings)
   }
+
+  override def getName: String = "Confluent Avro Stream Decoder"
+
+  override def getDescription: String = "Decoder for Kafka messages in Avro format. The decoder connects to a Schema Registry instance to retrieve the schema information."
+
+  override def getProperties: Map[String, PropertyMetadata] = Map(
+    PARAM_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),
+    PARAM_VALUE_SCHEMA_ID -> PropertyMetadata("Schema Id", Some("Specific Id of schema or \"latest\""), required = true),
+    PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> PropertyMetadata("Schema naming strategy",
+      Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = true),
+    PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> PropertyMetadata("Record name", Some("Record name for naming strategies record.name or topic.record.name"), required = false),
+    PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> PropertyMetadata("Record namespace", Some("Record namespace for naming strategies record.name or topic.record.name"), required = false)
+  )
 
   private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
 

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
@@ -94,6 +95,16 @@ object KafkaStreamReader extends StreamReaderFactory {
     new KafkaStreamReader(topic, brokers, extraOptions)
   }
 
+  override def getName: String = "Kafka Reader"
+
+  override def getDescription: String = "This component ingests data from a kafka topic."
+
+  override def getProperties: Map[String, PropertyMetadata] = Map(
+    KEY_TOPIC -> PropertyMetadata("Topic name", Some("Name of the kafka topic"), required = true),
+    KEY_BROKERS -> PropertyMetadata("Brokers", Some("Comma-separated list of kafka broker urls"), required = true))
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(rootFactoryOptionalConfKey)
+
   private def getTopic(configuration: Configuration): String = {
     getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is $KEY_TOPIC defined?")
   }
@@ -105,5 +116,5 @@ object KafkaStreamReader extends StreamReaderFactory {
 
   private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
 
-  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) =  map.filterKeys(!_.contains(exclusionToken))
+  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) = map.filterKeys(!_.contains(exclusionToken))
 }
