@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.api.transformer
+package za.co.absa.hyperdrive.ingestor.api
 
-import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
+import org.apache.commons.configuration2.Configuration
 
-trait StreamTransformerFactory extends ComponentFactory[StreamTransformer]
+trait ComponentFactory[T] extends HasComponentAttributes {
+  def apply(config: Configuration): T
 }
