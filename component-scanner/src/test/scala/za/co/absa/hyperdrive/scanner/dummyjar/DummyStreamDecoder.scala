@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.scanner.dummyjar
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
+import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory, StreamDecoderFactoryProvider}
 
 class DummyStreamDecoder extends StreamDecoder {
   override def decode(streamReader: DataStreamReader): DataFrame = ???
@@ -26,4 +26,8 @@ class DummyStreamDecoder extends StreamDecoder {
 
 object DummyStreamDecoder extends StreamDecoderFactory {
   override def apply(config: Configuration): StreamDecoder = ???
+}
+
+class DummyStreamDecoderLoader extends StreamDecoderFactoryProvider {
+  override def getComponentFactory: StreamDecoderFactory = DummyStreamDecoder
 }

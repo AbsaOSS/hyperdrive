@@ -16,40 +16,101 @@
 package za.co.absa.hyperdrive.scanner
 
 import java.io.File
+import java.net.URLClassLoader
+import java.util.ServiceLoader
+import java.util.zip.ZipFile
 
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactory
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactory
-import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactory
-import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactory
+import org.apache.logging.log4j.LogManager
+import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManagerFactory, StreamManagerFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.{ComponentFactoryProvider, HasComponentAttributes}
 
-import scala.reflect.runtime.{universe => ru}
-import scala.util.Try
+import scala.reflect.ClassTag
+import scala.util.{Failure, Success, Try}
 
-case class ComponentInfo(fullyQualifiedName: String,
-                         humanReadableName: String,
-                         jarPath: String)
+case class ComponentDescriptors(readers: Seq[ComponentDescriptor],
+                                decoders: Seq[ComponentDescriptor],
+                                transformers: Seq[ComponentDescriptor],
+                                writers: Seq[ComponentDescriptor],
+                                managers: Seq[ComponentDescriptor])
+
+case class ComponentDescriptor(attributes: HasComponentAttributes,
+                               fullyQualifiedName: String,
+                               jarPath: File)
 
 object ComponentScanner {
+  private val logger = LogManager.getLogger
+  private val jarSuffix = ".jar"
 
-  def getStreamReaderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamReaderFactory])
+  def getComponents(baseDirectory: File): Try[ComponentDescriptors] = getComponents(List(baseDirectory))
 
-  def getStreamManagerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamManagerFactory])
-
-  def getStreamDecoderComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamDecoderFactory])
-
-  def getStreamTransformerComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamTransformerFactory])
-
-  def getStreamWriterComponents(directory: File): Try[List[ComponentInfo]] = getComponentsInfo(directory, ru.symbolOf[StreamWriterFactory])
-
-  def getComponentsInfo(directory: File, factoryType: ru.TypeSymbol): Try[List[ComponentInfo]] = {
-    for {
-      objectsInfo <- ObjectScanner.getObjectsInfo(directory, factoryType)
-      componentsInfo <- Try(objectsInfo.map{case (className, jarPath) => ComponentInfo(className, getHumanReadableName(className), jarPath)})
-    } yield componentsInfo
+  def getComponents(baseDirectories: List[File]): Try[ComponentDescriptors] = {
+    Try(
+      flatten(baseDirectories
+        .flatMap(findAllJarsInDirectory)
+        .map(f => findComponentsInJar(f)))
+    )
   }
 
-  private def getHumanReadableName(fullyQualifiedName: String) = {
-    if (fullyQualifiedName.takeRight(1) == "$") fullyQualifiedName.dropRight(1) else fullyQualifiedName
+  private def flatten(componentDescriptors: Seq[ComponentDescriptors]) = {
+    ComponentDescriptors(
+      componentDescriptors.flatMap(_.readers),
+      componentDescriptors.flatMap(_.decoders),
+      componentDescriptors.flatMap(_.transformers),
+      componentDescriptors.flatMap(_.writers),
+      componentDescriptors.flatMap(_.managers)
+    )
+  }
+
+  private def findAllJarsInDirectory(directory: File): List[File] = {
+    if (!directory.exists()) throw new IllegalArgumentException(s"Directory $directory does not exist")
+    if (!directory.isDirectory) throw new IllegalArgumentException(s"Argument $directory is not a directory")
+    findAllJarsInDirectoryRecursively(directory)
+  }
+
+  private def findAllJarsInDirectoryRecursively(directory: File): List[File] = {
+    val jarsInSubdirectories = directory
+      .listFiles()
+      .filter(_.isDirectory)
+      .flatMap(findAllJarsInDirectoryRecursively)
+
+    val jars = directory
+      .listFiles()
+      .filter(_.isFile)
+      .filter(_.getName.endsWith(jarSuffix))
+      .toList
+
+    jars ++ jarsInSubdirectories
+  }
+
+  private def findComponentsInJar(jar: File): ComponentDescriptors = {
+    Try(new ZipFile(jar.getPath)) match {
+      case Failure(exception) =>
+        logger.warn(s"Could not open file ${jar.getPath}", exception)
+        ComponentDescriptors(List(), List(), List(), List(), List())
+      case Success(zipFile) =>
+        zipFile.close()
+        val classLoader = new URLClassLoader(Array(jar.toURI.toURL))
+
+        ComponentDescriptors(
+          loadService[StreamReaderFactoryProvider, StreamReaderFactory](classLoader, jar),
+          loadService[StreamDecoderFactoryProvider, StreamDecoderFactory](classLoader, jar),
+          loadService[StreamTransformerFactoryProvider, StreamTransformerFactory](classLoader, jar),
+          loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar),
+          loadService[StreamManagerFactoryProvider, StreamManagerFactory](classLoader, jar)
+        )
+    }
+  }
+
+  private def loadService[T <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: File)(implicit classTag: ClassTag[T]) = {
+    import scala.collection.JavaConverters._
+    ServiceLoader.load(classTag.runtimeClass, classLoader)
+      .asScala
+      .map(c => c.asInstanceOf[T])
+      .map(c => ComponentDescriptor(c.getComponentFactory, c.getComponentFactory.getClass.getName, jar))
+      .toList
   }
 }

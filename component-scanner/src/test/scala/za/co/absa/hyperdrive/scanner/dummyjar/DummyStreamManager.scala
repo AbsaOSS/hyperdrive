@@ -19,7 +19,7 @@ import org.apache.commons.configuration2
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory, StreamManagerFactoryProvider}
 
 class DummyStreamManager(topic: String) extends StreamManager {
   override def configure(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader = ???
@@ -29,4 +29,8 @@ class DummyStreamManager(topic: String) extends StreamManager {
 
 object DummyStreamManager extends StreamManagerFactory {
   override def apply(config: configuration2.Configuration): StreamManager = ???
+}
+
+class DummyStreamManagerLoader extends StreamManagerFactoryProvider {
+  override def getComponentFactory: StreamManagerFactory = DummyStreamManager
 }

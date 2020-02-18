@@ -19,6 +19,12 @@ import java.io.File
 import java.nio.file.Files
 
 import org.scalatest.{FlatSpec, Matchers}
+import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactoryProvider
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactoryProvider
+import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryProvider
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
+import za.co.absa.hyperdrive.scanner.dummyjar._
 
 import scala.reflect.io.Directory
 
@@ -27,40 +33,61 @@ class TestComponentScanner extends FlatSpec with Matchers {
 
   behavior of "ComponentScanner"
 
-  val DUMMYJARPATH = "za/co/absa/hyperdrive/scanner/dummyjar/"
-  val DUMMYPACKAGE = "za.co.absa.hyperdrive.scanner.dummyjar."
+  private val dummyJarPath = "za/co/absa/hyperdrive/scanner/dummyjar/"
+  private val dummyPackage = dummyJarPath.replace("/", ".")
 
   it should "list API components in the same jar" in {
     // given
     val baseDirPath = Files.createTempDirectory("listAllComponentsInSingleJar")
     val baseDir = new File(baseDirPath.toUri)
     val filenames = List(
-      s"${DUMMYJARPATH}DummyStreamReaderOne.class",
-      s"${DUMMYJARPATH}DummyStreamReaderOne$$.class",
-      s"${DUMMYJARPATH}DummyStreamManager.class",
-      s"${DUMMYJARPATH}DummyStreamManager$$.class",
-      s"${DUMMYJARPATH}DummyStreamDecoder.class",
-      s"${DUMMYJARPATH}DummyStreamDecoder$$.class",
-      s"${DUMMYJARPATH}DummyStreamTransformer.class",
-      s"${DUMMYJARPATH}DummyStreamTransformer$$.class",
-      s"${DUMMYJARPATH}DummyStreamWriterOne.class",
-      s"${DUMMYJARPATH}DummyStreamWriterOne$$.class")
-    JarTestUtils.createJar(baseDir, "jar1.jar", filenames)
+      s"${dummyJarPath}DummyStreamReaderOne.class",
+      s"${dummyJarPath}DummyStreamReaderOne$$.class",
+      s"${dummyJarPath}DummyStreamReaderOneLoader.class",
+      s"${dummyJarPath}DummyStreamReaderTwo.class",
+      s"${dummyJarPath}DummyStreamReaderTwo$$.class",
+      s"${dummyJarPath}DummyStreamReaderTwoLoader.class",
+      s"${dummyJarPath}DummyStreamManager.class",
+      s"${dummyJarPath}DummyStreamManager$$.class",
+      s"${dummyJarPath}DummyStreamManagerLoader.class",
+      s"${dummyJarPath}DummyStreamDecoder.class",
+      s"${dummyJarPath}DummyStreamDecoder$$.class",
+      s"${dummyJarPath}DummyStreamDecoderLoader.class",
+      s"${dummyJarPath}DummyStreamTransformer.class",
+      s"${dummyJarPath}DummyStreamTransformer$$.class",
+      s"${dummyJarPath}DummyStreamTransformerLoader.class",
+      s"${dummyJarPath}DummyStreamWriterOne.class",
+      s"${dummyJarPath}DummyStreamWriterOne$$.class",
+      s"${dummyJarPath}DummyStreamWriterOneLoader.class"
+    )
+
+    val serviceProviders = Map(
+      classOf[StreamReaderFactoryProvider].getName -> List(
+        s"${dummyPackage}DummyStreamReaderOneLoader",
+        s"${dummyPackage}DummyStreamReaderTwoLoader"),
+      classOf[StreamManagerFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamManagerLoader"),
+      classOf[StreamDecoderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamDecoderLoader"),
+      classOf[StreamTransformerFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamTransformerLoader"),
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterOneLoader"))
+
+    JarTestUtils.createJar(baseDir, "jar1.jar", filenames, serviceProviders)
 
     // when
-    val readers = ComponentScanner.getStreamReaderComponents(baseDir).get
-    val managers = ComponentScanner.getStreamManagerComponents(baseDir).get
-    val decoders = ComponentScanner.getStreamDecoderComponents(baseDir).get
-    val transformers = ComponentScanner.getStreamTransformerComponents(baseDir).get
-    val writers = ComponentScanner.getStreamWriterComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    val expectedJarPath = baseDir.getAbsolutePath + "/jar1.jar"
-    readers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamReaderOne$$", s"${DUMMYPACKAGE}DummyStreamReaderOne", expectedJarPath)
-    managers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamManager$$", s"${DUMMYPACKAGE}DummyStreamManager", expectedJarPath)
-    decoders should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamDecoder$$", s"${DUMMYPACKAGE}DummyStreamDecoder", expectedJarPath)
-    transformers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamTransformer$$", s"${DUMMYPACKAGE}DummyStreamTransformer", expectedJarPath)
-    writers should contain only ComponentInfo(s"${DUMMYPACKAGE}DummyStreamWriterOne$$", s"${DUMMYPACKAGE}DummyStreamWriterOne", expectedJarPath)
+    val expectedJarPath = new File(baseDir.getAbsolutePath + "/jar1.jar")
+    components.readers should contain theSameElementsAs List(
+      ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJarPath),
+      ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJarPath))
+    components.managers should contain only
+      ComponentDescriptor(DummyStreamManager, s"${dummyPackage}DummyStreamManager$$", expectedJarPath)
+    components.decoders should contain only
+      ComponentDescriptor(DummyStreamDecoder, s"${dummyPackage}DummyStreamDecoder$$", expectedJarPath)
+    components.transformers should contain only
+      ComponentDescriptor(DummyStreamTransformer, s"${dummyPackage}DummyStreamTransformer$$", expectedJarPath)
+    components.writers should contain only
+      ComponentDescriptor(DummyStreamWriterOne, s"${dummyPackage}DummyStreamWriterOne$$", expectedJarPath)
 
     // cleanup
     new Directory(baseDir).deleteRecursively()
