@@ -105,12 +105,17 @@ object ComponentScanner {
     }
   }
 
-  private def loadService[T <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: File)(implicit classTag: ClassTag[T]) = {
+  private def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: File)(implicit classTag: ClassTag[P]): List[ComponentDescriptor] = {
+    loadService[P, F](classLoader)
+      .map(factory => ComponentDescriptor(factory, factory.getClass.getName, jar))
+      .toList
+  }
+
+  def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader)(implicit classTag: ClassTag[P]): Iterable[F] = {
     import scala.collection.JavaConverters._
     ServiceLoader.load(classTag.runtimeClass, classLoader)
       .asScala
-      .map(c => c.asInstanceOf[T])
-      .map(c => ComponentDescriptor(c.getComponentFactory, c.getComponentFactory.getClass.getName, jar))
-      .toList
+      .map(c => c.asInstanceOf[P])
+      .map(c => c.getComponentFactory)
   }
 }

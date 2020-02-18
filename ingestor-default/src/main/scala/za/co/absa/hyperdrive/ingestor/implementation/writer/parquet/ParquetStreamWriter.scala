@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
@@ -44,4 +44,8 @@ object ParquetStreamWriter extends StreamWriterFactory {
   )
 
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
+}
+
+class ParquetStreamWriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = ParquetStreamWriter
 }

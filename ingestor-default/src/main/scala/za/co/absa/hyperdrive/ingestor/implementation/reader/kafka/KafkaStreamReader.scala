@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
@@ -117,4 +117,8 @@ object KafkaStreamReader extends StreamReaderFactory {
   private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
 
   private def filterKeysContaining(map: Map[String, String], exclusionToken: String) = map.filterKeys(!_.contains(exclusionToken))
+}
+
+class KafkaStreamReaderLoader extends StreamReaderFactoryProvider {
+  override def getComponentFactory: StreamReaderFactory = KafkaStreamReader
 }

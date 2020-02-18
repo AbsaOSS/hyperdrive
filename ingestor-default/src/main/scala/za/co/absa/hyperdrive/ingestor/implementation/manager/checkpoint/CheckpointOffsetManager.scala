@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory, StreamManagerFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow}
@@ -106,4 +106,8 @@ object CheckpointOffsetManager extends StreamManagerFactory {
   private def getCheckpointLocation(configuration: Configuration): String = getOrThrow(KEY_CHECKPOINT_BASE_LOCATION, configuration, errorMessage = s"Could not find checkpoint location. Is '$KEY_CHECKPOINT_BASE_LOCATION' defined?")
 
   private def getStartingOffsets(configuration: Configuration): Option[String] = getOrNone(KEY_STARTING_OFFSETS, configuration)
+}
+
+class CheckpointOffsetManagerLoader extends StreamManagerFactoryProvider {
+  override def getComponentFactory: StreamManagerFactory = CheckpointOffsetManager
 }

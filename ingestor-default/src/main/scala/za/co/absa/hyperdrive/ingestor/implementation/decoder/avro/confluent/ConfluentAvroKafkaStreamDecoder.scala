@@ -23,7 +23,7 @@ import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_SCHEMA_REGISTRY_URL, PARAM_VALUE_SCHEMA_ID, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
+import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory, StreamDecoderFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, KEY_TOPIC}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
@@ -114,4 +114,8 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
     import SchemaStorageNamingStrategies._
     strategy == RECORD_NAME || strategy == TOPIC_RECORD_NAME
   }
+}
+
+class ConfluentAvroKafkaStreamDecoderLoader extends StreamDecoderFactoryProvider {
+  override def getComponentFactory: StreamDecoderFactory = ConfluentAvroKafkaStreamDecoder
 }
