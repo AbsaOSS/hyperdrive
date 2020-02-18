@@ -15,6 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.transformer
 
-import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactoryProvider
 
-trait StreamTransformerFactory extends ComponentFactory[StreamTransformer]
+trait StreamTransformerFactoryProvider extends ComponentFactoryProvider[StreamTransformerFactory]

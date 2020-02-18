@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.api.transformer
+package za.co.absa.hyperdrive.ingestor.api
 
-import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
-
-trait StreamTransformerFactory extends ComponentFactory[StreamTransformer]
+trait ComponentFactoryProvider[T <: HasComponentAttributes] {
+  def getComponentFactory: T
+}
