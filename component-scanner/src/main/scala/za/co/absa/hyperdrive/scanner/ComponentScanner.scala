@@ -50,8 +50,8 @@ object ComponentScanner {
   def getComponents(baseDirectories: List[File]): Try[ComponentDescriptors] = {
     Try(
       flatten(baseDirectories
-        .flatMap(findAllJarsInDirectory)
-        .map(f => findComponentsInJar(f)))
+        .flatMap(findJarsInDirectory)
+        .map(jar => findComponentsInJar(jar)))
     )
   }
 
@@ -65,25 +65,15 @@ object ComponentScanner {
     )
   }
 
-  private def findAllJarsInDirectory(directory: File): List[File] = {
+  private def findJarsInDirectory(directory: File): List[File] = {
     if (!directory.exists()) throw new IllegalArgumentException(s"Directory $directory does not exist")
     if (!directory.isDirectory) throw new IllegalArgumentException(s"Argument $directory is not a directory")
-    findAllJarsInDirectoryRecursively(directory)
-  }
 
-  private def findAllJarsInDirectoryRecursively(directory: File): List[File] = {
-    val jarsInSubdirectories = directory
-      .listFiles()
-      .filter(_.isDirectory)
-      .flatMap(findAllJarsInDirectoryRecursively)
-
-    val jars = directory
+    directory
       .listFiles()
       .filter(_.isFile)
       .filter(_.getName.endsWith(jarSuffix))
       .toList
-
-    jars ++ jarsInSubdirectories
   }
 
   private def findComponentsInJar(jar: File): ComponentDescriptors = {
@@ -106,16 +96,12 @@ object ComponentScanner {
   }
 
   private def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: File)(implicit classTag: ClassTag[P]): List[ComponentDescriptor] = {
-    loadService[P, F](classLoader)
-      .map(factory => ComponentDescriptor(factory, factory.getClass.getName, jar))
-      .toList
-  }
-
-  def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader)(implicit classTag: ClassTag[P]): Iterable[F] = {
     import scala.collection.JavaConverters._
     ServiceLoader.load(classTag.runtimeClass, classLoader)
       .asScala
-      .map(c => c.asInstanceOf[P])
-      .map(c => c.getComponentFactory)
+      .map(untypedClass => untypedClass.asInstanceOf[P])
+      .map(provider => provider.getComponentFactory)
+      .map(factory => ComponentDescriptor(factory, factory.getClass.getName, jar))
+      .toList
   }
 }

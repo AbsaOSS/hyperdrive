@@ -16,9 +16,9 @@
 package za.co.absa.hyperdrive.scanner
 
 import java.io.File
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
@@ -26,20 +26,26 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryPr
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
 import za.co.absa.hyperdrive.scanner.dummyjar._
 
-import scala.reflect.io.Directory
 
-
-class TestComponentScanner extends FlatSpec with Matchers {
+class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   behavior of "ComponentScanner"
+
+  private var baseDir = new File(".")
 
   private val dummyJarPath = "za/co/absa/hyperdrive/scanner/dummyjar/"
   private val dummyPackage = dummyJarPath.replace("/", ".")
 
-  it should "list API components in the same jar" in {
+  before {
+    baseDir = Files.createTempDirectory("TestComponentScanner").toFile
+  }
+
+  after {
+    scala.reflect.io.Path(baseDir).deleteRecursively()
+  }
+
+  it should "list components in the same jar" in {
     // given
-    val baseDirPath = Files.createTempDirectory("listAllComponentsInSingleJar")
-    val baseDir = new File(baseDirPath.toUri)
     val filenames = List(
       s"${dummyJarPath}DummyStreamReaderOne.class",
       s"${dummyJarPath}DummyStreamReaderOne$$.class",
@@ -76,7 +82,7 @@ class TestComponentScanner extends FlatSpec with Matchers {
     val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    val expectedJarPath = new File(baseDir.getAbsolutePath + "/jar1.jar")
+    val expectedJarPath = new File(s"${baseDir.getAbsolutePath}/jar1.jar")
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJarPath),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJarPath))
@@ -88,9 +94,110 @@ class TestComponentScanner extends FlatSpec with Matchers {
       ComponentDescriptor(DummyStreamTransformer, s"${dummyPackage}DummyStreamTransformer$$", expectedJarPath)
     components.writers should contain only
       ComponentDescriptor(DummyStreamWriterOne, s"${dummyPackage}DummyStreamWriterOne$$", expectedJarPath)
+  }
+
+  it should "list components in multiple jars" in {
+    // given
+    val filesJar1 = List(
+      s"${dummyJarPath}DummyStreamReaderOne.class",
+      s"${dummyJarPath}DummyStreamReaderOne$$.class",
+      s"${dummyJarPath}DummyStreamWriterOne.class",
+      s"${dummyJarPath}DummyStreamWriterOne$$.class")
+    val serviceProviders1 = Map(
+      classOf[StreamReaderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamReaderOneLoader"),
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterOneLoader")
+    )
+    JarTestUtils.createJar(baseDir, "jar1.jar", filesJar1, serviceProviders1)
+
+    val filesJar2 = List(
+      s"${dummyJarPath}DummyStreamReaderTwo.class",
+      s"${dummyJarPath}DummyStreamReaderTwo$$.class",
+      s"${dummyJarPath}DummyStreamWriterTwo.class",
+      s"${dummyJarPath}DummyStreamWriterTwo$$.class")
+    val serviceProviders2 = Map(
+      classOf[StreamReaderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamReaderTwoLoader"),
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
+    )
+    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar2, serviceProviders2)
+
+    // when
+    val components = ComponentScanner.getComponents(baseDir).get
+
+    // then
+    val expectedJar1 = new File(s"${baseDir.getAbsolutePath}/jar1.jar")
+    val expectedJar2 = new File(s"${baseDir.getAbsolutePath}/jar2.jar")
+    components.readers should contain theSameElementsAs List(
+      ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJar1),
+      ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJar2)
+    )
+
+    components.writers should contain theSameElementsAs List(
+      ComponentDescriptor(DummyStreamWriterOne, s"${dummyPackage}DummyStreamWriterOne$$", expectedJar1),
+      ComponentDescriptor(DummyStreamWriterTwo, s"${dummyPackage}DummyStreamWriterTwo$$", expectedJar2)
+    )
+  }
+
+  it should "return an empty list if the given directory contains only jar files without class files" in {
+    // given
+    JarTestUtils.createJar(baseDir, "jar1.jar", List())
+
+    // when
+    val components = ComponentScanner.getComponents(baseDir).get
+
+    // then
+    componentsShouldBeEmpty(components)
+  }
+
+
+  it should "skip but not fail if a jar is not a zip file" in {
+    // given
+    Files.createTempFile(Paths.get(baseDir.toURI), "anyFile", ".jar")
+
+    // when
+    val components = ComponentScanner.getComponents(baseDir).get
+
+    // then
+    componentsShouldBeEmpty(components)
+  }
+
+  it should "return a failure if the given directory does not exist" in {
+    // given
+    val baseDirPath = Files.createTempDirectory("directorynotexist")
+    val baseDir = new File(baseDirPath.toUri)
+    Files.delete(baseDirPath)
+
+    // when
+    val result = ComponentScanner.getComponents(baseDir)
+
+    // then
+    result.isFailure shouldBe true
+    result.failed.get.getClass shouldBe classOf[IllegalArgumentException]
+    result.failed.get.getMessage should fullyMatch regex "Directory .*directorynotexist.* does not exist"
+  }
+
+  it should "return a failure if the given directory is not a directory" in {
+    // given
+    val anyFilePath = Files.createTempFile("anyFile", ".tmp")
+    val anyFile = new File(anyFilePath.toUri)
+
+    // when
+    val result = ComponentScanner.getComponents(anyFile)
+
+    // then
+    result.isFailure shouldBe true
+    result.failed.get.getClass shouldBe classOf[IllegalArgumentException]
+    result.failed.get.getMessage should fullyMatch regex "Argument .*anyFile.*tmp is not a directory"
 
     // cleanup
-    new Directory(baseDir).deleteRecursively()
+    anyFile.delete()
+  }
+
+  private def componentsShouldBeEmpty(components: ComponentDescriptors) = {
+    components.readers shouldBe empty
+    components.decoders shouldBe empty
+    components.transformers shouldBe empty
+    components.writers shouldBe empty
+    components.managers shouldBe empty
   }
 }
 
