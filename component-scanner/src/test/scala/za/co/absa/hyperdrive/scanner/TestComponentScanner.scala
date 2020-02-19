@@ -15,7 +15,6 @@
 
 package za.co.absa.hyperdrive.scanner
 
-import java.io.File
 import java.nio.file.{Files, Paths}
 
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
@@ -31,17 +30,17 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   behavior of "ComponentScanner"
 
-  private var baseDir = new File(".")
+  private var baseDir = Paths.get(".")
 
   private val dummyJarPath = "za/co/absa/hyperdrive/scanner/dummyjar/"
   private val dummyPackage = dummyJarPath.replace("/", ".")
 
   before {
-    baseDir = Files.createTempDirectory("TestComponentScanner").toFile
+    baseDir = Files.createTempDirectory("TestComponentScanner")
   }
 
   after {
-    scala.reflect.io.Path(baseDir).deleteRecursively()
+    scala.reflect.io.Path(baseDir.toFile).deleteRecursively()
   }
 
   it should "list components in the same jar" in {
@@ -82,7 +81,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    val expectedJarPath = new File(s"${baseDir.getAbsolutePath}/jar1.jar")
+    val expectedJarPath = baseDir.resolve("jar1.jar").toAbsolutePath
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJarPath),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJarPath))
@@ -124,8 +123,8 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    val expectedJar1 = new File(s"${baseDir.getAbsolutePath}/jar1.jar")
-    val expectedJar2 = new File(s"${baseDir.getAbsolutePath}/jar2.jar")
+    val expectedJar1 = baseDir.resolve("jar1.jar").toAbsolutePath
+    val expectedJar2 = baseDir.resolve("jar2.jar").toAbsolutePath
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJar1),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJar2)
@@ -151,7 +150,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   it should "skip but not fail if a jar is not a zip file" in {
     // given
-    Files.createTempFile(Paths.get(baseDir.toURI), "anyFile", ".jar")
+    Files.createTempFile(Paths.get(baseDir.toUri), "anyFile", ".jar")
 
     // when
     val components = ComponentScanner.getComponents(baseDir).get
@@ -163,11 +162,10 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
   it should "return a failure if the given directory does not exist" in {
     // given
     val baseDirPath = Files.createTempDirectory("directorynotexist")
-    val baseDir = new File(baseDirPath.toUri)
     Files.delete(baseDirPath)
 
     // when
-    val result = ComponentScanner.getComponents(baseDir)
+    val result = ComponentScanner.getComponents(baseDirPath)
 
     // then
     result.isFailure shouldBe true
@@ -178,10 +176,9 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
   it should "return a failure if the given directory is not a directory" in {
     // given
     val anyFilePath = Files.createTempFile("anyFile", ".tmp")
-    val anyFile = new File(anyFilePath.toUri)
 
     // when
-    val result = ComponentScanner.getComponents(anyFile)
+    val result = ComponentScanner.getComponents(anyFilePath)
 
     // then
     result.isFailure shouldBe true
@@ -189,7 +186,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     result.failed.get.getMessage should fullyMatch regex "Argument .*anyFile.*tmp is not a directory"
 
     // cleanup
-    anyFile.delete()
+    Files.delete(anyFilePath)
   }
 
   private def componentsShouldBeEmpty(components: ComponentDescriptors) = {
