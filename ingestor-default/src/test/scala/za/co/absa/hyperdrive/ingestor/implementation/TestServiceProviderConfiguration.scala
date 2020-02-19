@@ -32,7 +32,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.{ParquetPart
 
 import scala.reflect.ClassTag
 
-class TestServiceProviderInterface extends FlatSpec with Matchers {
+class TestServiceProviderConfiguration extends FlatSpec with Matchers {
 
   behavior of "Service Provider Interface (META-INF/services)"
 
@@ -66,8 +66,8 @@ class TestServiceProviderInterface extends FlatSpec with Matchers {
     import scala.collection.JavaConverters._
     ServiceLoader.load(classTag.runtimeClass, classLoader)
       .asScala
-      .map(c => c.asInstanceOf[P])
-      .map(c => c.getComponentFactory)
+      .map(_.asInstanceOf[P])
+      .map(_.getComponentFactory)
       .toList
   }
 }

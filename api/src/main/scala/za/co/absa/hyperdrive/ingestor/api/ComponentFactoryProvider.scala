@@ -15,6 +15,11 @@
 
 package za.co.absa.hyperdrive.ingestor.api
 
+/**
+ * Implementations of this trait are responsible for providing an instance of a [[ComponentFactory]] via the
+ * service provider interface (SPI) and need to be registered in a provider configuration file under META-INF/services
+ * Implementations must have a no-args constructor to be instantiable.
+ */
 trait ComponentFactoryProvider[T <: ComponentFactory[_]] {
   def getComponentFactory: T
 }

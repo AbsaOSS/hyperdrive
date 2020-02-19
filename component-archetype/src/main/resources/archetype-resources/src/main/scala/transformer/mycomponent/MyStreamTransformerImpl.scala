@@ -20,7 +20,8 @@ package ${package}.transformer.mycomponent
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
-import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 
 /**
  * This is a stub for a custom implementation of a StreamTransformer
@@ -38,4 +39,16 @@ object MyStreamTransformerImpl extends StreamTransformerFactory {
     logger.info("Building MyStreamTransformerImpl")
     new MyStreamTransformerImpl()
   }
+
+  override def getName: String = "My Stream Transformer"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+}
+
+class MyStreamTransformerImplLoader extends StreamTransformerFactoryProvider {
+  override def getComponentFactory: StreamTransformerFactory = MyStreamTransformerImpl
 }

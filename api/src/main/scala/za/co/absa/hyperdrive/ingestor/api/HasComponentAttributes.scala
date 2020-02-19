@@ -15,10 +15,27 @@
 
 package za.co.absa.hyperdrive.ingestor.api
 
-case class PropertyMetadata(label: String,
+case class PropertyMetadata(
+                             /**
+                              * A human readable label for this property.
+                              */
+                             label: String,
+
+                             /**
+                              * An optional text that gives a detailed description of this property.
+                              */
                             hint: Option[String],
+
+                             /**
+                              * true if the property is required, false otherwise
+                              */
                             required: Boolean)
 
+/**
+ * This trait should be implemented by all implementations of [[ComponentFactory]] to provide a self-description
+ * how the component should be used and configured. This information may be used by external applications
+ * that automatically discover components
+ */
 trait HasComponentAttributes {
   /**
    * @return a human readable name of the component.
@@ -37,8 +54,8 @@ trait HasComponentAttributes {
   def getProperties: Map[String, PropertyMetadata] = Map()
 
   /**
-   * @return a prefix to be used for extra configuration. Typically extra configuration is required
-   *         to pass on configuration properties, e.g. for DataStreamWriter.options
+   * @return a prefix to be used for arbitrary extra configuration. Typically extra configuration is required
+   *         to pass on configuration properties, e.g. to DataStreamWriter.options
    */
   def getExtraConfigurationPrefix: Option[String] = None
 }

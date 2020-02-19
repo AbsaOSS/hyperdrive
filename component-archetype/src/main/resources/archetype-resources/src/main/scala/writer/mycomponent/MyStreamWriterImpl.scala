@@ -21,8 +21,9 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 
 
 /**
@@ -30,10 +31,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
  */
 
 private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter {
-
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
-
-  override def getDestination: String = destination
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory {
@@ -43,4 +41,16 @@ object MyStreamWriterImpl extends StreamWriterFactory {
     logger.info("Building MyStreamWriterImpl")
     new MyStreamWriterImpl("destination")
   }
+
+  override def getName: String = "My Stream Writer"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+}
+
+class MyStreamWriterImplLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = MyStreamWriterImpl
 }
