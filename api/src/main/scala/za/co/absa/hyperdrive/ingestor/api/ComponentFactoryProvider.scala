@@ -15,6 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api
 
-trait ComponentFactoryProvider[T <: HasComponentAttributes] {
+trait ComponentFactoryProvider[T <: ComponentFactory[_]] {
   def getComponentFactory: T
 }

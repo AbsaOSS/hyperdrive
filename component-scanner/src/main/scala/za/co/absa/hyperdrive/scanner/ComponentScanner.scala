@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManagerFactory, StreamM
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.{ComponentFactoryProvider, HasComponentAttributes}
+import za.co.absa.hyperdrive.ingestor.api.{ComponentFactory, ComponentFactoryProvider, HasComponentAttributes}
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
@@ -92,7 +92,7 @@ object ComponentScanner {
     )
   }
 
-  private def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: Path)(implicit classTag: ClassTag[P]): List[ComponentDescriptor] = {
+  private def loadService[P <: ComponentFactoryProvider[F], F <: ComponentFactory[_]](classLoader: ClassLoader, jar: Path)(implicit classTag: ClassTag[P]): List[ComponentDescriptor] = {
     import scala.collection.JavaConverters._
     Try(ServiceLoader.load(classTag.runtimeClass, classLoader)
       .asScala
