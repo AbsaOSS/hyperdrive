@@ -144,22 +144,63 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    componentsShouldBeEmpty(components)
+    components.readers shouldBe empty
+    components.decoders shouldBe empty
+    components.transformers shouldBe empty
+    components.writers shouldBe empty
+    components.managers shouldBe empty
   }
-
 
   it should "skip but not fail if a jar is not a zip file" in {
     // given
-    Files.createTempFile(Paths.get(baseDir.toUri), "anyFile", ".jar")
+    Files.createTempFile(Paths.get(baseDir.toUri), "notAZipFile", ".jar")
+
+    val filesJar = List(
+      s"${dummyJarPath}DummyStreamWriterTwo.class",
+      s"${dummyJarPath}DummyStreamWriterTwo$$.class")
+    val serviceProviders = Map(
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
+    )
+    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar, serviceProviders)
 
     // when
     val components = ComponentScanner.getComponents(baseDir).get
 
     // then
-    componentsShouldBeEmpty(components)
+    val expectedJar = baseDir.resolve("jar2.jar").toAbsolutePath
+    components.writers should contain only
+      ComponentDescriptor(DummyStreamWriterTwo, s"${dummyPackage}DummyStreamWriterTwo$$", expectedJar)
   }
 
-  it should "return a failure if the given directory does not exist" in {
+  it should "skip but not fail if the SPI points to a non-existent implementation" in {
+    // given
+    val filesFakeJar = List(
+      s"${dummyJarPath}DummyStreamWriterOne.class",
+      s"${dummyJarPath}DummyStreamWriterOne$$.class")
+    val fakeServiceProviders = Map(
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}NonExistentLoader")
+    )
+    JarTestUtils.createJar(baseDir, "jar1.jar", filesFakeJar, fakeServiceProviders)
+
+    val filesJar = List(
+      s"${dummyJarPath}DummyStreamWriterTwo.class",
+      s"${dummyJarPath}DummyStreamWriterTwo$$.class")
+    val serviceProviders = Map(
+      classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
+    )
+    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar, serviceProviders)
+
+    // when
+    val components = ComponentScanner.getComponents(baseDir).get
+
+    // then
+    val expectedJar = baseDir.resolve("jar2.jar").toAbsolutePath
+    components.writers should contain only
+      ComponentDescriptor(DummyStreamWriterTwo, s"${dummyPackage}DummyStreamWriterTwo$$", expectedJar)
+  }
+
+
+  it should "return a failure if the given path does not exist" in {
     // given
     val baseDirPath = Files.createTempDirectory("directorynotexist")
     Files.delete(baseDirPath)
@@ -173,7 +214,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     result.failed.get.getMessage should fullyMatch regex "Directory .*directorynotexist.* does not exist"
   }
 
-  it should "return a failure if the given directory is not a directory" in {
+  it should "return a failure if the given path is not a directory" in {
     // given
     val anyFilePath = Files.createTempFile("anyFile", ".tmp")
 
@@ -187,14 +228,6 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
     // cleanup
     Files.delete(anyFilePath)
-  }
-
-  private def componentsShouldBeEmpty(components: ComponentDescriptors) = {
-    components.readers shouldBe empty
-    components.decoders shouldBe empty
-    components.transformers shouldBe empty
-    components.writers shouldBe empty
-    components.managers shouldBe empty
   }
 }
 

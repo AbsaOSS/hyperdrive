@@ -18,7 +18,6 @@ package za.co.absa.hyperdrive.scanner
 import java.net.URLClassLoader
 import java.nio.file.{Files, Path}
 import java.util.ServiceLoader
-import java.util.zip.ZipFile
 
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
@@ -83,31 +82,29 @@ object ComponentScanner {
   }
 
   private def findComponentsInJar(jar: Path): ComponentDescriptors = {
-    Try(new ZipFile(jar.toFile)) match {
-      case Failure(exception) =>
-        logger.warn(s"Could not open file ${jar.toUri.getPath}", exception)
-        ComponentDescriptors(List(), List(), List(), List(), List())
-      case Success(zipFile) =>
-        zipFile.close()
-        val classLoader = new URLClassLoader(Array(jar.toUri.toURL))
-
-        ComponentDescriptors(
-          loadService[StreamReaderFactoryProvider, StreamReaderFactory](classLoader, jar),
-          loadService[StreamDecoderFactoryProvider, StreamDecoderFactory](classLoader, jar),
-          loadService[StreamTransformerFactoryProvider, StreamTransformerFactory](classLoader, jar),
-          loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar),
-          loadService[StreamManagerFactoryProvider, StreamManagerFactory](classLoader, jar)
-        )
-    }
+    val classLoader = new URLClassLoader(Array(jar.toUri.toURL))
+    ComponentDescriptors(
+      loadService[StreamReaderFactoryProvider, StreamReaderFactory](classLoader, jar),
+      loadService[StreamDecoderFactoryProvider, StreamDecoderFactory](classLoader, jar),
+      loadService[StreamTransformerFactoryProvider, StreamTransformerFactory](classLoader, jar),
+      loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar),
+      loadService[StreamManagerFactoryProvider, StreamManagerFactory](classLoader, jar)
+    )
   }
 
   private def loadService[P <: ComponentFactoryProvider[F], F <: HasComponentAttributes](classLoader: ClassLoader, jar: Path)(implicit classTag: ClassTag[P]): List[ComponentDescriptor] = {
     import scala.collection.JavaConverters._
-    ServiceLoader.load(classTag.runtimeClass, classLoader)
+    Try(ServiceLoader.load(classTag.runtimeClass, classLoader)
       .asScala
       .map(untypedClass => untypedClass.asInstanceOf[P])
       .map(provider => provider.getComponentFactory)
       .map(factory => ComponentDescriptor(factory, factory.getClass.getName, jar))
       .toList
+    ) match {
+      case Failure(exception) =>
+        logger.warn(s"Could not load components from ${jar.toAbsolutePath}", exception)
+        List()
+      case Success(components) => components
+    }
   }
 }
