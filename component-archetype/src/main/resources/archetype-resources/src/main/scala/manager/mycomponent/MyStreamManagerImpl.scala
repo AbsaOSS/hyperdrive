@@ -29,9 +29,9 @@ import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerF
 
 private[manager] class MyStreamManagerImpl extends StreamManager {
 
-  def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = ???
+  override def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = ???
 
-  def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
+  override def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
 }
 
 object MyStreamManagerImpl extends StreamManagerFactory {

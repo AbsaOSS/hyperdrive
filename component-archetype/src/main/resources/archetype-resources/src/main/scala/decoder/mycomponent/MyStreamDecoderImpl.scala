@@ -28,7 +28,7 @@ import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderF
  */
 
 private[decoder] class MyStreamDecoderImpl extends StreamDecoder {
-  def decode(streamReader: DataStreamReader): DataFrame = ???
+  override def decode(streamReader: DataStreamReader): DataFrame = ???
 }
 
 object MyStreamDecoderImpl extends StreamDecoderFactory {

@@ -28,7 +28,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 
 private[transformer] class MyStreamTransformerImpl() extends StreamTransformer {
 
-  def transform(streamData: DataFrame): DataFrame = ???
+  override def transform(streamData: DataFrame): DataFrame = ???
 }
 
 object MyStreamTransformerImpl extends StreamTransformerFactory {

@@ -26,7 +26,7 @@ private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[Stri
     throw new IllegalArgumentException("Empty list of columns to select.")
   }
 
-  def transform(streamData: DataFrame): DataFrame = {
+  override def transform(streamData: DataFrame): DataFrame = {
     if (streamData == null) {
       throw new IllegalArgumentException("Null DataFrame received.")
     }
