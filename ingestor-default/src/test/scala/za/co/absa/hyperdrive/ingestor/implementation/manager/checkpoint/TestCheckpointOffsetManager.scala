@@ -39,20 +39,6 @@ class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with 
 
   behavior of "CheckpointingOffsetManager"
 
-  it should "throw on blank checkpoint base location" in {
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(checkpointLocation = null, None))
-  }
-
-  it should "throw on nonexistent checkpoint base location" in {
-    assertThrows[IllegalArgumentException](new CheckpointOffsetManager(checkpointLocation = "  ", None))
-  }
-
-  it should "throw on null DataStreamReader" in {
-    val nullDataStreamReader: DataStreamReader = null
-    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, None)
-    assertThrows[IllegalArgumentException] (manager.configure(nullDataStreamReader, validConfiguration))
-  }
-
   it should "set offsets to earliest if no checkpoint location exists" in {
     val dataStreamReader = mock[DataStreamReader]
     val nonExistent = tempDir.toPath.resolve("non-existent")
@@ -79,12 +65,6 @@ class TestCheckpointOffsetManager extends FlatSpec with BeforeAndAfterEach with 
     manager.configure(dataStreamReader, validConfiguration)
 
     verify(dataStreamReader, never()).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST) // should not set offset, since checkpoint location exists
-  }
-
-  it should "throw on null DataStreamWriter" in {
-    val nullDataStreamWriter: DataStreamWriter[Row] = null
-    val manager = new CheckpointOffsetManager(checkpointLocation = tempDir.getAbsolutePath, None)
-    assertThrows[IllegalArgumentException] (manager.configure(nullDataStreamWriter, validConfiguration))
   }
 
   it should "set checkpoint location" in {

@@ -26,21 +26,26 @@ class TestCheckpointOffsetManagerObject extends FlatSpec with BeforeAndAfterEach
 
   private val checkpointLocation = "/tmp/checkpoint/location"
 
-  private val configStub = mock[Configuration]
+  private val configMock = mock[Configuration]
 
-  override def beforeEach(): Unit = reset(configStub)
+  override def beforeEach(): Unit = reset(configMock)
 
   behavior of CheckpointOffsetManager.getClass.getSimpleName
 
   it should "throw on blank checkpoint location" in {
-    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManager(configStub))
+    val throwable = intercept[IllegalArgumentException](CheckpointOffsetManager(configMock))
     assert(throwable.getMessage.toLowerCase.contains("location"))
+  }
+
+  it should "throw on nonexistent checkpoint base location" in {
+    when(configMock.getString(CheckpointOffsetManagerProps.CHECKPOINT_LOCATION_KEY)).thenReturn(" ")
+    assertThrows[IllegalArgumentException](CheckpointOffsetManager(configMock))
   }
 
   it should "create checkpoint offset manager" in {
     stubCheckpointLocation()
 
-    val manager = CheckpointOffsetManager(configStub).asInstanceOf[CheckpointOffsetManager]
+    val manager = CheckpointOffsetManager(configMock).asInstanceOf[CheckpointOffsetManager]
     assert(checkpointLocation == manager.checkpointLocation)
     assert(manager.startingOffsets.isEmpty)
   }
@@ -49,12 +54,12 @@ class TestCheckpointOffsetManagerObject extends FlatSpec with BeforeAndAfterEach
     stubCheckpointLocation()
     stubProperty(KEY_STARTING_OFFSETS, "latest")
 
-    val manager = CheckpointOffsetManager(configStub).asInstanceOf[CheckpointOffsetManager]
+    val manager = CheckpointOffsetManager(configMock).asInstanceOf[CheckpointOffsetManager]
     assert(checkpointLocation == manager.checkpointLocation)
     assert("latest" == manager.startingOffsets.get)
   }
 
-  private def stubProperty(key: String, value: String): Unit = when(configStub.getString(key)).thenReturn(value)
+  private def stubProperty(key: String, value: String): Unit = when(configMock.getString(key)).thenReturn(value)
 
   private def stubCheckpointLocation(): Unit = stubProperty(KEY_CHECKPOINT_BASE_LOCATION, checkpointLocation)
 }

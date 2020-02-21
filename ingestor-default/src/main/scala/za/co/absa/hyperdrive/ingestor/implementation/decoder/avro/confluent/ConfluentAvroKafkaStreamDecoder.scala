@@ -32,10 +32,6 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
     throw new IllegalArgumentException("Blank topic.")
   }
 
-  if (schemaRegistrySettings == null) {
-    throw new IllegalArgumentException("Null Schema Registry settings received.")
-  }
-
   if (schemaRegistrySettings.isEmpty) {
     throw new IllegalArgumentException("Empty Schema Registry settings received.")
   }
@@ -43,10 +39,6 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
   private val logger = LogManager.getLogger
 
   override def decode(streamReader: DataStreamReader): DataFrame = {
-    if (streamReader == null) {
-      throw new IllegalArgumentException("Null DataStreamReader instance received.")
-    }
-
     val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
     logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
 
@@ -72,9 +64,9 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
 
   private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
 
-  private def getSchemaRegistrySettings(configuration: Configuration): Map[String,String] = {
+  private def getSchemaRegistrySettings(configuration: Configuration): Map[String, String] = {
     import SchemaManager._
-    val settings = Map[String,String](
+    val settings = Map[String, String](
       PARAM_SCHEMA_REGISTRY_URL -> getOrThrow(KEY_SCHEMA_REGISTRY_URL, configuration, errorMessage = s"Schema Registry URL not specified. Is '$KEY_SCHEMA_REGISTRY_URL' configured?"),
       PARAM_VALUE_SCHEMA_ID -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, configuration, errorMessage = s"Schema id not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID' configured?"),
       PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, configuration, errorMessage = s"Schema naming strategy not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY' configured?")
@@ -83,7 +75,7 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
     settings ++ getRecordSettings(settings, configuration)
   }
 
-  private def getRecordSettings(currentSettings: Map[String,String], configuration: Configuration): Map[String,String] = {
+  private def getRecordSettings(currentSettings: Map[String, String], configuration: Configuration): Map[String, String] = {
     val valueNamingStrategy = currentSettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
 
     if (namingStrategyInvolvesRecord(valueNamingStrategy)) {

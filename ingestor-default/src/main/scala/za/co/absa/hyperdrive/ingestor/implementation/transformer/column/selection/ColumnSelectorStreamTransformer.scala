@@ -22,16 +22,12 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSele
 
 private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[String]) extends StreamTransformer {
 
-  if (columns == null || columns.isEmpty) {
+  if (columns.isEmpty) {
     throw new IllegalArgumentException("Empty list of columns to select.")
   }
 
   override def transform(streamData: DataFrame): DataFrame = {
-    if (streamData == null) {
-      throw new IllegalArgumentException("Null DataFrame received.")
-    }
-
-    streamData.select(columns.head, columns.tail:_*)
+    streamData.select(columns.head, columns.tail: _*)
   }
 }
 

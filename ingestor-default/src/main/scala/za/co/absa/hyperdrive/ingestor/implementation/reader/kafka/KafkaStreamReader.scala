@@ -59,18 +59,13 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
    */
   override def read(spark: SparkSession): DataStreamReader = {
 
-    import KafkaStreamReaderProps._
-
-    if (spark == null) {
-      throw new IllegalArgumentException("Null SparkSession instance.")
-    }
-
     if (spark.sparkContext.isStopped) {
       throw new IllegalStateException("SparkSession is stopped.")
     }
 
     logger.info(s"Will read from topic $topic")
 
+    import KafkaStreamReaderProps._
     val streamReader = spark
       .readStream
       .format(STREAM_FORMAT_KAFKA_NAME)

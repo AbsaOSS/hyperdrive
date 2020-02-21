@@ -43,10 +43,6 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
   private val logger = LogManager.getLogger
 
   override def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
-    if (streamReader == null) {
-      throw new IllegalArgumentException("Null DataStreamReader instance.")
-    }
-
     val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
 
     startingOffsets match {
@@ -60,10 +56,6 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
   }
 
   override def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = {
-    if (streamWriter == null) {
-      throw new IllegalArgumentException("Null DataStreamWriter instance.")
-    }
-
     logger.info(s"Checkpoint location resolved to: '$checkpointLocation'")
     streamWriter.option(CHECKPOINT_LOCATION_KEY, checkpointLocation)
   }
