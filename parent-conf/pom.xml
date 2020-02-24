@@ -65,7 +65,7 @@
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
         <testcontainers.kafka.version>1.12.3</testcontainers.kafka.version>
-        <kafka.avro.serializer.version>5.2.2</kafka.avro.serializer.version>
+        <kafka.avro.serializer.version>5.3.1</kafka.avro.serializer.version>
 
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
@@ -257,10 +257,10 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${kafka.avro.serializer.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
