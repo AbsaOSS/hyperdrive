@@ -42,7 +42,7 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
 
   private val logger = LogManager.getLogger
 
-  def decode(streamReader: DataStreamReader): DataFrame = {
+  override def decode(streamReader: DataStreamReader): DataFrame = {
     if (streamReader == null) {
       throw new IllegalArgumentException("Null DataStreamReader instance received.")
     }
