@@ -21,7 +21,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 /**
  * This is a stub for a custom implementation of a StreamTransformer
@@ -32,13 +32,16 @@ private[transformer] class MyStreamTransformerImpl() extends StreamTransformer {
   def transform(streamData: DataFrame): DataFrame = ???
 }
 
-object MyStreamTransformerImpl extends StreamTransformerFactory {
+object MyStreamTransformerImpl extends StreamTransformerFactory with MyStreamTransformerImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamTransformer = {
     logger.info("Building MyStreamTransformerImpl")
     new MyStreamTransformerImpl()
   }
+}
+
+trait MyStreamTransformerImplAttributes extends HasComponentAttributes {
 
   override def getName: String = "My Stream Transformer"
 

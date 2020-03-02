@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory, StreamManagerFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 /**
  * This is a stub for a custom implementation of a StreamManager
@@ -35,13 +35,16 @@ private[manager] class MyStreamManagerImpl extends StreamManager {
   def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
 }
 
-object MyStreamManagerImpl extends StreamManagerFactory {
+object MyStreamManagerImpl extends StreamManagerFactory with MyStreamManagerImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamManager = {
     logger.info("Building MyStreamManagerImpl")
     new MyStreamManagerImpl()
   }
+}
+
+trait MyStreamManagerImplAttributes extends HasComponentAttributes {
 
   override def getName: String = "My Stream Manager"
 

@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory, StreamDecoderFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 /**
  * This is a stub for a custom implementation of a StreamDecoder
@@ -32,13 +32,16 @@ private[decoder] class MyStreamDecoderImpl extends StreamDecoder {
   def decode(streamReader: DataStreamReader): DataFrame = ???
 }
 
-object MyStreamDecoderImpl extends StreamDecoderFactory {
+object MyStreamDecoderImpl extends StreamDecoderFactory with MyStreamDecoderImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamDecoder = {
     logger.info("Building MyStreamDecoderImpl")
     new MyStreamDecoderImpl()
   }
+}
+
+trait MyStreamDecoderImplAttributes extends HasComponentAttributes {
 
   override def getName: String = "My Stream Decoder"
 
