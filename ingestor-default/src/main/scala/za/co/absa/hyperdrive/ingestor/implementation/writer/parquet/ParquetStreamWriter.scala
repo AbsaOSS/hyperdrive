@@ -17,14 +17,13 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_EXTRA_CONFS_ROOT
 
 private[writer] class ParquetStreamWriter(destination: String, extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, extraConfOptions)
 
-object ParquetStreamWriter extends StreamWriterFactory {
+object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterAttributes {
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
@@ -35,17 +34,5 @@ object ParquetStreamWriter extends StreamWriterFactory {
     new ParquetStreamWriter(destinationDirectory, extraOptions)
   }
 
-  override def getName: String = "Parquet Stream Writer"
-
-  override def getDescription: String = "This writer saves ingested data in Parquet format on a filesystem (e.g. HDFS)"
-
-  override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true)
-  )
-
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
-}
-
-class ParquetStreamWriterLoader extends StreamWriterFactoryProvider {
-  override def getComponentFactory: StreamWriterFactory = ParquetStreamWriter
 }

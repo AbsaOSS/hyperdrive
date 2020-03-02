@@ -74,7 +74,7 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, repor
   }
 }
 
-object ParquetPartitioningStreamWriter extends StreamWriterFactory {
+object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetPartitioningStreamWriterAttributes {
   val reportDateFormat: String = "yyyy-MM-dd"
   val reportDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(reportDateFormat)
 
@@ -95,18 +95,5 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory {
     }
   }
 
-  override def getName: String = "Parquet Partitioning Stream Writer"
-
-  override def getDescription: String = "This writer saves the ingested data in parquet format, partitioned by ingestion date and version. " +
-    "The version is incremented automatically for each ingestion on the same day"
-
-  override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true)
-  )
-
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
-}
-
-class ParquetPartitioningStreamWriterLoader extends StreamWriterFactoryProvider {
-  override def getComponentFactory: StreamWriterFactory = ParquetPartitioningStreamWriter
 }

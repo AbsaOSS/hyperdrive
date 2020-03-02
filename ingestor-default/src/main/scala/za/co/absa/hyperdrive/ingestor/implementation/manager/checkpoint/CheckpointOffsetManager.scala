@@ -20,9 +20,8 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory, StreamManagerFactoryProvider}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.{KEY_CHECKPOINT_BASE_LOCATION, KEY_TOPIC}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.KEY_CHECKPOINT_BASE_LOCATION
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrNone, getOrThrow}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
@@ -79,7 +78,7 @@ private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
   }
 }
 
-object CheckpointOffsetManager extends StreamManagerFactory {
+object CheckpointOffsetManager extends StreamManagerFactory with CheckpointOffsetManagerAttributes {
   override def apply(config: Configuration): StreamManager = {
     val checkpointLocation = getCheckpointLocation(config)
     val startingOffsets = getStartingOffsets(config)
@@ -89,25 +88,7 @@ object CheckpointOffsetManager extends StreamManagerFactory {
     new CheckpointOffsetManager(checkpointLocation, startingOffsets)
   }
 
-  override def getName: String = "Checkpoint Offset Manager"
-
-  override def getDescription: String = "Configures the checkpoint location for both reader and writer."
-
-  override def getProperties: Map[String, PropertyMetadata] = {
-    val checkpointDescription = "Path to the checkpoint location. The checkpoint location has to be unique for each workflow"
-    val offsetDescription = "The starting offset is only considered if the checkpoint location does not already exist," +
-      "i.e. the ingestion has not been started yet."
-    Map(
-      KEY_CHECKPOINT_BASE_LOCATION -> PropertyMetadata("Checkpoint Location", Some(checkpointDescription), required = true),
-      KEY_STARTING_OFFSETS -> PropertyMetadata("Starting offset", Some(offsetDescription), required = false)
-    )
-  }
-
   private def getCheckpointLocation(configuration: Configuration): String = getOrThrow(KEY_CHECKPOINT_BASE_LOCATION, configuration, errorMessage = s"Could not find checkpoint location. Is '$KEY_CHECKPOINT_BASE_LOCATION' defined?")
 
   private def getStartingOffsets(configuration: Configuration): Option[String] = getOrNone(KEY_STARTING_OFFSETS, configuration)
-}
-
-class CheckpointOffsetManagerLoader extends StreamManagerFactoryProvider {
-  override def getComponentFactory: StreamManagerFactory = CheckpointOffsetManager
 }

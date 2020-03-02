@@ -36,20 +36,12 @@ private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[Stri
   }
 }
 
-object ColumnSelectorStreamTransformer extends StreamTransformerFactory {
+object ColumnSelectorStreamTransformer extends StreamTransformerFactory with ColumnSelectorStreamTransformerAttributes {
   override def apply(config: Configuration): StreamTransformer = {
     val columns = getColumnsAsSequence(config)
     LogManager.getLogger.info(s"Going to create ColumnSelectorStreamTransformer using: columns='$columns'")
     new ColumnSelectorStreamTransformer(columns)
   }
-
-  override def getName: String = "Column Selector Transformer"
-
-  override def getDescription: String = "This transformer selects only the given columns. Column expressions are not possible"
-
-  override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_COLUMNS_TO_SELECT -> PropertyMetadata("Columns to select", Some("Comma separated list of columns that should be selected. If empty, all columns are selected."), required = false)
-  )
 
   private def getColumnsAsSequence(configuration: Configuration): Seq[String] = {
     configuration.getStringArray(KEY_COLUMNS_TO_SELECT) match {
@@ -57,8 +49,4 @@ object ColumnSelectorStreamTransformer extends StreamTransformerFactory {
       case _ => Seq("*")
     }
   }
-}
-
-class ColumnSelectorStreamTransformerLoader extends StreamTransformerFactoryProvider {
-  override def getComponentFactory: StreamTransformerFactory = ColumnSelectorStreamTransformer
 }
