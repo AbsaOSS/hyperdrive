@@ -34,14 +34,6 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
   }
 
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
-    if (dataFrame == null) {
-      throw new IllegalArgumentException("Null DataFrame.")
-    }
-
-    if (streamManager == null) {
-      throw new IllegalArgumentException("Null StreamManager instance.")
-    }
-
     val outStream = getOutStream(dataFrame)
 
     val streamWithOptions = addOptions(outStream, extraConfOptions)
