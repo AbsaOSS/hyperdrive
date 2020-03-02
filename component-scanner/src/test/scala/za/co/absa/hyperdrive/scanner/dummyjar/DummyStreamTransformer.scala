@@ -23,7 +23,7 @@ class DummyStreamTransformer extends StreamTransformer {
   override def transform(streamData: DataFrame): DataFrame = ???
 }
 
-object DummyStreamTransformer extends StreamTransformerFactory {
+object DummyStreamTransformer extends StreamTransformerFactory with DummyAttributes {
   override def apply(config: Configuration): StreamTransformer = ???
 }
 

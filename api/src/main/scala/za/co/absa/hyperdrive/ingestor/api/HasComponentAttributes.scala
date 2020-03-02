@@ -40,18 +40,18 @@ trait HasComponentAttributes {
   /**
    * @return a human readable name of the component.
    */
-  def getName: String = ""
+  def getName: String
 
   /**
    * @return a description for the component.
    */
-  def getDescription: String = ""
+  def getDescription: String
 
   /**
    * @return a map describing configuration properties for this component. The keys have to be unique to avoid
    *         name clashes with properties from other components.
    */
-  def getProperties: Map[String, PropertyMetadata] = Map()
+  def getProperties: Map[String, PropertyMetadata]
 
   /**
    * @return a prefix to be used for arbitrary extra configuration. Typically extra configuration is required

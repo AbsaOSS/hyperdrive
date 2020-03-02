@@ -25,7 +25,7 @@ class DummyStreamWriterOne extends StreamWriter {
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
 }
 
-object DummyStreamWriterOne extends StreamWriterFactory {
+object DummyStreamWriterOne extends StreamWriterFactory with DummyAttributes {
   override def apply(config: Configuration): StreamWriter = ???
 }
 

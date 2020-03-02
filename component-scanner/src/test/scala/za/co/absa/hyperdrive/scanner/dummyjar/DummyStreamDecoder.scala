@@ -24,7 +24,7 @@ class DummyStreamDecoder extends StreamDecoder {
   override def decode(streamReader: DataStreamReader): DataFrame = ???
 }
 
-object DummyStreamDecoder extends StreamDecoderFactory {
+object DummyStreamDecoder extends StreamDecoderFactory with DummyAttributes {
   override def apply(config: Configuration): StreamDecoder = ???
 }
 

@@ -24,7 +24,7 @@ class DummyStreamReaderOne extends DummyTrait {
   override def read(spark: SparkSession): DataStreamReader = ???
 }
 
-object DummyStreamReaderOne extends AbstractDummyStreamReaderFactory {
+object DummyStreamReaderOne extends AbstractDummyStreamReaderFactory with DummyAttributes {
   override def apply(conf: Configuration): StreamReader = ???
 }
 
