@@ -23,7 +23,7 @@ import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, KEY_TOPIC}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
 private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String]) extends StreamDecoder {
@@ -42,8 +42,8 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
     val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
     logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
 
-    import za.co.absa.abris.avro.functions.from_confluent_avro
     import org.apache.spark.sql.functions.col
+    import za.co.absa.abris.avro.functions.from_confluent_avro
     streamReader
       .load()
       .select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data)
@@ -51,7 +51,7 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val sc
   }
 }
 
-object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory {
+object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with ConfluentAvroKafkaStreamDecoderAttributes {
 
   override def apply(config: Configuration): StreamDecoder = {
     val topic = getTopic(config)

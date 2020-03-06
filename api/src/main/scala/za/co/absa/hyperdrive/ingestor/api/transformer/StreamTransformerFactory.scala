@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.transformer
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamTransformerFactory {
-  def apply(config: Configuration): StreamTransformer
-}
+trait StreamTransformerFactory extends ComponentFactory[StreamTransformer]

@@ -21,7 +21,8 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
+import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory, StreamManagerFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 /**
  * This is a stub for a custom implementation of a StreamManager
@@ -34,11 +35,27 @@ private[manager] class MyStreamManagerImpl extends StreamManager {
   override def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = ???
 }
 
-object MyStreamManagerImpl extends StreamManagerFactory {
+object MyStreamManagerImpl extends StreamManagerFactory with MyStreamManagerImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamManager = {
     logger.info("Building MyStreamManagerImpl")
     new MyStreamManagerImpl()
   }
+}
+
+trait MyStreamManagerImplAttributes extends HasComponentAttributes {
+
+  override def getName: String = "My Stream Manager"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+
+}
+
+class MyStreamManagerImplLoader extends StreamManagerFactoryProvider {
+  override def getComponentFactory: StreamManagerFactory = MyStreamManagerImpl
 }

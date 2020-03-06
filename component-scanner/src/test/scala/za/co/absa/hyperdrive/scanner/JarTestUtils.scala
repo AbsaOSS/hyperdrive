@@ -15,21 +15,24 @@
 
 package za.co.absa.hyperdrive.scanner
 
-import java.io._
+import java.io.{BufferedInputStream, IOException}
+import java.nio.file.{Files, Path, Paths}
 import java.util.jar.{Attributes, JarEntry, JarOutputStream, Manifest}
 
 object JarTestUtils {
 
   val BUFFER_SIZE = 1024
 
-  def createJar(baseDir: File, jarName: String, filenames: List[String]): File = {
-    val content = filenames.map(filename => new File(getClass.getClassLoader.getResource(filename).toURI) -> filename).toMap
-    JarTestUtils.createJar(baseDir, jarName, content)
+  private val serviceProviderPath = "META-INF/services"
+
+  def createJar(baseDir: Path, jarName: String, filenames: List[String], serviceProviders: Map[String, List[String]] = Map()): Path = {
+    val content = filenames.map(filename => Paths.get(getClass.getClassLoader.getResource(filename).toURI) -> filename).toMap
+    createJar(baseDir, jarName, content, serviceProviders)
   }
 
-  def createJar(baseDir: File, jarName: String, content: Map[File, String]): File = {
-    val jarFile = new File(baseDir, jarName)
-    addEntries(jarFile, createManifest(), content)
+  private def createJar(baseDir: Path, jarName: String, content: Map[Path, String], serviceProviders: Map[String, List[String]]): Path = {
+    val jarFile = baseDir.resolve(jarName)
+    addEntries(jarFile, createManifest(), content, serviceProviders)
     jarFile
   }
 
@@ -41,23 +44,24 @@ object JarTestUtils {
     manifest
   }
 
-  private def addEntries(destJarFile: File, manifest: Manifest, content: Map[File, String]): Unit = {
-    val outputJar = new JarOutputStream(new FileOutputStream(destJarFile.getAbsolutePath), manifest)
+  private def addEntries(destJarFile: Path, manifest: Manifest, content: Map[Path, String], serviceProviders: Map[String, List[String]]): Unit = {
+    val outputJar = new JarOutputStream(Files.newOutputStream(destJarFile.toAbsolutePath), manifest)
     content.foreach(entry => add(entry._1, entry._2, outputJar))
+    serviceProviders.foreach(entry => addServiceProvider(entry._1, entry._2, outputJar))
     outputJar.close()
   }
 
   @throws[IOException]
-  private def add(source: File, targetPath: String, outputJar: JarOutputStream): Unit = {
-    if (source.isDirectory) {
+  private def add(source: Path, targetPath: String, outputJar: JarOutputStream): Unit = {
+    if (Files.isDirectory(source)) {
       throw new UnsupportedOperationException("Adding directories to jars is not supported")
     }
     else {
       val entry = new JarEntry(targetPath.replace("\\", "/"))
-      entry.setTime(source.lastModified())
+      entry.setTime(Files.getLastModifiedTime(source).toMillis)
       outputJar.putNextEntry(entry)
 
-      val in = new BufferedInputStream(new FileInputStream(source))
+      val in = new BufferedInputStream(Files.newInputStream(source))
 
       val buffer = new Array[Byte](BUFFER_SIZE)
 
@@ -70,5 +74,11 @@ object JarTestUtils {
       outputJar.closeEntry()
       in.close()
     }
+  }
+
+  private def addServiceProvider(interface: String, providerClass: List[String], outputJar: JarOutputStream): Unit = {
+    outputJar.putNextEntry(new JarEntry(s"$serviceProviderPath/$interface"))
+    val providerClasses = providerClass.mkString("\n")
+    outputJar.write(providerClasses.getBytes())
   }
 }

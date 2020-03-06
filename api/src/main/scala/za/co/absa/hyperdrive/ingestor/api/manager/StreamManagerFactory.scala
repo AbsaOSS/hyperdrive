@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.manager
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamManagerFactory {
-  def apply(config: Configuration): StreamManager
-}
+trait StreamManagerFactory extends ComponentFactory[StreamManager]

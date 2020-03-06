@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.reader
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamReaderFactory {
-  def apply(conf: Configuration): StreamReader
-}
+trait StreamReaderFactory extends ComponentFactory[StreamReader]

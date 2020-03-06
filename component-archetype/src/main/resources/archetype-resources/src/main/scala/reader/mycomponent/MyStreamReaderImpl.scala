@@ -21,24 +21,38 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
+
 
 /**
  * This is a stub for a custom implementation of a StreamReader
  */
 
 private[reader] class MyStreamReaderImpl() extends StreamReader {
-
   override def read(spark: SparkSession): DataStreamReader = ???
-
-  override def getSourceName: String = ???
 }
 
-object MyStreamReaderImpl extends StreamReaderFactory {
+object MyStreamReaderImpl extends StreamReaderFactory with MyStreamReaderImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamReader = {
     logger.info("Building MyStreamReaderImpl")
     new MyStreamReaderImpl()
   }
+}
+
+trait MyStreamReaderImplAttributes extends HasComponentAttributes {
+
+  override def getName: String = "My Stream Reader"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+}
+
+class MyStreamReaderImplLoader extends StreamReaderFactoryProvider {
+  override def getComponentFactory: StreamReaderFactory = MyStreamReaderImpl
 }

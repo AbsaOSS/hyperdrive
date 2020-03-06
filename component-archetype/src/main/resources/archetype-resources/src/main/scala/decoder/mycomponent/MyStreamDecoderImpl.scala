@@ -21,7 +21,8 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
+import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory, StreamDecoderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 /**
  * This is a stub for a custom implementation of a StreamDecoder
@@ -31,11 +32,26 @@ private[decoder] class MyStreamDecoderImpl extends StreamDecoder {
   override def decode(streamReader: DataStreamReader): DataFrame = ???
 }
 
-object MyStreamDecoderImpl extends StreamDecoderFactory {
+object MyStreamDecoderImpl extends StreamDecoderFactory with MyStreamDecoderImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamDecoder = {
     logger.info("Building MyStreamDecoderImpl")
     new MyStreamDecoderImpl()
   }
+}
+
+trait MyStreamDecoderImplAttributes extends HasComponentAttributes {
+
+  override def getName: String = "My Stream Decoder"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+}
+
+class MyStreamDecoderImplLoader extends StreamDecoderFactoryProvider {
+  override def getComponentFactory: StreamDecoderFactory = MyStreamDecoderImpl
 }

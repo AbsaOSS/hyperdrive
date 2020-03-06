@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.decoder
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamDecoderFactory {
-  def apply(config: Configuration): StreamDecoder
-}
+trait StreamDecoderFactory extends ComponentFactory[StreamDecoder]

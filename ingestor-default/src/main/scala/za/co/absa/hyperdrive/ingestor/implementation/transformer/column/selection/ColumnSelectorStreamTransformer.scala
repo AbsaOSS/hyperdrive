@@ -17,7 +17,8 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selecti
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
-import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT
 
 private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[String]) extends StreamTransformer {
@@ -31,7 +32,7 @@ private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[Stri
   }
 }
 
-object ColumnSelectorStreamTransformer extends StreamTransformerFactory {
+object ColumnSelectorStreamTransformer extends StreamTransformerFactory with ColumnSelectorStreamTransformerAttributes {
   override def apply(config: Configuration): StreamTransformer = {
     val columns = getColumnsAsSequence(config)
     LogManager.getLogger.info(s"Going to create ColumnSelectorStreamTransformer using: columns='$columns'")
