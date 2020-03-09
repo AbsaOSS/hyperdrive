@@ -21,24 +21,39 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
+import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 
 /**
  * This is a stub for a custom implementation of a StreamWriter
  */
 
-private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter(destination) {
-
-  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery = ???
+private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter {
+  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
 }
 
-object MyStreamWriterImpl extends StreamWriterFactory {
+object MyStreamWriterImpl extends StreamWriterFactory with MyStreamWriterImplAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamWriter = {
     logger.info("Building MyStreamWriterImpl")
     new MyStreamWriterImpl("destination")
   }
+}
+
+trait MyStreamWriterImplAttributes extends HasComponentAttributes {
+
+  override def getName: String = "My Stream Writer"
+
+  override def getDescription: String = "This component is a stub"
+
+  override def getProperties: Map[String, PropertyMetadata] = Map()
+
+  override def getExtraConfigurationPrefix: Option[String] = None
+}
+
+class MyStreamWriterImplLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = MyStreamWriterImpl
 }

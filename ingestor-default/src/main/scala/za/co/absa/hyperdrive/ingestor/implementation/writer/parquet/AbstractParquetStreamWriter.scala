@@ -17,37 +17,34 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
+import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
-private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter(destination) {
+private[writer] abstract class AbstractParquetStreamWriter(destination: String, val extraConfOptions: Map[String, String]) extends StreamWriter {
+  private val logger = LogManager.getLogger
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
 
-  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery = {
-    if (dataFrame == null) {
-      throw new IllegalArgumentException("Null DataFrame.")
-    }
-
-    if (offsetManager == null) {
-      throw new IllegalArgumentException("Null OffsetManager instance.")
-    }
-
+  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
     val outStream = getOutStream(dataFrame)
 
     val streamWithOptions = addOptions(outStream, extraConfOptions)
 
-    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, offsetManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
+    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
 
+    logger.info(s"Writing to $destination")
     streamWithOptionsAndOffset.start(destination)
   }
+
+  def getDestination: String = destination
 
   protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
     dataFrame
@@ -59,7 +56,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
-  protected def configureOffsets(outStream: DataStreamWriter[Row], offsetManager: OffsetManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = offsetManager.configureOffsets(outStream, configuration)
+  protected def configureOffsets(outStream: DataStreamWriter[Row], streamManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = streamManager.configure(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {

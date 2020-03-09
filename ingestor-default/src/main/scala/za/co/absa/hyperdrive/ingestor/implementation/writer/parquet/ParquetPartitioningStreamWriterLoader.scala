@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.api.manager
+package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-trait OffsetManagerFactory {
-  def apply(config: Configuration): OffsetManager
+class ParquetPartitioningStreamWriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = ParquetPartitioningStreamWriter
 }

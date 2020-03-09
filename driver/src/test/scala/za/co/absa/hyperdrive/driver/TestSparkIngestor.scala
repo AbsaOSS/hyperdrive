@@ -15,18 +15,15 @@
 
 package za.co.absa.hyperdrive.driver
 
-import java.nio.file.{Files, Paths}
-import java.util.UUID
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.{DataStreamReader, StreamingQuery}
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -36,12 +33,12 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   private val sparkSession: SparkSession = mock[SparkSession]
   private val streamReader: StreamReader = mock[StreamReader]
-  private val offsetManager: OffsetManager = mock[OffsetManager]
+  private val streamManager: StreamManager = mock[StreamManager]
   private val streamDecoder: StreamDecoder = mock[StreamDecoder]
   private val streamTransformer: StreamTransformer = mock[StreamTransformer]
   private val streamWriter: StreamWriter = mock[StreamWriter]
 
-  private val nullMockedDataStream: DataStreamReader = null
+  private val dataStreamReaderMock: DataStreamReader = mock[DataStreamReader]
   private val dataFrame: DataFrame = mock[DataFrame]
   private val streamingQuery: StreamingQuery = mock[StreamingQuery]
 
@@ -50,14 +47,12 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   override def beforeEach(): Unit = {
     reset(sparkSession,
       streamReader,
-      offsetManager,
+      streamManager,
       streamDecoder,
       streamTransformer,
       streamWriter,
       dataFrame,
       streamingQuery)
-    when(streamReader.getSourceName).thenReturn("test-source")
-    when(streamWriter.getDestination).thenReturn("test-destination")
     val sparkContext = mock[SparkContext]
     when(sparkContext.hadoopConfiguration).thenReturn(configuration)
     when(sparkSession.sparkContext).thenReturn(sparkContext)
@@ -65,153 +60,67 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
 
   behavior of SparkIngestor.getClass.getName
 
-  it should "throw on null Spark session" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(spark = null, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("spark"))
-    assert(throwable.getMessage.toLowerCase.contains("session"))
-  }
-
-  it should "throw on null StreamReader" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader = null, offsetManager, streamDecoder, streamTransformer, streamWriter)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("stream"))
-    assert(throwable.getMessage.toLowerCase.contains("reader"))
-  }
-
-  it should "throw on null OffsetManager" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager = null, streamDecoder, streamTransformer, streamWriter)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("offset"))
-    assert(throwable.getMessage.toLowerCase.contains("manager"))
-  }
-
-  it should "throw on null AvroDecoder" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, decoder = null, streamTransformer, streamWriter)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("decoder"))
-  }
-
-  it should "throw on null StreamTransformer" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer = null, streamWriter)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("stream"))
-    assert(throwable.getMessage.toLowerCase.contains("transformer"))
-  }
-
-  it should "throw on null StreamWriter" in {
-    val throwable = intercept[IllegalArgumentException](
-      SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter = null)
-    )
-    assert(throwable.getMessage.toLowerCase.contains("null"))
-    assert(throwable.getMessage.toLowerCase.contains("stream"))
-    assert(throwable.getMessage.toLowerCase.contains("writer"))
-  }
-
   it should "throw IngestionStartException if stream reader fails during setup" in {
-    when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
-    when(streamReader.read(sparkSession)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    when(streamReader.read(sparkSession)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
-  it should "throw IngestionStartException if offset manager fails during setup" in {
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+  it should "throw IngestionStartException if stream manager fails during setup" in {
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "throw IngestionStartException if format decoder fails during setup" in {
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
-    when(streamDecoder.decode(nullMockedDataStream)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "throw IngestionStartException if stream transformer fails during setup" in {
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
-    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamTransformer.transform(dataFrame)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "throw IngestionStartException if stream writer fails during setup" in {
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
-    when(streamWriter.write(dataFrame, offsetManager)).thenThrow(classOf[NullPointerException])
-    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
-  }
-
-  it should "delete destination directory and throw IngestionException if ingestion fails" in {
-    val destination = Files.createTempDirectory("test")
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
-    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
-    when(streamingQuery.processAllAvailable()).thenThrow(classOf[NullPointerException])
-    when(streamWriter.getDestination).thenReturn(destination.toUri.getPath)
-    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
-    assert(!Files.exists(destination))
-  }
-
-  it should "not delete destination directory if it has not been empty before if ingestion fails" in {
-    val destination = Files.createTempDirectory("test")
-    val filepath = destination.resolve("someFile.txt")
-    Files.createFile(filepath)
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
-    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
-    when(streamingQuery.processAllAvailable()).thenThrow(classOf[NullPointerException])
-    when(streamWriter.getDestination).thenReturn(destination.toUri.getPath)
-    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
-    assert(Files.exists(filepath))
+    when(streamWriter.write(dataFrame, streamManager)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "throw IngestionException if ingestion fails during execution" in {
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
-    when(streamingQuery.stop()).thenThrow(classOf[IllegalStateException])
-    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter))
+    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+    when(streamingQuery.stop()).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionException](SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter))
   }
 
   it should "invoke the components in correct order" in {
-    prepareMocks()
+    when(streamReader.read(sparkSession)).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(dataStreamReaderMock, configuration)).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
 
-    // order in which the components should be invoked
-    val inOrderCheck = inOrder(streamReader, sparkSession, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    SparkIngestor.ingest(sparkSession, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
 
-    SparkIngestor.ingest(sparkSession, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
-
-    val nullMockedDataStream: DataStreamReader = null
-
+    val inOrderCheck = inOrder(streamReader, sparkSession, streamManager, streamDecoder, streamTransformer, streamWriter)
     inOrderCheck.verify(streamReader).read(sparkSession)
-    inOrderCheck.verify(offsetManager).configureOffsets(nullMockedDataStream, configuration)
-    inOrderCheck.verify(streamDecoder).decode(nullMockedDataStream)
+    inOrderCheck.verify(streamManager).configure(dataStreamReaderMock, configuration)
+    inOrderCheck.verify(streamDecoder).decode(dataStreamReaderMock)
     inOrderCheck.verify(streamTransformer).transform(dataFrame)
-    inOrderCheck.verify(streamWriter).write(dataFrame, offsetManager)
-
+    inOrderCheck.verify(streamWriter).write(dataFrame, streamManager)
     verify(streamingQuery).processAllAvailable
     verify(streamingQuery).stop
-  }
-
-  private def prepareMocks(): Unit = {
-    when(streamReader.read(sparkSession)).thenReturn(nullMockedDataStream)
-    when(streamReader.getSourceName).thenReturn("mocked_topic")
-
-    when(offsetManager.configureOffsets(nullMockedDataStream, configuration)).thenReturn(nullMockedDataStream)
-    when(streamDecoder.decode(nullMockedDataStream)).thenReturn(dataFrame)
-    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-
-    when(streamWriter.write(dataFrame, offsetManager)).thenReturn(streamingQuery)
-    when(streamWriter.getDestination).thenReturn("mocked_destination")
   }
 }

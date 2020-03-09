@@ -17,9 +17,10 @@ package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestConfigUtils extends FlatSpec with Matchers {
+class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
   behavior of s"ConfigUtils"
 
@@ -157,9 +158,7 @@ class TestConfigUtils extends FlatSpec with Matchers {
   }
 
   "getPropertySubset" should "return an empty map if Configuration.subset returns null" in {
-    val config = new BaseConfiguration() {
-      override def subset(str: String) = null
-    }
+    val config = mock[Configuration]
 
     val properties = ConfigUtils.getPropertySubset(config, "")
 

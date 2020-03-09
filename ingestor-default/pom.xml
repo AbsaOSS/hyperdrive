@@ -18,7 +18,7 @@
     <parent>
         <artifactId>parent-conf</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>3.0.1-SNAPSHOT</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -38,12 +38,29 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--ABRiS-->
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>abris_${scala.compat.version}</artifactId>
+        </dependency>
+        <!--Kafka-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+        </dependency>
+
+        <!--Tests-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>testutils</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

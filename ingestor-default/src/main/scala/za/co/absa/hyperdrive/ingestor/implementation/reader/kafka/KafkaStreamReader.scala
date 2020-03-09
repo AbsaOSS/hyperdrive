@@ -20,7 +20,8 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
@@ -59,16 +60,13 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
    */
   override def read(spark: SparkSession): DataStreamReader = {
 
-    import KafkaStreamReaderProps._
-
-    if (spark == null) {
-      throw new IllegalArgumentException("Null SparkSession instance.")
-    }
-
     if (spark.sparkContext.isStopped) {
       throw new IllegalStateException("SparkSession is stopped.")
     }
 
+    logger.info(s"Will read from topic $topic")
+
+    import KafkaStreamReaderProps._
     val streamReader = spark
       .readStream
       .format(STREAM_FORMAT_KAFKA_NAME)
@@ -77,11 +75,9 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
 
     streamReader.options(extraConfs)
   }
-
-  override def getSourceName: String = s"Kafka topic: $topic"
 }
 
-object KafkaStreamReader extends StreamReaderFactory {
+object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttributes {
   private val logger = LogManager.getLogger
 
   override def apply(conf: Configuration): StreamReader = {
@@ -105,5 +101,5 @@ object KafkaStreamReader extends StreamReaderFactory {
 
   private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
 
-  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) =  map.filterKeys(!_.contains(exclusionToken))
+  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) = map.filterKeys(!_.contains(exclusionToken))
 }

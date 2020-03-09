@@ -13,19 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.api.manager
+package za.co.absa.hyperdrive.ingestor.api
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
+import org.apache.commons.configuration2.Configuration
 
-/**
-  * Base class for all OffsetManagers.
-  *
-  */
-abstract class OffsetManager(topic: String) {
-
-  def configureOffsets(streamReader: DataStreamReader, configuration: Configuration): DataStreamReader
-
-  def configureOffsets(streamWriter: DataStreamWriter[Row], configuration: Configuration): DataStreamWriter[Row]
+trait ComponentFactory[T] extends HasComponentAttributes {
+  def apply(config: Configuration): T
 }

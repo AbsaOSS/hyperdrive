@@ -38,26 +38,15 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
   behavior of "KafkaStreamReader"
 
   it should "throw on blank topic" in {
-    assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(topic = null, validBrokers, validExtraConfs)
-    )
     assertThrows[IllegalArgumentException]( // empty topic
       new KafkaStreamReader(topic = "  ", validBrokers, validExtraConfs)
     )
   }
 
   it should "throw on blank brokers" in {
-    assertThrows[IllegalArgumentException]( // null topic
-      new KafkaStreamReader(validTopic, brokers = null, validExtraConfs)
-    )
     assertThrows[IllegalArgumentException]( // empty topic
       new KafkaStreamReader(validTopic, brokers = "  ", validExtraConfs)
     )
-  }
-
-  it should "throw on null SparkSession" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
-    assertThrows[IllegalArgumentException](reader.read(spark = null))
   }
 
   it should "throw if SparkSession is stopped" in {
@@ -96,11 +85,6 @@ class TestKafkaStreamReader extends FlatSpec with MockitoSugar {
     verify(dataStreamReader).option(TOPIC_SUBSCRIPTION_KEY, validTopic)
     verify(dataStreamReader).option(SPARK_BROKERS_SETTING_KEY, validBrokers)
     verify(dataStreamReader, never()).options(validExtraConfs)
-  }
-
-  it should "include the topic in the source name" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, validExtraConfs)
-    assert(reader.getSourceName.toLowerCase.contains(validTopic))
   }
 
   private def getMockedSparkContext(stopped: Boolean): SparkContext = {

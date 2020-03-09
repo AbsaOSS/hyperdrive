@@ -30,11 +30,18 @@
         <!-- Maven -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!--Versions-->
+        <!-- Versions -->
+        <hyperdrive.version>${project.version}</hyperdrive.version>
+
+        <!-- Build -->
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
         <scala.version>${scala.version}</scala.version>
         <scala.maven.plugin.version>${scala.maven.plugin.version}</scala.maven.plugin.version>
-        <hyperdrive.version>${project.version}</hyperdrive.version>
+
+        <!-- Tests -->
+        <scala.compat.version>${scala.compat.version}</scala.compat.version>
+        <scalatest.version>${scalatest.version}</scalatest.version>
+        <scalatest.maven.version>${scalatest.maven.version}</scalatest.maven.version>
     </properties>
 
     <dependencies>
@@ -44,6 +51,14 @@
             <artifactId>api</artifactId>
             <version>\${hyperdrive.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_\${scala.compat.version}</artifactId>
+            <version>\${scalatest.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -90,10 +105,37 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <hyperdriveVersion>${hyperdrive.version}</hyperdriveVersion>
+                            <hyperdriveVersion>\${hyperdrive.version}</hyperdriveVersion>
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+
+            <!-- Tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>\${scalatest.maven.version}</version>
+                <configuration>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <filereports>TestSuite.txt</filereports>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>unit-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

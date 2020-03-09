@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.api.writer
 
-import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamWriterFactory {
-  def apply(config: Configuration): StreamWriter
-}
+trait StreamWriterFactory extends ComponentFactory[StreamWriter]

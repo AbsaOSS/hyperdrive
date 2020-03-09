@@ -19,16 +19,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import org.apache.commons.configuration2.Configuration
-
 import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetPartitioningStreamWriterKeys._
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
 
 private[writer] class ParquetPartitioningStreamWriter(destination: String, reportDate: String, extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, extraConfOptions) {
@@ -73,7 +74,7 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, repor
   }
 }
 
-object ParquetPartitioningStreamWriter extends StreamWriterFactory {
+object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetPartitioningStreamWriterAttributes {
   val reportDateFormat: String = "yyyy-MM-dd"
   val reportDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(reportDateFormat)
 
@@ -93,4 +94,6 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory {
       case _ => reportDateFormatter.format(LocalDate.now())
     }
   }
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
 }

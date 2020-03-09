@@ -21,7 +21,7 @@ import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
+import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -49,7 +49,7 @@ object SparkIngestor {
     *
     * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param offsetManager     [[OffsetManager]] implementation responsible for defining offsets on the source stream and checkpoints on the destination stream.
+    * @param streamManager     [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -58,25 +58,22 @@ object SparkIngestor {
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(spark: SparkSession,
-            streamReader: StreamReader,
-            offsetManager: OffsetManager,
-            decoder: StreamDecoder,
-            streamTransformer: StreamTransformer,
-            streamWriter: StreamWriter): Unit= {
-
-    validateInput(spark, streamReader, offsetManager, decoder, streamTransformer, streamWriter)
+             streamReader: StreamReader,
+             streamManager: StreamManager,
+             decoder: StreamDecoder,
+             streamTransformer: StreamTransformer,
+             streamWriter: StreamWriter): Unit= {
 
     val ingestionId = generateIngestionId
 
-    logger.info(s"STARTING ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
+    logger.info(s"STARTING ingestion (id = $ingestionId)")
 
-    val destinationEmptyBefore = isDestinationEmpty(spark, streamWriter.getDestination)
     val ingestionQuery = try {
-      val inputStream = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = offsetManager.configureOffsets(inputStream, spark.sparkContext.hadoopConfiguration) // does offset management if any
+      val inputStreamReader = streamReader.read(spark) // gets the source stream
+      val configuredStreamReader = streamManager.configure(inputStreamReader, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
-      streamWriter.write(transformedDataFrame, offsetManager) // sends the stream to the destination
+      streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
     } catch {
       case NonFatal(e) =>
         throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)
@@ -87,69 +84,13 @@ object SparkIngestor {
       ingestionQuery.stop()
     } catch {
       case NonFatal(e) =>
-        if(destinationEmptyBefore) {
-          cleanupDestination(spark, streamWriter.getDestination)
-        }
         throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. There was no error in the query plan, but something when wrong. " +
           s"Pay attention to this exception since the query has been started, which might lead to duplicate data or similar issues. " +
           s"The logs should have enough detail, but a possible course of action is to replay this ingestion and overwrite the destination.", e)
     }
 
-    logger.info(s"FINISHED ingestion from '${streamReader.getSourceName}' into '${streamWriter.getDestination}' (id = $ingestionId)")
-  }
-
-  private def validateInput(spark: SparkSession,
-                            streamReader: StreamReader,
-                            offsetManager: OffsetManager,
-                            decoder: StreamDecoder,
-                            streamTransformer: StreamTransformer,
-                            streamWriter: StreamWriter): Unit = {
-    if (spark == null) {
-      throw new IllegalArgumentException("Received NULL SparkSession instance.")
-    }
-
-    if (streamReader == null) {
-      throw new IllegalArgumentException("Received NULL StreamReader instance.")
-    }
-
-    if (offsetManager == null) {
-      throw new IllegalArgumentException("Received NULL OffsetManager instance.")
-    }
-
-    if (decoder == null) {
-      throw new IllegalArgumentException("Received NULL StreamDecoder instance.")
-    }
-
-    if (streamTransformer == null) {
-      throw new IllegalArgumentException("Received NULL StreamTransformer instance.")
-    }
-
-    if (streamWriter == null) {
-      throw new IllegalArgumentException("Received NULL StreamWriter instance.")
-    }
+    logger.info(s"FINISHED ingestion (id = $ingestionId)")
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString
-
-  private def isDestinationEmpty(spark: SparkSession, destinationDirectory: String): Boolean = {
-    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val destinationPath = new Path(destinationDirectory)
-    !fs.exists(destinationPath) || !fs.listFiles(destinationPath, true).hasNext
-  }
-
-  private def cleanupDestination(spark: SparkSession, destinationDirectory: String): Unit = {
-    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val destinationPath = new Path(destinationDirectory)
-
-    if(fs.exists(destinationPath)) {
-      val filesIterator = fs.listFiles(destinationPath, true)
-      val filesList = new AbstractIterator[LocatedFileStatus] {
-        override def hasNext: Boolean = filesIterator.hasNext
-        override def next: LocatedFileStatus = filesIterator.next
-      }.map(f => f.getPath).toList
-      logger.info(s"Deleting directory $destinationDirectory with ${filesList.size} files: ${filesList.mkString(", ")}")
-
-      fs.delete(destinationPath, true)
-    }
-  }
 }
