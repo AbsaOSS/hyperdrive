@@ -14,3 +14,4 @@
 #
 za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriterLoader
 za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriterLoader
+za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriterLoader
