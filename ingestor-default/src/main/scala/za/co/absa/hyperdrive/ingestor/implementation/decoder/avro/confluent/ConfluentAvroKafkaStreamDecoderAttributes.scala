@@ -15,8 +15,8 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
 
-import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_SCHEMA_REGISTRY_URL, PARAM_VALUE_SCHEMA_ID, PARAM_VALUE_SCHEMA_NAMING_STRATEGY}
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
 trait ConfluentAvroKafkaStreamDecoderAttributes extends HasComponentAttributes {
 
@@ -25,12 +25,11 @@ trait ConfluentAvroKafkaStreamDecoderAttributes extends HasComponentAttributes {
   override def getDescription: String = "Decoder for Kafka messages in Avro format. The decoder connects to a Schema Registry instance to retrieve the schema information."
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    PARAM_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),
-    PARAM_VALUE_SCHEMA_ID -> PropertyMetadata("Schema Id", Some("Specific Id of schema or \"latest\""), required = true),
-    PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> PropertyMetadata("Schema naming strategy",
+    KEY_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),
+    KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID -> PropertyMetadata("Schema Id", Some("Specific Id of schema or \"latest\""), required = true),
+    KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> PropertyMetadata("Schema naming strategy",
       Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = true),
-    PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> PropertyMetadata("Record name", Some("Record name for naming strategies record.name or topic.record.name"), required = false),
-    PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> PropertyMetadata("Record namespace", Some("Record namespace for naming strategies record.name or topic.record.name"), required = false)
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Record name", Some("Record name for naming strategies record.name or topic.record.name"), required = false),
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Record namespace", Some("Record namespace for naming strategies record.name or topic.record.name"), required = false)
   )
-
 }
