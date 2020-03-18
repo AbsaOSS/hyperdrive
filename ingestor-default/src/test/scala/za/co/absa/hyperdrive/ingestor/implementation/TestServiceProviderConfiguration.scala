@@ -28,6 +28,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.Conf
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
+import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.{ParquetPartitioningStreamWriter, ParquetStreamWriter}
 
 import scala.reflect.ClassTag
@@ -58,7 +59,7 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
 
   it should "load StreamWriters" in {
     val factoryProviders = loadServices[StreamWriterFactoryProvider, StreamWriterFactory]()
-    factoryProviders should contain theSameElementsAs Seq(ParquetPartitioningStreamWriter, ParquetStreamWriter)
+    factoryProviders should contain theSameElementsAs Seq(ParquetPartitioningStreamWriter, ParquetStreamWriter, KafkaStreamWriter)
   }
 
   private def loadServices[P <: ComponentFactoryProvider[F], F <: ComponentFactory[_]]()(implicit classTag: ClassTag[P]): Iterable[F] = {
