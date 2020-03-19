@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.kafka
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.streaming.StreamingQuery
+import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
@@ -47,6 +47,7 @@ private[writer] class KafkaStreamWriter(topic: String,
       dataFrame.sparkSession.sparkContext.hadoopConfiguration)
 
     configuredStreamWriter
+      .trigger(Trigger.Once())
       .option("topic", topic)
       .option("kafka.bootstrap.servers", brokers)
       .format("kafka")
