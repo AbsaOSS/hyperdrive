@@ -23,6 +23,7 @@ import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.SchemaRegistrySettingsUtil
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
 
@@ -78,7 +79,7 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with Conflue
   private def getRecordSettings(currentSettings: Map[String, String], configuration: Configuration): Map[String, String] = {
     val valueNamingStrategy = currentSettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
 
-    if (namingStrategyInvolvesRecord(valueNamingStrategy)) {
+    if (SchemaRegistrySettingsUtil.namingStrategyInvolvesRecord(valueNamingStrategy)) {
       Map(
         PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, configuration, errorMessage = s"Record name not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME' configured?"),
         PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, configuration, errorMessage = s"Record namespace not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE' configured?")
@@ -86,10 +87,5 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with Conflue
     } else {
       Map()
     }
-  }
-
-  private def namingStrategyInvolvesRecord(strategy: String): Boolean = {
-    import SchemaStorageNamingStrategies._
-    strategy == RECORD_NAME || strategy == TOPIC_RECORD_NAME
   }
 }

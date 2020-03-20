@@ -38,12 +38,13 @@ The data ingestion pipeline of Hyperdrive consists of five components: readers, 
 - **Writers** define where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
 
 ### Built-in components
-- `KafkaStreamReader` - connects to a secure Kafka broker.
+- `KafkaStreamReader` - reads from a Kafka topic.
 - `CheckpointOffsetManager` - defines checkpoints for the stream reader and writer.
 - `ConfluentAvroKafkaStreamDecoder` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This decoder is capable of seamlessly handling whatever schemas the payload messages are using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's `processAllAvailable` method on the stream writer.
 - `ParquetPartitioningStreamWriter` - writes the DataFrame as Parquet, partitioned by the ingestion date and an auto-incremented version number.
+- `KafkaStreamWriter` - writes to a Kafka topic.
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
@@ -148,6 +149,25 @@ The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns 
 | `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
 
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
+
+##### KafkaStreamWriter
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `writer.kafka.topic` | Yes | The name of the kafka topic to ingest data from. Equivalent to Spark property `topic` |
+| `writer.kafka.brokers` | Yes | List of kafka broker URLs . Equivalent to Spark property `kafka.bootstrap.servers` |
+| `writer.kafka.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
+| `writer.kafka.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
+| `writer.kafka.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
+| `writer.kafka.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+
+
+Hint: Hyperdrive uses [Apache Commons Configuration 2](https://github.com/apache/commons-configuration). This allows
+properties to be referenced, e.g. like so
+```
+decoder.avro.schema.registry.url=http://localhost:8081
+writer.kafka.schema.registry.url=${decoder.avro.schema.registry.url}
+```
 
 ### Workflow Manager
 Hyperdrive ingestions may be triggered using the Workflow Manager, which is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger

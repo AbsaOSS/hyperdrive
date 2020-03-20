@@ -23,16 +23,13 @@ import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.containers.{GenericContainer, KafkaContainer, Network}
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.hyperdrive.testutils.SparkTestBase
-
-case class SchemaRegistryContainer(dockerImageName: String) extends GenericContainer[SchemaRegistryContainer](dockerImageName)
 
 /**
  * This e2e test requires a Docker installation on the executing machine.
  */
-class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val baseDirPath = Files.createTempDirectory("hyperdriveE2eTest")
@@ -40,52 +37,15 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
   private val checkpointDir = s"$baseDir/checkpoint"
   private val destinationDir = s"$baseDir/destination"
 
-  private val confluentPlatformVersion = "5.3.1"
-  private val schemaRegistryPort = 8081
-  private val commonNetwork = Network.newNetwork()
-  private val kafka = startKafka(commonNetwork)
-  private val schemaRegistry = startSchemaRegistry(commonNetwork)
-
-  private def startKafka(network: Network): KafkaContainer = {
-    val kafka = new KafkaContainer(confluentPlatformVersion).withNetwork(network)
-    kafka.start()
-    kafka
-  }
-
-  private def startSchemaRegistry(network: Network): SchemaRegistryContainer = {
-    val kafkaBrokerUrlInsideDocker = "PLAINTEXT://" + kafka.getNetworkAliases.get(0) + ":9092"
-    val schemaRegistry =
-      SchemaRegistryContainer(s"confluentinc/cp-schema-registry:$confluentPlatformVersion")
-        .withExposedPorts(schemaRegistryPort)
-        .withNetwork(network)
-        .withEnv("SCHEMA_REGISTRY_HOST_NAME", "localhost") // loopback to the container
-        .withEnv("SCHEMA_REGISTRY_LISTENERS", s"http://0.0.0.0:$schemaRegistryPort") // loopback to the container
-        .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", kafkaBrokerUrlInsideDocker)
-        .waitingFor(Wait.forHttp("/subjects").forStatusCode(200))
-    schemaRegistry.start()
-    schemaRegistry
-  }
-
-  private def createProducer(): KafkaProducer[Int, GenericRecord] = {
-    val props = new Properties()
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers)
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerSerializer")
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
-    props.put(ProducerConfig.CLIENT_ID_CONFIG, "AvroProducer")
-    props.put("schema.registry.url", schemaRegistryUrl)
-    new KafkaProducer[Int, GenericRecord](props)
-  }
-
-  private def schemaRegistryUrl: String = s"http://${schemaRegistry.getContainerIpAddress}:${schemaRegistry.getMappedPort(schemaRegistryPort)}"
-
   behavior of "CommandLineIngestionDriver"
 
   before {
     fs.mkdirs(new Path(destinationDir))
   }
 
-  it should "execute the whole pipeline" in {
+  it should "execute the whole kafka-to-parquet pipeline" in {
     // given
+    val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
     val topic = "e2etest"
     val numberOfRecords = 50
     val schemaString = raw"""{"type": "record", "name": "$topic", "fields": [
@@ -94,7 +54,7 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
       ]}"""
     val schema = new Parser().parse(schemaString)
 
-    val producer = createProducer()
+    val producer = createProducer(kafkaSchemaRegistryWrapper)
     for (i <- 0 until numberOfRecords) {
       val record = new GenericData.Record(schema)
       record.put("field1", "hello")
@@ -117,13 +77,13 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
 
       // Source(Kafka) settings
       "reader.kafka.topic" -> topic,
-      "reader.kafka.brokers" -> s"http://${kafka.getContainerIpAddress}:${kafka.getMappedPort(kafka.getExposedPorts.get(0))}",
+      "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
       // Offset management(checkpointing) settings
       "manager.checkpoint.base.location" -> (checkpointDir + "/${reader.kafka.topic}"),
 
       // Format(ABRiS) settings
-      "decoder.avro.schema.registry.url" -> schemaRegistryUrl,
+      "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "decoder.avro.value.schema.id" -> "latest",
       "decoder.avro.value.schema.naming.strategy" -> "topic.name",
 
@@ -154,6 +114,17 @@ class CommandLineIngestionDriverDockerTest extends FlatSpec with Matchers with S
   }
 
   after {
-        fs.delete(new Path(baseDir), true)
+    SchemaManager.reset()
+    fs.delete(new Path(baseDir), true)
   }
+
+  private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[Int, GenericRecord] = {
+    val props = new Properties()
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSchemaRegistryWrapper.kafka.getBootstrapServers)
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerSerializer")
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
+    props.put(ProducerConfig.CLIENT_ID_CONFIG, "AvroProducer")
+    kafkaSchemaRegistryWrapper.createProducer(props)
+  }
+
 }
