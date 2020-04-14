@@ -37,7 +37,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Map()))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", None, Map()))
   }
 
   it should "set format as 'parquet'" in {
@@ -54,6 +54,14 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
 
     invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).trigger(Trigger.Once)
+  }
+
+  it should "set Trigger.ProcessingTime" in {
+    val dataStreamWriter = getDataStreamWriter
+    val offsetManager = getStreamManager(dataStreamWriter)
+
+    invokeWriter(dataStreamWriter, offsetManager, Map(), Some(1L))
+    verify(dataStreamWriter).trigger(Trigger.ProcessingTime(1L))
   }
 
   it should "set output mode as 'append'" in {
@@ -92,15 +100,16 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     verify(dataStreamWriter).options(extraConfs)
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager, extraOptions: Map[String,String]): Unit = {
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
+                           extraOptions: Map[String,String], processingTime: Option[Long] = None): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, processingTime, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 
   private def getDataStreamWriter: DataStreamWriter[Row] = {
     val dataStreamWriter = mock[DataStreamWriter[Row]]
-    when(dataStreamWriter.trigger(any(Trigger.Once().getClass))).thenReturn(dataStreamWriter)
+    when(dataStreamWriter.trigger(any[Trigger]())).thenReturn(dataStreamWriter)
     when(dataStreamWriter.format(anyString())).thenReturn(dataStreamWriter)
     when(dataStreamWriter.outputMode(any(OutputMode.Append().getClass))).thenReturn(dataStreamWriter)
     when(dataStreamWriter.options(any(classOf[scala.collection.Map[String, String]]))).thenReturn(dataStreamWriter)

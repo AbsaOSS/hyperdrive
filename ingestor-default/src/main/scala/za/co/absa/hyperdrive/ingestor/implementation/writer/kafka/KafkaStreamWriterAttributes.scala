@@ -15,6 +15,7 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.kafka
 
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait KafkaStreamWriterAttributes extends HasComponentAttributes {
@@ -52,6 +53,7 @@ trait KafkaStreamWriterAttributes extends HasComponentAttributes {
     KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Record name",
       Some("Record name for naming strategies record.name or topic.record.name"), required = false),
     KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Record namespace",
-      Some("Record namespace for naming strategies record.name or topic.record.name"), required = false)
+      Some("Record namespace for naming strategies record.name or topic.record.name"), required = false),
+    StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata
   )
 }

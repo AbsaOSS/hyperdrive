@@ -15,6 +15,7 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY
 
@@ -26,6 +27,7 @@ trait ParquetPartitioningStreamWriterAttributes extends HasComponentAttributes {
     "The version is incremented automatically for each ingestion on the same day"
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true)
+    KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true),
+    StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata
   )
 }
