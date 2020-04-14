@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.ingestor.api.utils
 
 import org.apache.commons.configuration2.Configuration
 
