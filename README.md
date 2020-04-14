@@ -137,6 +137,7 @@ For detailed information on the subject name strategy, please take a look at the
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.common.trigger.processing.time` | No | Interval in ms for fixed interval micro-batch execution. If not set, a One-time micro-batch will be executed. |
 
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
 
@@ -147,6 +148,7 @@ The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns 
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
+| `writer.common.trigger.processing.time` | No | Interval in ms for fixed interval micro-batch execution. If not set, a One-time micro-batch will be executed. |
 
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
 
@@ -160,7 +162,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | `writer.kafka.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
 | `writer.kafka.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
 | `writer.kafka.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
-
+| `writer.common.trigger.processing.time` | No | Interval in ms for fixed interval micro-batch execution. If not set, a One-time micro-batch will be executed. |
 
 Hint: Hyperdrive uses [Apache Commons Configuration 2](https://github.com/apache/commons-configuration). This allows
 properties to be referenced, e.g. like so
