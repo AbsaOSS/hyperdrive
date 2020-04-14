@@ -22,9 +22,9 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
 
 private[reader] object KafkaStreamReaderProps {
   val STREAM_FORMAT_KAFKA_NAME = "kafka"

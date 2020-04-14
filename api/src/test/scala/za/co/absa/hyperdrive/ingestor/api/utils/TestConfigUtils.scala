@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.ingestor.api.utils
 
-import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 

@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.utils.ComponentFactoryUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.SchemaRegistrySettingsUtil
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils._
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils._
 
 private[writer] class KafkaStreamWriter(topic: String,
                                         brokers: String,
