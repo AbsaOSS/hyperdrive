@@ -17,7 +17,6 @@ package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -29,7 +28,6 @@ import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.StreamMan
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.IngestorKeys
 
 private[driver] class IngestionDriver {
 
@@ -40,7 +38,7 @@ private[driver] class IngestionDriver {
     applyDefaults(configuration)
     printConfiguration(configuration)
 
-    val spark = getSparkSession(configuration)
+    val sparkIngestor = SparkIngestor(configuration)
     val streamReader = getStreamReader(configuration)
     val streamManager = getStreamManager(configuration)
     val streamDecoder = getStreamDecoder(configuration)
@@ -48,10 +46,8 @@ private[driver] class IngestionDriver {
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    SparkIngestor.ingest(spark, streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
+    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
   }
-
-  private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 

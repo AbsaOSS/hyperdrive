@@ -17,24 +17,26 @@ package za.co.absa.hyperdrive.driver
 
 import java.util.UUID
 
-import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path}
+import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
+import za.co.absa.hyperdrive.ingestor.api.utils.ComponentFactoryUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
+import za.co.absa.hyperdrive.shared.utils.ConfigUtils
 
-import scala.collection.AbstractIterator
 import scala.util.control.NonFatal
 
 /**
   * This object is responsible for running the ingestion job by using the components it
   * receives upon invocation.
   */
-object SparkIngestor {
+class SparkIngestor(val spark: SparkSession,
+                    val conf: Configuration) {
 
   private val logger = LogManager.getLogger
 
@@ -47,7 +49,6 @@ object SparkIngestor {
     * IF this method is invoked to ingest from a continuous source (e.g. a topic that is receiving data no-stop), it WILL
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
-    * @param spark             [[SparkSession]] instance.
     * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
     * @param streamManager     [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
@@ -57,8 +58,7 @@ object SparkIngestor {
   @throws(classOf[IllegalArgumentException])
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
-  def ingest(spark: SparkSession,
-             streamReader: StreamReader,
+  def ingest(streamReader: StreamReader,
              streamManager: StreamManager,
              decoder: StreamDecoder,
              streamTransformer: StreamTransformer,
@@ -93,4 +93,22 @@ object SparkIngestor {
   }
 
   private def generateIngestionId: String = UUID.randomUUID().toString
+}
+
+object SparkIngestor extends SparkIngestorAttributes {
+  def apply(conf: Configuration): SparkIngestor = {
+    ComponentFactoryUtil.validateConfiguration(conf, getProperties)
+    val spark = getSparkSession(conf)
+    new SparkIngestor(spark, conf)
+  }
+
+  private def getSparkSession(conf: Configuration): SparkSession = {
+    val name = ConfigUtils.getOrThrow(KEY_APP_NAME, conf)
+    val sparkBuilder = SparkSession.builder().appName(name)
+    val extraConf = ConfigUtils.getPropertySubset(conf, optionalConfKey)
+    val sparkBuilderWithExtraConf = extraConf.foldLeft(sparkBuilder)((sparkBuilder, keyValue) =>
+      sparkBuilder.config(keyValue._1, keyValue._2))
+    sparkBuilderWithExtraConf.getOrCreate()
+  }
+
 }

@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.FlatSpec
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
+import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
 
 class TestCommandLineIngestionDriver extends FlatSpec {
 
@@ -40,7 +41,6 @@ class TestCommandLineIngestionDriver extends FlatSpec {
   }
 
   private def getSampleConfs: Map[String,String] = {
-    import IngestorKeys._
     import KafkaStreamReaderKeys._
     Map(
       KEY_APP_NAME -> "any_name",

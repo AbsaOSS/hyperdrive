@@ -97,6 +97,8 @@ The configuration file may be created from the template located at `driver/src/r
 | :--- | :---: | :--- |
 | `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
 
+Any additional properties for spark can be added with the prefix `ingestor.spark.option.`. E.g. the property `spark.driver.extraJavaOptions` can be added as `ingestor.spark.option.spark.driver.extraJavaOptions`.
+
 #### Settings for built-in components
 ##### KafkaStreamReader
 | Property Name | Required | Description |
