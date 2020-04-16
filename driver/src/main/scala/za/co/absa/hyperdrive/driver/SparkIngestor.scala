@@ -20,6 +20,7 @@ import java.util.UUID
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
+import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable, TerminationMethod}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -27,8 +28,9 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.utils.ComponentFactoryUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 /**
@@ -36,6 +38,7 @@ import scala.util.control.NonFatal
   * receives upon invocation.
   */
 class SparkIngestor(val spark: SparkSession,
+                    val terminationMethod: TerminationMethod,
                     val conf: Configuration) {
 
   private val logger = LogManager.getLogger
@@ -80,8 +83,13 @@ class SparkIngestor(val spark: SparkSession,
     }
 
     try {
-      ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
-      ingestionQuery.stop()
+      terminationMethod match {
+        case ProcessAllAvailable =>
+          ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
+          ingestionQuery.stop()
+        case AwaitTermination =>
+          ingestionQuery.awaitTermination()
+      }
     } catch {
       case NonFatal(e) =>
         throw new IngestionException(message = s"PROBABLY FAILED INGESTION $ingestionId. There was no error in the query plan, but something when wrong. " +
@@ -99,7 +107,18 @@ object SparkIngestor extends SparkIngestorAttributes {
   def apply(conf: Configuration): SparkIngestor = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)
     val spark = getSparkSession(conf)
-    new SparkIngestor(spark, conf)
+    val terminationMethod = getTerminationMethod(conf)
+    new SparkIngestor(spark, terminationMethod, conf)
+  }
+
+  private def getTerminationMethod(conf: Configuration): TerminationMethod = {
+    ConfigUtils.getOrNone(KEY_TERMINATION_METHOD, conf) match {
+      case Some(name) => TerminationMethodEnum.of(name) match {
+          case Failure(exception) => throw new IllegalArgumentException(s"Invalid value for $KEY_TERMINATION_METHOD", exception)
+          case Success(value) => value
+      }
+      case None => ProcessAllAvailable
+    }
   }
 
   private def getSparkSession(conf: Configuration): SparkSession = {

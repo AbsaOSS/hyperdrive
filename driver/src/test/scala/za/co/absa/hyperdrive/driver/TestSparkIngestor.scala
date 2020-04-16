@@ -25,6 +25,7 @@ import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.ArgumentMatchers._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.hyperdrive.driver.TerminationMethodEnum.AwaitTermination
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -160,6 +161,31 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     sparkIngestor.spark.conf.get("spark.driver.cores") shouldBe "2"
     sparkIngestor.spark.conf.get("spark.driver.memory") shouldBe "2g"
     sparkIngestor.spark.conf.get("spark.driver.extraLibraryPath") shouldBe "/tmp/nowhere"
+  }
+
+  it should "use terminationMethod awaitTermination if configured" in {
+    val config = new BaseConfiguration
+    config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
+    config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", AwaitTermination)
+    val sparkIngestor = SparkIngestor(config)
+    when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+
+    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
+
+    verify(streamingQuery).awaitTermination()
+  }
+
+  it should "throw if an invalid terminationMethod is configured" in {
+    val config = new BaseConfiguration
+    config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
+    config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", "non-existent")
+    val throwable = intercept[IllegalArgumentException](SparkIngestor(config))
+
+    throwable.getMessage should include(SparkIngestor.KEY_TERMINATION_METHOD)
   }
 
 }

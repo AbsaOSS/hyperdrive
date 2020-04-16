@@ -15,6 +15,7 @@
 
 package za.co.absa.hyperdrive.driver
 
+import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable}
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait SparkIngestorAttributes extends HasComponentAttributes {
@@ -22,13 +23,17 @@ trait SparkIngestorAttributes extends HasComponentAttributes {
   val keysPrefix = "ingestor.spark"
   val optionalConfKey = s"$keysPrefix.option"
   val KEY_APP_NAME = s"$keysPrefix.app.name"
+  val KEY_TERMINATION_METHOD = s"$keysPrefix.termination.method"
 
   override def getName: String = "Spark Ingestor"
 
   override def getDescription: String = "Component that invokes Spark for the ingestion"
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_APP_NAME -> PropertyMetadata("Name of Spark application", None, required = true)
+    KEY_APP_NAME -> PropertyMetadata("Name of Spark application", None, required = true),
+    KEY_TERMINATION_METHOD -> PropertyMetadata("Termination method",
+      Some(s"Either '$ProcessAllAvailable' (stop when no more messages arrive) or '$AwaitTermination' (stop on signal)." +
+        s" Default is '$ProcessAllAvailable'"), required = false)
   )
 
   override def getExtraConfigurationPrefix: Option[String] = Some(optionalConfKey)
