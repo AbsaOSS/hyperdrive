@@ -39,6 +39,7 @@ import scala.util.control.NonFatal
   */
 class SparkIngestor(val spark: SparkSession,
                     val terminationMethod: TerminationMethod,
+                    val awaitTerminationTimeout: Option[Long],
                     val conf: Configuration) {
 
   private val logger = LogManager.getLogger
@@ -65,7 +66,7 @@ class SparkIngestor(val spark: SparkSession,
              streamManager: StreamManager,
              decoder: StreamDecoder,
              streamTransformer: StreamTransformer,
-             streamWriter: StreamWriter): Unit= {
+             streamWriter: StreamWriter): Unit = {
 
     val ingestionId = generateIngestionId
 
@@ -88,7 +89,13 @@ class SparkIngestor(val spark: SparkSession,
           ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
           ingestionQuery.stop()
         case AwaitTermination =>
-          ingestionQuery.awaitTermination()
+          awaitTerminationTimeout match {
+            case Some(timeout) =>
+              ingestionQuery.awaitTermination(timeout)
+              ingestionQuery.stop()
+            case None =>
+              ingestionQuery.awaitTermination()
+          }
       }
     } catch {
       case NonFatal(e) =>
@@ -104,21 +111,40 @@ class SparkIngestor(val spark: SparkSession,
 }
 
 object SparkIngestor extends SparkIngestorAttributes {
+
+  private val logger = LogManager.getLogger
+
   def apply(conf: Configuration): SparkIngestor = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)
     val spark = getSparkSession(conf)
     val terminationMethod = getTerminationMethod(conf)
-    new SparkIngestor(spark, terminationMethod, conf)
+    val awaitTerminationTimeout = getAwaitTerminationTimeoutMs(conf)
+
+    logger.info(s"Creating ingestor: termination method = '$terminationMethod', " +
+      s"await termination timeout = '$awaitTerminationTimeout'")
+    new SparkIngestor(spark, terminationMethod, awaitTerminationTimeout, conf)
   }
 
   private def getTerminationMethod(conf: Configuration): TerminationMethod = {
     ConfigUtils.getOrNone(KEY_TERMINATION_METHOD, conf) match {
       case Some(name) => TerminationMethodEnum.of(name) match {
-          case Failure(exception) => throw new IllegalArgumentException(s"Invalid value for $KEY_TERMINATION_METHOD", exception)
-          case Success(value) => value
+        case Failure(exception) => throw new IllegalArgumentException(s"Invalid value for $KEY_TERMINATION_METHOD", exception)
+        case Success(value) => value
       }
       case None => ProcessAllAvailable
     }
+  }
+
+  private def getAwaitTerminationTimeoutMs(conf: Configuration): Option[Long] = {
+    ConfigUtils.getOrNone(KEY_AWAIT_TERMINATION_TIMEOUT, conf)
+      .flatMap(value =>
+        try {
+          Some(value.toLong)
+        } catch {
+          case e: NumberFormatException => throw new IllegalArgumentException(s"Invalid value for " +
+            s"$KEY_AWAIT_TERMINATION_TIMEOUT. Value: $value", e)
+        }
+      )
   }
 
   private def getSparkSession(conf: Configuration): SparkSession = {

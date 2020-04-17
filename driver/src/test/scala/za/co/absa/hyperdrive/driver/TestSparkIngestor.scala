@@ -179,6 +179,23 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     verify(streamingQuery).awaitTermination()
   }
 
+  it should "use timeout if configured with terminationMethod awaitTermination" in {
+    val config = new BaseConfiguration
+    config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
+    config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", AwaitTermination)
+    config.addProperty(s"${SparkIngestor.KEY_AWAIT_TERMINATION_TIMEOUT}", "10000")
+    val sparkIngestor = SparkIngestor(config)
+    when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
+    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
+    when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
+    when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
+    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+
+    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
+
+    verify(streamingQuery).awaitTermination(eqTo(10000L))
+  }
+
   it should "throw if an invalid terminationMethod is configured" in {
     val config = new BaseConfiguration
     config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
@@ -186,6 +203,15 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     val throwable = intercept[IllegalArgumentException](SparkIngestor(config))
 
     throwable.getMessage should include(SparkIngestor.KEY_TERMINATION_METHOD)
+  }
+
+  it should "throw if a timeout is not a number" in {
+    val config = new BaseConfiguration
+    config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
+    config.addProperty(s"${SparkIngestor.KEY_AWAIT_TERMINATION_TIMEOUT}", "nan")
+    val throwable = intercept[IllegalArgumentException](SparkIngestor(config))
+
+    throwable.getMessage should include(SparkIngestor.KEY_AWAIT_TERMINATION_TIMEOUT)
   }
 
 }

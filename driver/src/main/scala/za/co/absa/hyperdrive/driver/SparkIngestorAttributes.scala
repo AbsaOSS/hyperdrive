@@ -24,6 +24,7 @@ trait SparkIngestorAttributes extends HasComponentAttributes {
   val optionalConfKey = s"$keysPrefix.option"
   val KEY_APP_NAME = s"$keysPrefix.app.name"
   val KEY_TERMINATION_METHOD = s"$keysPrefix.termination.method"
+  val KEY_AWAIT_TERMINATION_TIMEOUT = s"$keysPrefix.await.termination.timeout"
 
   override def getName: String = "Spark Ingestor"
 
@@ -33,7 +34,9 @@ trait SparkIngestorAttributes extends HasComponentAttributes {
     KEY_APP_NAME -> PropertyMetadata("Name of Spark application", None, required = true),
     KEY_TERMINATION_METHOD -> PropertyMetadata("Termination method",
       Some(s"Either '$ProcessAllAvailable' (stop when no more messages arrive) or '$AwaitTermination' (stop on signal)." +
-        s" Default is '$ProcessAllAvailable'"), required = false)
+        s" Default is '$ProcessAllAvailable'"), required = false),
+    KEY_AWAIT_TERMINATION_TIMEOUT -> PropertyMetadata("Await Termination: Timeout(ms)", Some("Stops query when timeout is reached." +
+      s" This option is only valid with termination method '$AwaitTermination'"), required = false)
   )
 
   override def getExtraConfigurationPrefix: Option[String] = Some(optionalConfKey)
