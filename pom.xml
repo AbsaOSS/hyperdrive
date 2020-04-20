@@ -97,8 +97,8 @@
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
-        <scala.version>2.11.8</scala.version>
-        <scala.compat.version>2.11</scala.compat.version>
+        <scala.version>2.12.11</scala.version>
+        <scala.compat.version>2.12</scala.compat.version>
 
     </properties>
 

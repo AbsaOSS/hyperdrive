@@ -39,8 +39,8 @@
 
     <properties>
         <!--Enforced versions-->
-        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
-        <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
+        <fasterxml.jackson.version>2.10.0</fasterxml.jackson.version> <!--Same as Spark uses-->
+        <avro.version>1.9.1</avro.version> <!--Same as Abris uses-->
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -60,15 +60,12 @@
         <slf4j.log4j2.version>1.7.26</slf4j.log4j2.version>
 
         <!--Kafka-->
-        <kafka.version>2.1.1</kafka.version>
-        <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
         <testcontainers.kafka.version>1.12.4</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
         <!--Spark-->
-        <spark.version>2.4.3</spark.version>
+        <spark.version>3.0.0-preview2</spark.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -162,7 +159,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${fasterxml.jackson.databind.version}</version>
+                <version>${fasterxml.jackson.version}</version>
             </dependency>
             <!--Avro-->
             <dependency>
@@ -235,7 +232,7 @@
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-                <version>${spark.sql.kafka.version}</version>
+                <version>${spark.version}</version>
             </dependency>
 
             <!--Configurations-->
