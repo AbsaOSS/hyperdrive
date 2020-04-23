@@ -21,7 +21,6 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 trait SparkIngestorAttributes extends HasComponentAttributes {
 
   val keysPrefix = "ingestor.spark"
-  val optionalConfKey = s"$keysPrefix.option"
   val KEY_APP_NAME = s"$keysPrefix.app.name"
   val KEY_TERMINATION_METHOD = s"$keysPrefix.termination.method"
   val KEY_AWAIT_TERMINATION_TIMEOUT = s"$keysPrefix.await.termination.timeout"
@@ -39,5 +38,5 @@ trait SparkIngestorAttributes extends HasComponentAttributes {
       s" This option is only valid with termination method '$AwaitTermination'"), required = false)
   )
 
-  override def getExtraConfigurationPrefix: Option[String] = Some(optionalConfKey)
+  override def getExtraConfigurationPrefix: Option[String] = None
 }

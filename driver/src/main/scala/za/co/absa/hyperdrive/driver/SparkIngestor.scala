@@ -149,11 +149,7 @@ object SparkIngestor extends SparkIngestorAttributes {
 
   private def getSparkSession(conf: Configuration): SparkSession = {
     val name = ConfigUtils.getOrThrow(KEY_APP_NAME, conf)
-    val sparkBuilder = SparkSession.builder().appName(name)
-    val extraConf = ConfigUtils.getPropertySubset(conf, optionalConfKey)
-    val sparkBuilderWithExtraConf = extraConf.foldLeft(sparkBuilder)((sparkBuilder, keyValue) =>
-      sparkBuilder.config(keyValue._1, keyValue._2))
-    sparkBuilderWithExtraConf.getOrCreate()
+    SparkSession.builder().appName(name).getOrCreate()
   }
 
 }

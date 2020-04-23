@@ -149,20 +149,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     throwable.getMessage should include(SparkIngestor.KEY_APP_NAME)
   }
 
-  it should "use extra configuration for spark" in {
-    val config = new BaseConfiguration
-    config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
-    config.addProperty(s"${SparkIngestor.optionalConfKey}.spark.driver.cores", "2")
-    config.addProperty(s"${SparkIngestor.optionalConfKey}.spark.driver.memory", "2g")
-    config.addProperty(s"${SparkIngestor.optionalConfKey}.spark.driver.extraLibraryPath", "/tmp/nowhere")
-
-    val sparkIngestor = SparkIngestor(config)
-
-    sparkIngestor.spark.conf.get("spark.driver.cores") shouldBe "2"
-    sparkIngestor.spark.conf.get("spark.driver.memory") shouldBe "2g"
-    sparkIngestor.spark.conf.get("spark.driver.extraLibraryPath") shouldBe "/tmp/nowhere"
-  }
-
   it should "use terminationMethod awaitTermination if configured" in {
     val config = new BaseConfiguration
     config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")

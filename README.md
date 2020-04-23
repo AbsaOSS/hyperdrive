@@ -99,8 +99,6 @@ The configuration file may be created from the template located at `driver/src/r
 | `ingestor.spark.termination.method` | No | Either `processAllAvailable` (stop query when no more messages are incoming) or `awaitTermination` (stop query on signal, e.g. Ctrl-C). Default is `processAllAvailable` |
 | `ingestor.spark.await.termination.timeout` | No | Timeout in milliseconds. Stops query when timeout is reached. This option is only valid with termination method `awaitTermination` |
 
-Any additional properties for spark can be added with the prefix `ingestor.spark.option.`. E.g. the property `spark.driver.extraJavaOptions` can be added as `ingestor.spark.option.spark.driver.extraJavaOptions`.
-
 #### Settings for built-in components
 ##### KafkaStreamReader
 | Property Name | Required | Description |
