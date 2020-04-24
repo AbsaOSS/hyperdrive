@@ -30,7 +30,7 @@ import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils._
 private[writer] class KafkaStreamWriter(topic: String,
                                         brokers: String,
                                         schemaRegistrySettings: Map[String, String],
-                                        triggerProcessingTime: Option[Long],
+                                        trigger: Trigger,
                                         extraOptions: Map[String, String]) extends StreamWriter {
 
   def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
@@ -46,9 +46,9 @@ private[writer] class KafkaStreamWriter(topic: String,
     val streamWriterWithOptions = dataStreamWriter.options(extraOptions)
     val streamWriterWithCheckpoints = streamManager.configure(streamWriterWithOptions,
       dataFrame.sparkSession.sparkContext.hadoopConfiguration)
-    val streamWriterWithTrigger = StreamWriterUtil.configureTrigger(streamWriterWithCheckpoints, triggerProcessingTime)
 
-    streamWriterWithTrigger
+    streamWriterWithCheckpoints
+      .trigger(trigger)
       .option("topic", topic)
       .option("kafka.bootstrap.servers", brokers)
       .format("kafka")
@@ -67,13 +67,13 @@ object KafkaStreamWriter extends StreamWriterFactory with KafkaStreamWriterAttri
     val topic = configuration.getString(KEY_TOPIC)
     val brokers = configuration.getString(KEY_BROKERS)
     val schemaRegistrySettings = getSchemaRegistrySettings(configuration, topic)
-    val processingTime = StreamWriterUtil.getTriggerProcessingTime(configuration)
+    val trigger = StreamWriterUtil.getTrigger(configuration)
     val extraOptions = getPropertySubset(configuration, optionalConfKey)
 
     logger.info(s"Creating writer: topic = '$topic', brokers = '$brokers', " +
-      s"schema registry settings = '$schemaRegistrySettings', processing time = '$processingTime'")
+      s"schema registry settings = '$schemaRegistrySettings', trigger = '$trigger'")
 
-    new KafkaStreamWriter(topic, brokers, schemaRegistrySettings, processingTime, extraOptions)
+    new KafkaStreamWriter(topic, brokers, schemaRegistrySettings, trigger, extraOptions)
   }
 
   private def getSchemaRegistrySettings(configuration: Configuration, topic: String): Map[String, String] = {

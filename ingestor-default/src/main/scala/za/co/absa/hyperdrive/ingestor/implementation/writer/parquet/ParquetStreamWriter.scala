@@ -17,25 +17,27 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
+import org.apache.spark.sql.streaming.Trigger
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_EXTRA_CONFS_ROOT
 
-private[writer] class ParquetStreamWriter(destination: String, triggerProcessingTime: Option[Long],
-                                          extraConfOptions: Map[String, String]) extends AbstractParquetStreamWriter(destination, triggerProcessingTime, extraConfOptions)
+private[writer] class ParquetStreamWriter(destination: String, trigger: Trigger,
+                                          extraConfOptions: Map[String, String])
+  extends AbstractParquetStreamWriter(destination, trigger, extraConfOptions)
 
 object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterAttributes {
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
-    val processingTime = StreamWriterUtil.getTriggerProcessingTime(config)
+    val trigger = StreamWriterUtil.getTrigger(config)
     val extraOptions = getExtraOptions(config)
 
     LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +
-      s"destination directory='$destinationDirectory', processing time='$processingTime', extra options='$extraOptions'")
+      s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
 
-    new ParquetStreamWriter(destinationDirectory, processingTime, extraOptions)
+    new ParquetStreamWriter(destinationDirectory, trigger, extraOptions)
   }
 
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)

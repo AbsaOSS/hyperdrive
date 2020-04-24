@@ -127,11 +127,15 @@ object SparkIngestor extends SparkIngestorAttributes {
 
   private def getTerminationMethod(conf: Configuration): TerminationMethod = {
     ConfigUtils.getOrNone(KEY_TERMINATION_METHOD, conf) match {
-      case Some(name) => TerminationMethodEnum.of(name) match {
-        case Failure(exception) => throw new IllegalArgumentException(s"Invalid value for $KEY_TERMINATION_METHOD", exception)
-        case Success(value) => value
-      }
+      case Some(name) => parseTerminationMethod(name)
       case None => ProcessAllAvailable
+    }
+  }
+
+  private def parseTerminationMethod(name: String) = {
+     TerminationMethodEnum.of(name) match {
+      case Failure(exception) => throw new IllegalArgumentException(s"Invalid value for $KEY_TERMINATION_METHOD", exception)
+      case Success(value) => value
     }
   }
 

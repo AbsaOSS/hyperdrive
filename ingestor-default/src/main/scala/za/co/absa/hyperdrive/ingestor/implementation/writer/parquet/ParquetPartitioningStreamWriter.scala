@@ -23,7 +23,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
-import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode}
+import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
@@ -33,13 +33,13 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetPar
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
 
-private[writer] class ParquetPartitioningStreamWriter(destination: String, processingTime: Option[Long],
+private[writer] class ParquetPartitioningStreamWriter(destination: String, trigger: Trigger,
                                                       reportDate: String, extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, processingTime, extraConfOptions) {
+  extends AbstractParquetStreamWriter(destination, trigger, extraConfOptions) {
   private val COL_DATE = "hyperdrive_date"
   private val COL_VERSION = "hyperdrive_version"
 
-  override protected def getOutStream(dataFrame: DataFrame, processingTime: Option[Long]): DataStreamWriter[Row] = {
+  override protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
     val spark = dataFrame.sparkSession
     val initialVersion = 1
     val nextVersion = findNextVersion(spark, initialVersion)
@@ -47,9 +47,8 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, proce
       .withColumn(COL_DATE, to_date(lit(reportDate), ParquetPartitioningStreamWriter.reportDateFormat))
       .withColumn(COL_VERSION, lit(nextVersion))
 
-    val streamWriter = dfWithDate.writeStream
-    val streamWriterWithTrigger = StreamWriterUtil.configureTrigger(streamWriter, processingTime)
-    streamWriterWithTrigger
+    dfWithDate.writeStream
+      .trigger(trigger)
       .format(source = "parquet")
       .partitionBy(COL_DATE, COL_VERSION)
       .outputMode(OutputMode.Append())
@@ -83,14 +82,14 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetP
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
-    val processingTime = StreamWriterUtil.getTriggerProcessingTime(config)
+    val trigger = StreamWriterUtil.getTrigger(config)
     val reportDateString = getReportDateString(config)
     val extraOptions = getExtraOptions(config)
 
-    LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +
-      s"destination directory='$destinationDirectory', processing time='$processingTime', extra options='$extraOptions'")
+    LogManager.getLogger.info(s"Going to create ParquetPartitioningStreamWriter instance using: " +
+      s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
 
-    new ParquetPartitioningStreamWriter(destinationDirectory, processingTime, reportDateString, extraOptions)
+    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, reportDateString, extraOptions)
   }
 
   private def getReportDateString(configuration: Configuration): String = {

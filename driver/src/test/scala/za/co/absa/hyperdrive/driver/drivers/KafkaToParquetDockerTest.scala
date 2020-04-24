@@ -74,6 +74,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
 
       // Spark settings
       "ingestor.spark.app.name" -> "ingestor-app",
+      "ingestor.spark.termination.method" -> "AwaitTermination",
 
       // Source(Kafka) settings
       "reader.kafka.topic" -> topic,

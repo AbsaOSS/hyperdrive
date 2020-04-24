@@ -15,55 +15,88 @@
 
 package za.co.absa.hyperdrive.ingestor.api.utils
 
-import java.util.concurrent.TimeUnit
-
-import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.streaming.{DataStreamWriter, Trigger}
-import org.mockito.Mockito._
+import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import org.mockito.ArgumentMatchers.{eq => eqTo}
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 
 class TestStreamWriterUtil extends FlatSpec with Matchers with MockitoSugar {
 
   behavior of s"StreamWriterUtil"
 
-  "configureTrigger" should "configure one-time trigger if processing-time is not defined" in {
-    val dataStreamWriterMock = mock[DataStreamWriter[Row]]
-
-    StreamWriterUtil.configureTrigger(dataStreamWriterMock, None)
-
-    verify(dataStreamWriterMock).trigger(eqTo(Trigger.Once()))
-  }
-
-  it should "configure processing-time trigger if processing-time is defined" in {
-    val dataStreamWriterMock = mock[DataStreamWriter[Row]]
-    val interval = 2000L
-
-    StreamWriterUtil.configureTrigger(dataStreamWriterMock, Some(interval))
-
-    verify(dataStreamWriterMock).trigger(eqTo(Trigger.ProcessingTime(interval, TimeUnit.MILLISECONDS)))
-  }
-
-  "getTriggerProcessingTime" should "convert the value to Long if possible" in {
-    val configPositiveCase = createConfiguration("60000")
-    val configNegativeCaseNotANumber = createConfiguration("1 minute")
-    val configNegativeCaseNotDefined = new BaseConfiguration
-
-    val valuePositiveCase = StreamWriterUtil.getTriggerProcessingTime(configPositiveCase)
-    val valueNegativeCaseNotANumber = StreamWriterUtil.getTriggerProcessingTime(configNegativeCaseNotANumber)
-    val valueNegativeCaseNotDefined = StreamWriterUtil.getTriggerProcessingTime(configNegativeCaseNotDefined)
-
-    valuePositiveCase shouldBe Some(60000L)
-    valueNegativeCaseNotANumber shouldBe None
-    valueNegativeCaseNotDefined shouldBe None
-  }
-
-  private def createConfiguration(triggerProcessingTime: String): Configuration = {
+  "getTriggerAsTry" should "configure a one-time trigger by default" in {
     val configuration = new BaseConfiguration()
-    configuration.setProperty(StreamWriterCommonAttributes.keyTriggerProcessingTime, triggerProcessingTime)
-    configuration
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration).get
+
+    trigger shouldBe Trigger.Once()
+  }
+
+  it should "configure a one-time trigger if configured" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "Once")
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration).get
+
+    trigger shouldBe Trigger.Once()
+  }
+
+  it should "configure a processing trigger if configured with interval 0 ms by default" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "ProcessingTime")
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration).get
+
+    trigger shouldBe Trigger.ProcessingTime(0L)
+  }
+
+  it should "configure a processing trigger if configured with configured interval" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "ProcessingTime")
+    configuration.setProperty(keyTriggerProcessingTime, "20000")
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration).get
+
+    trigger shouldBe Trigger.ProcessingTime(20000L)
+  }
+
+  it should "throw an exception if the trigger type configuration value is invalid" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "invalid-trigger")
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration)
+
+    trigger.isFailure shouldBe true
+    trigger.failed.get.getMessage should include(keyTriggerType)
+  }
+
+  it should "throw an exception if the processing time value is not a number" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "ProcessingTime")
+    configuration.setProperty(keyTriggerProcessingTime, "10s")
+
+    val trigger = StreamWriterUtil.getTriggerAsTry(configuration)
+
+    trigger.isFailure shouldBe true
+    trigger.failed.get.getMessage should include(keyTriggerProcessingTime)
+  }
+
+  "getTrigger" should "return the trigger" in {
+    val configuration = new BaseConfiguration()
+
+    val trigger = StreamWriterUtil.getTrigger(configuration)
+
+    trigger shouldBe Trigger.Once()
+  }
+
+
+  it should "throw an exception if it fails" in {
+    val configuration = new BaseConfiguration()
+    configuration.setProperty(keyTriggerType, "invalid-trigger")
+
+    val exception = intercept[IllegalArgumentException](StreamWriterUtil.getTrigger(configuration))
+
+    exception.getMessage should include(keyTriggerType)
   }
 }

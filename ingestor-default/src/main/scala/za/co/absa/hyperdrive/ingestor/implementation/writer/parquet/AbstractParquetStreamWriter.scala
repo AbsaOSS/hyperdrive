@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery}
+import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
@@ -26,7 +26,7 @@ import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
-private[writer] abstract class AbstractParquetStreamWriter(destination: String, triggerProcessingTime: Option[Long],
+private[writer] abstract class AbstractParquetStreamWriter(destination: String, trigger: Trigger,
                                                            val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LogManager.getLogger
   if (StringUtils.isBlank(destination)) {
@@ -34,7 +34,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
   }
 
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
-    val outStream = getOutStream(dataFrame, triggerProcessingTime)
+    val outStream = getOutStream(dataFrame)
 
     val streamWithOptions = addOptions(outStream, extraConfOptions)
 
@@ -46,10 +46,9 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   def getDestination: String = destination
 
-  protected def getOutStream(dataFrame: DataFrame, processingTime: Option[Long]): DataStreamWriter[Row] = {
-    val streamWriter = dataFrame.writeStream
-    val streamWriterWithTrigger = StreamWriterUtil.configureTrigger(streamWriter, processingTime)
-    streamWriterWithTrigger
+  protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
+    dataFrame.writeStream
+      .trigger(trigger)
       .format(source = "parquet")
       .outputMode(OutputMode.Append())
   }

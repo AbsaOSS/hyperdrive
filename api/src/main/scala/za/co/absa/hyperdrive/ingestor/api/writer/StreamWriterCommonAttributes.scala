@@ -19,8 +19,10 @@ import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 
 object StreamWriterCommonAttributes {
   private val keysPrefix = "writer.common"
+  val keyTriggerType = s"$keysPrefix.trigger.type"
   val keyTriggerProcessingTime = s"$keysPrefix.trigger.processing.time"
+  val triggerTypeMetadata: PropertyMetadata = PropertyMetadata("Trigger type",
+    Some("Trigger type. Either 'Once' or 'ProcessingTime'. 'Once' by default"), required = false)
   val triggerProcessingTimeMetadata: PropertyMetadata = PropertyMetadata("Micro-batch interval (ms)",
     Some("Micro-batch interval in milliseconds. To be used for long-running spark jobs. Leave empty for one-time spark jobs"), required = false)
-
 }

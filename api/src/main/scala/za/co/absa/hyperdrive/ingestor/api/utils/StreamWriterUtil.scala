@@ -18,26 +18,42 @@ package za.co.absa.hyperdrive.ingestor.api.utils
 import java.util.concurrent.TimeUnit
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.streaming.{DataStreamWriter, Trigger}
+import org.apache.spark.sql.streaming.Trigger
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
+import za.co.absa.hyperdrive.ingestor.api.writer.TriggerTypeEnum._
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object StreamWriterUtil {
 
-  def configureTrigger(streamWriter: DataStreamWriter[Row], processingTimeOpt: Option[Long],
-                       timeUnit: TimeUnit = TimeUnit.MILLISECONDS): DataStreamWriter[Row] = {
-    processingTimeOpt match {
-      case Some(processingTime) => streamWriter.trigger(Trigger.ProcessingTime(processingTime, timeUnit))
-      case None => streamWriter.trigger(Trigger.Once())
+  def getTrigger(configuration: Configuration, timeUnit: TimeUnit = TimeUnit.MILLISECONDS): Trigger = {
+    getTriggerAsTry(configuration, timeUnit) match {
+      case Success(value) => value
+      case Failure(exception) => throw exception
     }
   }
 
-  def getTriggerProcessingTime(configuration: Configuration,
-                               processingTimeKey: String = StreamWriterCommonAttributes.keyTriggerProcessingTime): Option[Long] = {
-    ConfigUtils.getOrNone(processingTimeKey, configuration)
-      .flatMap(processingTimeValue => Try(processingTimeValue.toLong).toOption)
+  def getTriggerAsTry(configuration: Configuration, timeUnit: TimeUnit = TimeUnit.MILLISECONDS): Try[Trigger] = {
+    val triggerTypeKey = StreamWriterCommonAttributes.keyTriggerType
+
+    val once = Once.toString.toUpperCase
+    val processingTime = ProcessingTime.toString.toUpperCase
+    ConfigUtils.getOrNone(triggerTypeKey, configuration)
+      .map(triggerType => triggerType.toUpperCase match {
+        case `once` => Try(Trigger.Once())
+        case `processingTime` => getProcessingTime(configuration)
+          .flatMap(time => Try(Trigger.ProcessingTime(time, timeUnit)))
+        case _ => Failure(new IllegalArgumentException(s"Invalid value for $triggerTypeKey. " +
+          s"Got $triggerType, but expected either $Once or $ProcessingTime"))})
+      .getOrElse(Try(Trigger.Once()))
   }
 
+  private def getProcessingTime(configuration: Configuration): Try[Long] = {
+    val processingTimeKey = StreamWriterCommonAttributes.keyTriggerProcessingTime
+    val processingTime = ConfigUtils.getOrNone(processingTimeKey, configuration).getOrElse("0")
+    Try(processingTime.toLong).recoverWith {
+      case e: Exception => Failure(new IllegalArgumentException(s"Invalid value for $processingTimeKey. " +
+        s"Expected number, but got $processingTime", e))
+    }
+  }
 }

@@ -13,22 +13,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.driver
+package za.co.absa.hyperdrive.ingestor.api.writer
 
-import scala.util.{Failure, Success, Try}
-
-object TerminationMethodEnum {
-  sealed abstract class TerminationMethod(val name: String) {
+object TriggerTypeEnum {
+  sealed abstract class TriggerType(val name: String) {
     override def toString: String = name
   }
 
-  case object ProcessAllAvailable extends TerminationMethod("ProcessAllAvailable")
-  case object AwaitTermination extends TerminationMethod("AwaitTermination")
-  val values = Seq(ProcessAllAvailable, AwaitTermination)
-
-  def of(name: String): Try[TerminationMethod] = {
-    values.find(p => p.toString.toUpperCase == name.toUpperCase)
-      .map(Success(_))
-      .getOrElse(Failure(new IllegalArgumentException(s"No TerminationMethod with name $name exists")))
-  }
+  case object Once extends TriggerType("Once")
+  case object ProcessingTime extends TriggerType("ProcessingTime")
 }

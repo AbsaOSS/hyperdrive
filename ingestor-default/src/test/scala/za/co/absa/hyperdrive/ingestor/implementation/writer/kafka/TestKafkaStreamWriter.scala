@@ -30,6 +30,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter._
 
 class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
@@ -44,7 +45,8 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, "topic.name")
     config.addProperty("writer.kafka.option.extra-key", "ExtraValue")
     config.addProperty("writer.kafka.option.extra-key-2", "ExtraValue2")
-    config.addProperty("writer.common.trigger.processing.time", "10000")
+    config.addProperty(keyTriggerType, "ProcessingTime")
+    config.addProperty(keyTriggerProcessingTime, "10000")
 
     val dataStreamWriterMock = getDataStreamWriterMock()
     val dataFrameMock = getDataFrameMock(dataStreamWriterMock)
