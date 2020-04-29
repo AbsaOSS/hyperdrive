@@ -51,18 +51,30 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
     val sourceTopic = "e2etestsrc"
     val destinationTopic = "e2etestdest"
     val numberOfRecords = 50
-    val schemaString = raw"""{"type": "record", "name": "$sourceTopic", "fields": [
-      {"type": "string", "name": "field1"},
-      {"type": "int", "name": "field2"}
+
+    val keySchemaString = raw"""{"type": "record", "name": "$sourceTopic", "fields": [
+      {"type": "int", "name": "some_id"},
+      {"type": "string", "name": "key_field"}
       ]}"""
-    val schema = new Parser().parse(schemaString)
+    val keySchema = new Parser().parse(keySchemaString)
+
+    val valueSchemaString = raw"""{"type": "record", "name": "$sourceTopic", "fields": [
+      {"type": "int", "name": "some_id"},
+      {"type": "string", "name": "value_field"}
+      ]}"""
+    val valueSchema = new Parser().parse(valueSchemaString)
 
     val producer = createProducer(kafkaSchemaRegistryWrapper)
     for (i <- 0 until numberOfRecords) {
-      val record = new GenericData.Record(schema)
-      record.put("field1", "hello")
-      record.put("field2", i)
-      val producerRecord = new ProducerRecord[Int, GenericRecord](sourceTopic, 1, record)
+      val keyRecord = new GenericData.Record(keySchema)
+      keyRecord.put("some_id", i / 5)
+      keyRecord.put("key_field", "keyHello")
+
+      val valueRecord = new GenericData.Record(valueSchema)
+      valueRecord.put("some_id", i)
+      valueRecord.put("value_field", "valueHello")
+
+      val producerRecord = new ProducerRecord[GenericRecord, GenericRecord](sourceTopic, keyRecord, valueRecord)
       producer.send(producerRecord)
     }
     Thread.sleep(3000)
@@ -91,6 +103,9 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "decoder.avro.value.schema.id" -> "latest",
       "decoder.avro.value.schema.naming.strategy" -> "topic.name",
+      "decoder.avro.consume.keys" -> "true",
+      "decoder.avro.key.schema.id" -> "latest",
+      "decoder.avro.key.schema.naming.strategy" -> "topic.name",
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
@@ -102,7 +117,9 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "writer.kafka.topic" -> destinationTopic,
       "writer.kafka.brokers" -> "${reader.kafka.brokers}",
       "writer.kafka.schema.registry.url" -> "${decoder.avro.schema.registry.url}",
-      "writer.kafka.value.schema.naming.strategy" -> "topic.name"
+      "writer.kafka.value.schema.naming.strategy" -> "topic.name",
+      "writer.kafka.produce.keys" -> "true",
+      "writer.kafka.key.schema.naming.strategy" -> "topic.name"
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
@@ -117,10 +134,16 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
     import scala.collection.JavaConverters._
     val records = consumer.poll(Duration.ofMillis(500L)).asScala.toList
     records.size shouldBe numberOfRecords
-    val fieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-    fieldNames should contain theSameElementsAs List("field1", "field2")
-    records.map(_.value().get("field1")).distinct should contain theSameElementsAs List(new Utf8("hello"))
-    records.map(_.value().get("field2")) should contain theSameElementsAs List.range(0, numberOfRecords)
+
+    val keyFieldNames = records.head.key().getSchema.getFields.asScala.map(_.name())
+    keyFieldNames should contain theSameElementsAs List("some_id", "key_field")
+    records.map(_.key().get("some_id")) should contain theSameElementsInOrderAs List.tabulate(numberOfRecords)(_ / 5)
+    records.map(_.key().get("key_field")).distinct should contain theSameElementsAs List(new Utf8("keyHello"))
+
+    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
+    valueFieldNames should contain theSameElementsAs List("some_id", "value_field")
+    records.map(_.value().get("some_id")) should contain theSameElementsInOrderAs List.range(0, numberOfRecords)
+    records.map(_.value().get("value_field")).distinct should contain theSameElementsAs List(new Utf8("valueHello"))
   }
 
   after {
@@ -128,23 +151,23 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
     fs.delete(new Path(baseDir), true)
   }
 
-  def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[Int, GenericRecord] = {
+  def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
     val props = new Properties()
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSchemaRegistryWrapper.kafka.getBootstrapServers)
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerSerializer")
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "KafkaToKafkaProducer")
     props.put(ProducerConfig.ACKS_CONFIG, "1")
     kafkaSchemaRegistryWrapper.createProducer(props)
   }
 
-  def createConsumer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaConsumer[Int, GenericRecord] = {
+  def createConsumer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaConsumer[GenericRecord, GenericRecord] = {
     import org.apache.kafka.clients.consumer.ConsumerConfig
     val props = new Properties()
     props.put(ConsumerConfig.GROUP_ID_CONFIG, randomUUID.toString)
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSchemaRegistryWrapper.kafka.getBootstrapServers)
-    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerDeserializer")
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     kafkaSchemaRegistryWrapper.createConsumer(props)
   }

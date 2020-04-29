@@ -61,13 +61,13 @@ class KafkaSchemaRegistryWrapper {
 
   def schemaRegistryUrl: String = s"http://${schemaRegistry.getContainerIpAddress}:${schemaRegistry.getMappedPort(schemaRegistryPort)}"
 
-  def createProducer(props: Properties): KafkaProducer[Int, GenericRecord] = {
+  def createProducer[K, V](props: Properties): KafkaProducer[K, V] = {
     props.put("schema.registry.url", schemaRegistryUrl)
-    new KafkaProducer[Int, GenericRecord](props)
+    new KafkaProducer[K, V](props)
   }
 
-  def createConsumer(props: Properties): KafkaConsumer[Int, GenericRecord] = {
+  def createConsumer[K, V](props: Properties): KafkaConsumer[K, V] = {
     props.put("schema.registry.url", schemaRegistryUrl)
-    new KafkaConsumer[Int, GenericRecord](props)
+    new KafkaConsumer[K, V](props)
   }
 }

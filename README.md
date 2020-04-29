@@ -127,6 +127,11 @@ The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/Abs
 | `decoder.avro.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
 | `decoder.avro.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
 | `decoder.avro.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+| `decoder.avro.consume.keys` | No | If set to `true`, keys will be consumed and added as columns to the dataframe. Key columns will be prefixed with `key__` |
+| `decoder.avro.key.schema.id` | Yes if `decoder.avro.consume.keys` is true | The schema id for the key. |
+| `decoder.avro.key.schema.naming.strategy` | Yes if `decoder.avro.consume.keys` is true | Subject name strategy for key |
+| `decoder.avro.key.schema.record.name` | Yes for key naming strategies `record.name` and `topic.record.name` | Name of the record. |
+| `decoder.avro.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
 
 For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
 
@@ -166,6 +171,10 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | `writer.kafka.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
 | `writer.kafka.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
 | `writer.kafka.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+| `writer.kafka.produce.keys` | No | If set to `true`, keys will be produced according to the properties `key.column.prefix` and `key.column.names` of the [Hyperdrive Context](#hyperdrive-context) |
+| `writer.kafka.key.schema.naming.strategy` | Yes if `writer.kafka.produce.keys` is true | Subject name strategy for the key |
+| `writer.kafka.key.schema.record.name` | Yes if key naming strategy is either `record.name` or `topic.record.name` | Name of the record. |
+| `writer.kafka.key.schema.record.namespace` | Yes if key naming strategy is either `record.name` or `topic.record.name` | Namespace of the record. |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
@@ -186,6 +195,15 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 See the [Spark Documentation](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#triggers) for more information about triggers.
 
+#### Hyperdrive Context
+`HyperdriveContext` is an object intended to be used by the components to share data. It is a key-value store,
+where the key is a string and the value can be of any type. The following context variables are currently used by the default implementation.
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| key.column.prefix | String | If `ConfluentAvroKafkaStreamDecoder` is configured to consume keys, it prefixes the key columns with `key__` such that they can be distinguished in the dataframe. If `key__` happens to be a prefix of a value column, a random alphanumeric string is used instead. |
+| key.column.names | Seq[String] | If `ConfluentAvroKafkaStreamDecoder` is configured to consume keys, it contains the original column names (without prefix) in the key schema. |
+ 
 #### Other
 Hyperdrive uses [Apache Commons Configuration 2](https://github.com/apache/commons-configuration). This allows
 properties to be referenced, e.g. like so
