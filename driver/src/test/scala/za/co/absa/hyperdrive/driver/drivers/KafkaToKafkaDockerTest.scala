@@ -78,6 +78,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
 
       // Spark settings
       "ingestor.spark.app.name" -> "ingestor-app",
+      "ingestor.spark.termination.method" -> "ProcessAllAvailable",
 
       // Source(Kafka) settings
       "reader.kafka.topic" -> sourceTopic,
@@ -96,6 +97,8 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "transformer.columns.to.select" -> "*",
 
       // Sink(Kafka) settings
+      "writer.common.trigger.type" -> "ProcessingTime",
+      "writer.common.trigger.processing.time" -> "1000",
       "writer.kafka.topic" -> destinationTopic,
       "writer.kafka.brokers" -> "${reader.kafka.brokers}",
       "writer.kafka.schema.registry.url" -> "${decoder.avro.schema.registry.url}",

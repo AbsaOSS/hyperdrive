@@ -25,7 +25,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPAC
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.SchemaRegistrySettingsUtil
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
-import za.co.absa.hyperdrive.shared.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 
 private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String]) extends StreamDecoder {
 

@@ -28,13 +28,6 @@ object ConfigurationsKeys {
     val KEY_WRITER = s"$rootComponentConfKey.writer"
   }
 
-  object IngestorKeys {
-    val rootComponentConfKey = "ingestor"
-    val rootFactoryConfKey = s"$rootComponentConfKey.spark"
-
-    val KEY_APP_NAME = s"$rootFactoryConfKey.app.name"
-  }
-
   object KafkaStreamReaderKeys {
     val rootComponentConfKey = "reader"
     val rootFactoryConfKey = s"$rootComponentConfKey.kafka"

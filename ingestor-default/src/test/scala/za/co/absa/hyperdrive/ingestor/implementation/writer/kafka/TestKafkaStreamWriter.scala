@@ -15,10 +15,12 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.kafka
 
+import java.util.concurrent.TimeUnit
+
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.streaming.{DataStreamWriter, StreamingQuery}
+import org.apache.spark.sql.streaming.{DataStreamWriter, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.mockito.AdditionalAnswers._
 import org.mockito.ArgumentMatchers._
@@ -28,6 +30,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter._
 
 class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
@@ -42,6 +45,8 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, "topic.name")
     config.addProperty("writer.kafka.option.extra-key", "ExtraValue")
     config.addProperty("writer.kafka.option.extra-key-2", "ExtraValue2")
+    config.addProperty(keyTriggerType, "ProcessingTime")
+    config.addProperty(keyTriggerProcessingTime, "10000")
 
     val dataStreamWriterMock = getDataStreamWriterMock()
     val dataFrameMock = getDataFrameMock(dataStreamWriterMock)
@@ -55,6 +60,7 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     verify(dataStreamWriterMock).option("topic", "thetopic")
     verify(dataStreamWriterMock).option("kafka.bootstrap.servers", "brokers")
     verify(dataStreamWriterMock).format("kafka")
+    verify(dataStreamWriterMock).trigger(eqTo(Trigger.ProcessingTime(10000L, TimeUnit.MILLISECONDS)))
   }
 
   private val recordNamingStrategies = Table("namingStrategy", "topic.record.name", "record.name")
