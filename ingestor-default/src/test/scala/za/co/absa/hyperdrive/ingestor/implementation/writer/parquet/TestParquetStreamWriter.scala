@@ -37,7 +37,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), Map()))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), None, Map()))
   }
 
   it should "set format as 'parquet'" in {
@@ -103,7 +103,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
                            extraOptions: Map[String,String], trigger: Trigger = Trigger.Once()): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, trigger, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, trigger, None, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 

@@ -82,6 +82,7 @@ object ConfigurationsKeys {
     val rootFactoryConfKey = s"$rootComponentRootKey.parquet"
 
     val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
+    val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
     val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
   }
 
