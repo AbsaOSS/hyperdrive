@@ -16,17 +16,17 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
 import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
 
-class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
+class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
 
-  behavior of CommandLineIngestionDriver.getClass.getSimpleName
+  behavior of PropertiesIngestionDriver.getClass.getSimpleName
 
   it should "load all configuration" in {
-    val settings = getSettings
+    val configurationFile = getClass.getClassLoader.getResource("ingestion.properties").getPath
 
-    val config = CommandLineIngestionDriver.parseConfiguration(settings)
+    val config = PropertiesIngestionDriver.loadConfiguration(configurationFile)
 
     config.getString("ingestor.spark.app.name") shouldBe "any_name"
     config.getStringArray("reader.kafka.brokers") shouldBe Array("localhost:9092", "otherhost:9093")
@@ -41,27 +41,5 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
     properties.getProperty("key1") shouldBe "value1"
     properties.getProperty("key2") shouldBe "value2"
     properties.getProperty("key3") shouldBe "value3"
-  }
-
-  it should "throw if any configuration is malformed" in {
-    val invalidSetting = "key2="
-    val invalidConfString = Array("key1=value1,value2", invalidSetting, "key3=value3")
-    val throwable = intercept[IllegalArgumentException](CommandLineIngestionDriver.parseConfiguration(invalidConfString))
-    assert(throwable.getMessage.toLowerCase.contains(invalidSetting))
-  }
-
-  private def getSettings: Array[String] = {
-    import KafkaStreamReaderKeys._
-    Array(
-      s"$KEY_APP_NAME=any_name",
-      s"$KEY_BROKERS=localhost:9092,otherhost:9093",
-      "ssl.keystore.password=any-keystore!!@#$% password",
-      "ssl.truststore.password=kd9910))383(((*-+",
-      "ssl.truststore.location=another/place/truststore.jks",
-      "key.equals.sign.in.value=value1=value2",
-      "some.long=3000000000",
-      "some.interpolated.value=${some.long}999",
-      "some.properties=key1 = value1, key2=value2, key3=value3"
-    )
   }
 }

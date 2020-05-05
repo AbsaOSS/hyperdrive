@@ -96,7 +96,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
 
       // Sink(Parquet) settings
       "writer.parquet.destination.directory" -> destinationDir,
-      "writer.parquet.partition.columns" -> "field3"
+      "writer.parquet.partition.columns" -> "field3, field1"
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
@@ -117,7 +117,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
     df.select("field3")
       .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.tabulate(numberOfRecords)(_ / 5)
 
-    fs.exists(new Path(s"$destinationDir/field3=0")) shouldBe true
+    fs.exists(new Path(s"$destinationDir/field3=0/field1=hello")) shouldBe true
   }
 
   after {
