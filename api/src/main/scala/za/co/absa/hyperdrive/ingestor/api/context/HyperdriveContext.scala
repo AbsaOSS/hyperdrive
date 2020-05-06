@@ -15,24 +15,23 @@
 
 package za.co.absa.hyperdrive.ingestor.api.context
 
-import scala.collection.{mutable => mu}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
 import scala.reflect.runtime.{universe => ru}
+import scala.util.Try
 
 object HyperdriveContext {
-  private val contextValues = mu.Map[String, Any]()
+  private var contextValues = Map[String, Any]()
 
-  def put(key: String, value: Any): Option[Any] = contextValues.put(key, value)
+  def put(key: String, value: Any): Unit = {
+    contextValues = contextValues + (key -> value)
+  }
 
-  def get[T:ClassTag:ru.TypeTag](key: String): Try[T] = {
-    val value: Try[Any] = contextValues.get(key)
-      .map(Success(_))
-      .getOrElse(Failure(new NoSuchElementException(s"Could not find value for key $key")))
-
-    value.flatMap {
-      case asT: T => Success(asT)
-      case _ => Failure(new ClassCastException(s"Could not cast value $value for key $key to type ${ru.typeOf[T]}"))
-    }
+  def get[T: ClassTag : ru.TypeTag](key: String): Try[T] = {
+    Try(
+      contextValues(key) match {
+        case asT: T => asT
+        case value => throw new ClassCastException(s"Could not cast value $value for key $key to type ${ru.typeOf[T]}")
+      }
+    )
   }
 }
