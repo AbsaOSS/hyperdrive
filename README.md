@@ -144,6 +144,7 @@ For detailed information on the subject name strategy, please take a look at the
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.parquet.partition.columns` | No | Comma-separated list of columns to partition by. |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
