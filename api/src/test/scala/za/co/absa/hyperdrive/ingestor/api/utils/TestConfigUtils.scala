@@ -105,6 +105,43 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     throwable.getMessage shouldBe "No configuration property found for key non-existent"
   }
 
+
+  "getSeqOrNone" should "return the value as an array if key exists" in {
+    // given
+    val config = new BaseConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("key", "value, value2, value3, value4")
+
+    // when
+    val value = ConfigUtils.getSeqOrNone("key", config)
+
+    // then
+    value.get should contain theSameElementsAs Seq("value", "value2", "value3", "value4")
+  }
+
+  it should "return None if array is empty" in {
+    // given
+    val config = new BaseConfiguration()
+    config.addProperty("key", "")
+
+    // when
+    val value = ConfigUtils.getSeqOrNone("key", config)
+
+    // then
+    value shouldBe None
+  }
+
+  it should "return None if key doesn't exist" in {
+    // given
+    val config = new BaseConfiguration()
+
+    // when
+    val value = ConfigUtils.getSeqOrNone("non-existent", config)
+
+    // then
+    value shouldBe None
+  }
+
   "getOrNone" should "return the value as an option if key exists" in {
     // given
     val config = new BaseConfiguration()

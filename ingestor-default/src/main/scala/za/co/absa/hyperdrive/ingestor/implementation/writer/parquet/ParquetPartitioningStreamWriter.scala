@@ -23,35 +23,29 @@ import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
-import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import org.apache.spark.sql.streaming.Trigger
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.AbstractParquetStreamWriter._
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetPartitioningStreamWriterKeys._
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_EXTRA_CONFS_ROOT
 
 
 private[writer] class ParquetPartitioningStreamWriter(destination: String, trigger: Trigger,
+                                                      partitionColumns: Option[Seq[String]],
                                                       reportDate: String, extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, trigger, extraConfOptions) {
-  private val COL_DATE = "hyperdrive_date"
-  private val COL_VERSION = "hyperdrive_version"
+  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, extraConfOptions) {
 
-  override protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
+  import ParquetPartitioningStreamWriter.{COL_DATE, COL_VERSION}
+  override protected def transformDataframe(dataFrame: DataFrame): DataFrame = {
     val spark = dataFrame.sparkSession
     val initialVersion = 1
     val nextVersion = findNextVersion(spark, initialVersion)
     val dfWithDate = dataFrame
       .withColumn(COL_DATE, to_date(lit(reportDate), ParquetPartitioningStreamWriter.reportDateFormat))
       .withColumn(COL_VERSION, lit(nextVersion))
-
-    dfWithDate.writeStream
-      .trigger(trigger)
-      .format(source = "parquet")
-      .partitionBy(COL_DATE, COL_VERSION)
-      .outputMode(OutputMode.Append())
+    dfWithDate
   }
 
   private def findNextVersion(spark: SparkSession, initialVersion: Int): Int = {
@@ -79,17 +73,20 @@ private[writer] class ParquetPartitioningStreamWriter(destination: String, trigg
 object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetPartitioningStreamWriterAttributes {
   val reportDateFormat: String = "yyyy-MM-dd"
   val reportDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(reportDateFormat)
+  val COL_DATE = "hyperdrive_date"
+  val COL_VERSION = "hyperdrive_version"
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
     val trigger = StreamWriterUtil.getTrigger(config)
+    val partitionColumns = Some(Seq(COL_DATE, COL_VERSION))
     val reportDateString = getReportDateString(config)
     val extraOptions = getExtraOptions(config)
 
     LogManager.getLogger.info(s"Going to create ParquetPartitioningStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
 
-    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, reportDateString, extraOptions)
+    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, partitionColumns, reportDateString, extraOptions)
   }
 
   private def getReportDateString(configuration: Configuration): String = {

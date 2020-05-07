@@ -37,7 +37,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), Map()))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), None, Map()))
   }
 
   it should "set format as 'parquet'" in {
@@ -100,21 +100,25 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     verify(dataStreamWriter).options(extraConfs)
   }
 
+  it should "partition by given column names" in {
+    val dataStreamWriter = getDataStreamWriter
+    val streamManager = getStreamManager(dataStreamWriter)
+
+    invokeWriter(dataStreamWriter, streamManager, Map(), partitionColumns = Some(Seq("column1", "column2")))
+    verify(dataStreamWriter).partitionBy("column1", "column2")
+  }
+
   private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
-                           extraOptions: Map[String,String], trigger: Trigger = Trigger.Once()): Unit = {
+                           extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
+                           partitionColumns: Option[Seq[String]] = None): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, trigger, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, trigger, partitionColumns, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 
-  private def getDataStreamWriter: DataStreamWriter[Row] = {
-    val dataStreamWriter = mock[DataStreamWriter[Row]]
-    when(dataStreamWriter.trigger(any[Trigger]())).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.format(anyString())).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.outputMode(any(OutputMode.Append().getClass))).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.options(any(classOf[scala.collection.Map[String, String]]))).thenReturn(dataStreamWriter)
-    dataStreamWriter
-  }
+  private def getDataStreamWriter: DataStreamWriter[Row] =
+    mock[DataStreamWriter[Row]](withSettings().defaultAnswer(RETURNS_SELF))
+
 
   private def getDataFrame(dataStreamWriter: DataStreamWriter[Row]): DataFrame = {
     val sparkContext = mock[SparkContext]
