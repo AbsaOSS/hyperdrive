@@ -49,11 +49,11 @@ object PropertiesIngestionDriver extends IngestionDriver {
     ingest(configurations)
   }
 
-  private def loadConfiguration(path: String): Configuration = {
+  def loadConfiguration(path: String): Configuration = {
     val parameters = new Parameters()
     new FileBasedConfigurationBuilder[PropertiesConfiguration](classOf[PropertiesConfiguration])
       .configure(parameters.fileBased()
-        .setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+        .setListDelimiterHandler(new DefaultListDelimiterHandler(ListDelimiter))
         .setFile(new File(path)))
       .getConfiguration
   }

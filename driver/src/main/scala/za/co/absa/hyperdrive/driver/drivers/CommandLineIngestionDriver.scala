@@ -15,8 +15,10 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import org.apache.commons.configuration2.Configuration
-import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.commons.configuration2.builder.BasicConfigurationBuilder
+import org.apache.commons.configuration2.builder.fluent.Parameters
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
@@ -39,7 +41,12 @@ object CommandLineIngestionDriver extends IngestionDriver {
   }
 
   def parseConfiguration(settings: Array[String]): Configuration = {
-    val configuration = new BaseConfiguration
+    val configuration = new BasicConfigurationBuilder[BaseConfiguration](classOf[BaseConfiguration])
+        .configure(new Parameters()
+          .basic()
+          .setListDelimiterHandler(new DefaultListDelimiterHandler(ListDelimiter)))
+      .getConfiguration
+
     settings.foreach(setOrThrow(_, configuration))
     configuration
   }

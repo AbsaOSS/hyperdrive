@@ -30,8 +30,8 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.Strea
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 
 private[driver] class IngestionDriver {
-
   private val logger = LogManager.getLogger
+  val ListDelimiter = ','
 
   def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
