@@ -16,76 +16,119 @@
 package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.{RandomStringUtils, StringUtils}
 import org.apache.logging.log4j.LogManager
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY, SchemaStorageNamingStrategies}
+import za.co.absa.abris.avro.functions.from_confluent_avro
+import za.co.absa.abris.avro.read.confluent.SchemaManager._
+import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.SchemaRegistrySettingsUtil
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, SchemaRegistrySettingsUtil}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 
-private[decoder] class ConfluentAvroKafkaStreamDecoder(val topic: String, val schemaRegistrySettings: Map[String,String]) extends StreamDecoder {
+private[decoder] class ConfluentAvroKafkaStreamDecoder(
+  val topic: String,
+  val valueSchemaRegistrySettings: Map[String, String],
+  val keySchemaRegistrySettings: Option[Map[String, String]])
+  extends StreamDecoder {
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException("Blank topic.")
   }
 
-  if (schemaRegistrySettings.isEmpty) {
-    throw new IllegalArgumentException("Empty Schema Registry settings received.")
+  if (valueSchemaRegistrySettings.isEmpty) {
+    throw new IllegalArgumentException(
+      "Empty Schema Registry settings received.")
   }
 
   private val logger = LogManager.getLogger
 
   override def decode(streamReader: DataStreamReader): DataFrame = {
-    val schemaRegistryFullSettings = schemaRegistrySettings + (SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> topic)
-    logger.info(s"SchemaRegistry settings: $schemaRegistryFullSettings")
+    logger.info(s"SchemaRegistry settings: $valueSchemaRegistrySettings")
 
-    import org.apache.spark.sql.functions.col
-    import za.co.absa.abris.avro.functions.from_confluent_avro
-    streamReader
-      .load()
-      .select(from_confluent_avro(col("value"), schemaRegistryFullSettings) as 'data)
+    val dataFrame = streamReader.load()
+    keySchemaRegistrySettings match {
+      case Some(keySettings) => getKeyValueDataFrame(dataFrame, keySettings)
+      case None => getValueDataFrame(dataFrame)
+    }
+  }
+
+  private def getKeyValueDataFrame(dataFrame: DataFrame,
+                                   keySchemaRegistrySettings: Map[String, String]) = {
+    val keyValueDf = dataFrame.select(
+      from_confluent_avro(col("key"), keySchemaRegistrySettings) as 'key,
+      from_confluent_avro(col("value"), valueSchemaRegistrySettings) as 'value)
+
+    val keyColumnNames = keyValueDf.select("key.*").columns.toSeq
+    val valueColumnNames = keyValueDf.select("value.*").columns.toSeq
+    val prefix = ConfluentAvroKafkaStreamDecoder.determineKeyColumnPrefix(valueColumnNames)
+
+    HyperdriveContext.put(HyperdriveContextKeys.keyColumnNames, keyColumnNames)
+    HyperdriveContext.put(HyperdriveContextKeys.keyColumnPrefix, prefix)
+
+    val prefixedKeyColumns = keyColumnNames.map(c => keyValueDf(s"key.$c").as(s"$prefix$c"))
+    val valueColumns = valueColumnNames.map(c => keyValueDf(s"value.$c"))
+    keyValueDf.select(prefixedKeyColumns ++ valueColumns: _*)
+  }
+
+  private def getValueDataFrame(dataFrame: DataFrame) = {
+    dataFrame
+      .select(from_confluent_avro(col("value"), valueSchemaRegistrySettings) as 'data)
       .select("data.*")
   }
+
+
 }
 
 object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with ConfluentAvroKafkaStreamDecoderAttributes {
+  private val keyColumnPrefixLength = 4
+
+  object ValueSchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
+    override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
+    override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
+    override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
+    override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
+    override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
+    override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
+    override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
+  }
+
+  object KeySchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
+    override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
+    override val schemaId: String = KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID
+    override val namingStrategy: String = KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY
+    override val recordName: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME
+    override val recordNamespace: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE
+    override val paramSchemaId: String = PARAM_KEY_SCHEMA_ID
+    override val paramSchemaNamingStrategy: String = PARAM_KEY_SCHEMA_NAMING_STRATEGY
+  }
 
   override def apply(config: Configuration): StreamDecoder = {
     val topic = getTopic(config)
-    val schemaRegistrySettings = getSchemaRegistrySettings(config)
+    val valueSchemaRegistrySettings = SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, ValueSchemaConfigKeys)
 
-    LogManager.getLogger.info(s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', schema registry settings='$schemaRegistrySettings'.")
+    val keySchemaRegistrySettingsOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
+      .flatMap(_ => Some(SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, KeySchemaConfigKeys)))
+    LogManager.getLogger.info(
+      s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', " +
+        s"value schema registry settings='$valueSchemaRegistrySettings', key schema registry settings='$keySchemaRegistrySettingsOpt'.")
 
-    new ConfluentAvroKafkaStreamDecoder(topic, schemaRegistrySettings)
+    new ConfluentAvroKafkaStreamDecoder(topic, valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
   }
 
-  private def getTopic(configuration: Configuration): String = getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
+  private def getTopic(configuration: Configuration): String =
+    getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
 
-  private def getSchemaRegistrySettings(configuration: Configuration): Map[String, String] = {
-    import SchemaManager._
-    val settings = Map[String, String](
-      PARAM_SCHEMA_REGISTRY_URL -> getOrThrow(KEY_SCHEMA_REGISTRY_URL, configuration, errorMessage = s"Schema Registry URL not specified. Is '$KEY_SCHEMA_REGISTRY_URL' configured?"),
-      PARAM_VALUE_SCHEMA_ID -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, configuration, errorMessage = s"Schema id not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID' configured?"),
-      PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, configuration, errorMessage = s"Schema naming strategy not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY' configured?")
-    )
-
-    settings ++ getRecordSettings(settings, configuration)
-  }
-
-  private def getRecordSettings(currentSettings: Map[String, String], configuration: Configuration): Map[String, String] = {
-    val valueNamingStrategy = currentSettings(PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
-
-    if (SchemaRegistrySettingsUtil.namingStrategyInvolvesRecord(valueNamingStrategy)) {
-      Map(
-        PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, configuration, errorMessage = s"Record name not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME' configured?"),
-        PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> getOrThrow(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE, configuration, errorMessage = s"Record namespace not specified for value. Is '$KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE' configured?")
-      )
-    } else {
-      Map()
+  def determineKeyColumnPrefix(valueColumnNames: Seq[String]): String = {
+    var candidatePrefix = "key__"
+    while (valueColumnNames.exists(c => c.startsWith(candidatePrefix))) {
+      candidatePrefix = s"${RandomStringUtils.randomAlphanumeric(keyColumnPrefixLength)}_"
     }
+    candidatePrefix
   }
 }

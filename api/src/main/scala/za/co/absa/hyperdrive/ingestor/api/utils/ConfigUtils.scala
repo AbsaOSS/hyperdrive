@@ -39,10 +39,17 @@ object ConfigUtils {
     }
   }
 
+  def getSeqOrNone(key: String, configuration: Configuration): Option[Seq[String]] = {
+    Try(getSeqOrThrow(key, configuration)) match {
+      case Success(value) => Some(value)
+      case Failure(_) => None
+    }
+  }
+
   def getOrNone(key: String, configuration: Configuration): Option[String] = {
     Try(getOrThrow(key, configuration)) match {
       case Success(value) => Some(value)
-      case Failure(exception) => None
+      case Failure(_) => None
     }
   }
 

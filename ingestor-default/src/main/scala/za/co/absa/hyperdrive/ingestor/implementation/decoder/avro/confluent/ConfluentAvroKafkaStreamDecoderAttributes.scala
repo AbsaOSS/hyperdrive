@@ -26,10 +26,18 @@ trait ConfluentAvroKafkaStreamDecoderAttributes extends HasComponentAttributes {
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),
-    KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID -> PropertyMetadata("Schema Id", Some("Specific Id of schema or \"latest\""), required = true),
-    KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> PropertyMetadata("Schema naming strategy",
+
+    KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID -> PropertyMetadata("Schema Id", Some("Specific Id of value-schema or \"latest\""), required = true),
+    KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> PropertyMetadata("Value-Schema naming strategy",
       Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = true),
-    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Record name", Some("Record name for naming strategies record.name or topic.record.name"), required = false),
-    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Record namespace", Some("Record namespace for naming strategies record.name or topic.record.name"), required = false)
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Value-Record name", Some("Value-Record name for naming strategies record.name or topic.record.name"), required = false),
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Value-Record namespace", Some("Value-Record namespace for naming strategies record.name or topic.record.name"), required = false),
+
+    KEY_CONSUME_KEYS -> PropertyMetadata("Consume keys", Some("True if keys should be ingested as well. Default: False"), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID -> PropertyMetadata("Key-Schema Id", Some("Specific Id of key-schema or \"latest\"."), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY -> PropertyMetadata("Key-Schema naming strategy",
+      Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false)
   )
 }

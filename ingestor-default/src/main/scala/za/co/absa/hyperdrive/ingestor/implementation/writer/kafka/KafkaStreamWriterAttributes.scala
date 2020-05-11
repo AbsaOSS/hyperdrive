@@ -29,6 +29,10 @@ trait KafkaStreamWriterAttributes extends HasComponentAttributes {
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = s"$keysPrefix.value.schema.record.name"
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = s"$keysPrefix.value.schema.record.namespace"
 
+  val KEY_PRODUCE_KEYS = s"$keysPrefix.produce.keys"
+  val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = s"$keysPrefix.key.schema.naming.strategy"
+  val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = s"$keysPrefix.key.schema.record.name"
+  val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = s"$keysPrefix.key.schema.record.namespace"
   /**
    * @return a human readable name of the component.
    */
@@ -47,13 +51,19 @@ trait KafkaStreamWriterAttributes extends HasComponentAttributes {
     KEY_TOPIC -> PropertyMetadata("Topic name", None, required = true),
     KEY_BROKERS -> PropertyMetadata("Brokers", Some("Comma-separated list of kafka broker urls"), required = true),
     KEY_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),
-    KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> PropertyMetadata("Schema naming strategy",
+    KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY -> PropertyMetadata("Value-Schema naming strategy",
       Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""),
       required = true),
-    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Record name",
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME -> PropertyMetadata("Value-Record name",
       Some("Record name for naming strategies record.name or topic.record.name"), required = false),
-    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Record namespace",
+    KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Value-Record namespace",
       Some("Record namespace for naming strategies record.name or topic.record.name"), required = false),
+
+    KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY -> PropertyMetadata("Key-Schema naming strategy",
+      Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
+    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata
+
   )
 }

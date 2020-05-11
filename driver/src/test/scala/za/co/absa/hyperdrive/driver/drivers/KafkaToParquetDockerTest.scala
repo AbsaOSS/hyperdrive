@@ -50,7 +50,8 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
     val numberOfRecords = 50
     val schemaString = raw"""{"type": "record", "name": "$topic", "fields": [
       {"type": "string", "name": "field1"},
-      {"type": "int", "name": "field2"}
+      {"type": "int", "name": "field2"},
+      {"type": "int", "name": "field3"}
       ]}"""
     val schema = new Parser().parse(schemaString)
 
@@ -59,6 +60,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       val record = new GenericData.Record(schema)
       record.put("field1", "hello")
       record.put("field2", i)
+      record.put("field3", i / 5)
       val producerRecord = new ProducerRecord[Int, GenericRecord](topic, 1, record)
       producer.send(producerRecord)
     }
@@ -70,7 +72,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "component.decoder" -> "za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder",
       "component.manager" -> "za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager",
       "component.transformer" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
-      "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter",
+      "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter",
 
       // Spark settings
       "ingestor.spark.app.name" -> "ingestor-app",
@@ -93,7 +95,8 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "transformer.columns.to.select" -> "*",
 
       // Sink(Parquet) settings
-      "writer.parquet.destination.directory" -> destinationDir
+      "writer.parquet.destination.directory" -> destinationDir,
+      "writer.parquet.partition.columns" -> "field3"
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
@@ -106,12 +109,15 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
     val df = spark.read.parquet(destinationDir)
     df.count shouldBe numberOfRecords
     import spark.implicits._
-    df.columns should contain theSameElementsAs List("hyperdrive_date", "hyperdrive_version", "field1", "field2")
+    df.columns should contain theSameElementsAs List("field1", "field2", "field3")
     df.select("field1").distinct()
       .map(_ (0).asInstanceOf[String]).collect() should contain theSameElementsAs List("hello")
-
     df.select("field2")
       .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.range(0, numberOfRecords)
+    df.select("field3")
+      .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs List.tabulate(numberOfRecords)(_ / 5)
+
+    fs.exists(new Path(s"$destinationDir/field3=0")) shouldBe true
   }
 
   after {

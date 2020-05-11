@@ -27,6 +27,7 @@ import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 private[writer] abstract class AbstractParquetStreamWriter(destination: String, trigger: Trigger,
+                                                           val partitionColumns: Option[Seq[String]],
                                                            val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LogManager.getLogger
   if (StringUtils.isBlank(destination)) {
@@ -34,11 +35,12 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
   }
 
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
-    val outStream = getOutStream(dataFrame)
+    val outDataframe = transformDataframe(dataFrame)
+    val outStream = getOutStream(outDataframe)
 
     val streamWithOptions = addOptions(outStream, extraConfOptions)
 
-    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, dataFrame.sparkSession.sparkContext.hadoopConfiguration)
+    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, outDataframe.sparkSession.sparkContext.hadoopConfiguration)
 
     logger.info(s"Writing to $destination")
     streamWithOptionsAndOffset.start(destination)
@@ -46,16 +48,29 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 
   def getDestination: String = destination
 
-  protected def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
-    dataFrame.writeStream
+  /**
+   * This method has only been added to preserve existing functionality of ParquetPartitioningStreamWriter.
+   * This method will be removed when ParquetPartitioningStreamWriter has been refactored to a Transformer.
+   * @see https://github.com/AbsaOSS/hyperdrive/issues/118
+   */
+  @deprecated
+  protected def transformDataframe(dataFrame: DataFrame): DataFrame = dataFrame
+
+  private def getOutStream(dataFrame: DataFrame): DataStreamWriter[Row] = {
+    val dataStreamWriter = dataFrame.writeStream
+    val dataStreamWriterWithPartition = partitionColumns match {
+      case Some(columns) => dataStreamWriter.partitionBy(columns: _*)
+      case None => dataStreamWriter
+    }
+    dataStreamWriterWithPartition
       .trigger(trigger)
       .format(source = "parquet")
       .outputMode(OutputMode.Append())
   }
 
-  protected def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
+  private def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
 
-  protected def configureOffsets(outStream: DataStreamWriter[Row], streamManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = streamManager.configure(outStream, configuration)
+  private def configureOffsets(outStream: DataStreamWriter[Row], streamManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = streamManager.configure(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {

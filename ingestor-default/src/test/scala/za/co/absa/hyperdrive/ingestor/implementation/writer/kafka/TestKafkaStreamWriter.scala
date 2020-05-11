@@ -29,6 +29,8 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_REGISTRY_URL
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter._
@@ -61,35 +63,6 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     verify(dataStreamWriterMock).option("kafka.bootstrap.servers", "brokers")
     verify(dataStreamWriterMock).format("kafka")
     verify(dataStreamWriterMock).trigger(eqTo(Trigger.ProcessingTime(10000L, TimeUnit.MILLISECONDS)))
-  }
-
-  private val recordNamingStrategies = Table("namingStrategy", "topic.record.name", "record.name")
-
-  it should "throw if naming strategy is record.name but record name is missing" in {
-    forAll(recordNamingStrategies) { namingStrategy: String =>
-      val config = new BaseConfiguration()
-      config.addProperty(KEY_TOPIC, "thetopic")
-      config.addProperty(KEY_BROKERS, "brokers")
-      config.addProperty(KEY_SCHEMA_REGISTRY_URL, "url")
-      config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, namingStrategy)
-
-      val throwable = intercept[IllegalArgumentException](KafkaStreamWriter(config))
-      throwable.getMessage should include(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME)
-    }
-  }
-
-  it should "throw if naming strategy is record.name but record namespace is missing" in {
-    forAll(recordNamingStrategies) { namingStrategy: String =>
-      val config = new BaseConfiguration()
-      config.addProperty(KEY_TOPIC, "thetopic")
-      config.addProperty(KEY_BROKERS, "brokers")
-      config.addProperty(KEY_SCHEMA_REGISTRY_URL, "url")
-      config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, namingStrategy)
-      config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME, "some name")
-
-      val throwable = intercept[IllegalArgumentException](KafkaStreamWriter(config))
-      throwable.getMessage should include(KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE)
-    }
   }
 
   private def getStreamManagerMock() = {
