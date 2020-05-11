@@ -77,6 +77,18 @@
             <timezone>Europe/Prague</timezone>
             <url>https://github.com/felipemmelo</url>
         </developer>
+        <developer>
+            <id>kevinwallimann</id>
+            <name>Kevin Wallimann</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/kevinwallimann</url>
+        </developer>
+        <developer>
+            <id>jozefbakus</id>
+            <name>Jozef Bakus</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/jozefbakus</url>
+        </developer>
     </developers>
 
     <properties>
