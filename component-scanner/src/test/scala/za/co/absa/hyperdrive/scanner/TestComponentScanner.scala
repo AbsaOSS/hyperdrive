@@ -18,6 +18,7 @@ package za.co.absa.hyperdrive.scanner
 import java.nio.file.{Files, Paths}
 
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
@@ -30,17 +31,14 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   behavior of "ComponentScanner"
 
-  private var baseDir = Paths.get(".")
+  private var baseDirPath = Paths.get(".")
 
   private val dummyJarPath = "za/co/absa/hyperdrive/scanner/dummyjar/"
   private val dummyPackage = dummyJarPath.replace("/", ".")
 
   before {
-    baseDir = Files.createTempDirectory("TestComponentScanner")
-  }
-
-  after {
-    scala.reflect.io.Path(baseDir.toFile).deleteRecursively()
+    val baseDir = TempDirectory("TestComponentScanner").deleteOnExit()
+    baseDirPath = baseDir.path
   }
 
   it should "list components in the same jar" in {
@@ -75,13 +73,13 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
       classOf[StreamTransformerFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamTransformerLoader"),
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterOneLoader"))
 
-    JarTestUtils.createJar(baseDir, "jar1.jar", filenames, serviceProviders)
+    JarTestUtils.createJar(baseDirPath, "jar1.jar", filenames, serviceProviders)
 
     // when
-    val components = ComponentScanner.getComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDirPath).get
 
     // then
-    val expectedJarPath = baseDir.resolve("jar1.jar").toAbsolutePath
+    val expectedJarPath = baseDirPath.resolve("jar1.jar").toAbsolutePath
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJarPath),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJarPath))
@@ -106,7 +104,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
       classOf[StreamReaderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamReaderOneLoader"),
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterOneLoader")
     )
-    JarTestUtils.createJar(baseDir, "jar1.jar", filesJar1, serviceProviders1)
+    JarTestUtils.createJar(baseDirPath, "jar1.jar", filesJar1, serviceProviders1)
 
     val filesJar2 = List(
       s"${dummyJarPath}DummyStreamReaderTwo.class",
@@ -117,14 +115,14 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
       classOf[StreamReaderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamReaderTwoLoader"),
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
     )
-    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar2, serviceProviders2)
+    JarTestUtils.createJar(baseDirPath, "jar2.jar", filesJar2, serviceProviders2)
 
     // when
-    val components = ComponentScanner.getComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDirPath).get
 
     // then
-    val expectedJar1 = baseDir.resolve("jar1.jar").toAbsolutePath
-    val expectedJar2 = baseDir.resolve("jar2.jar").toAbsolutePath
+    val expectedJar1 = baseDirPath.resolve("jar1.jar").toAbsolutePath
+    val expectedJar2 = baseDirPath.resolve("jar2.jar").toAbsolutePath
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJar1),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJar2)
@@ -138,10 +136,10 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   it should "return an empty list if the given directory contains only jar files without class files" in {
     // given
-    JarTestUtils.createJar(baseDir, "jar1.jar", List())
+    JarTestUtils.createJar(baseDirPath, "jar1.jar", List())
 
     // when
-    val components = ComponentScanner.getComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDirPath).get
 
     // then
     components.readers shouldBe empty
@@ -153,7 +151,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
 
   it should "skip but not fail if a jar is not a zip file" in {
     // given
-    Files.createTempFile(Paths.get(baseDir.toUri), "notAZipFile", ".jar")
+    Files.createTempFile(Paths.get(baseDirPath.toUri), "notAZipFile", ".jar")
 
     val filesJar = List(
       s"${dummyJarPath}DummyStreamWriterTwo.class",
@@ -161,13 +159,13 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val serviceProviders = Map(
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
     )
-    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar, serviceProviders)
+    JarTestUtils.createJar(baseDirPath, "jar2.jar", filesJar, serviceProviders)
 
     // when
-    val components = ComponentScanner.getComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDirPath).get
 
     // then
-    val expectedJar = baseDir.resolve("jar2.jar").toAbsolutePath
+    val expectedJar = baseDirPath.resolve("jar2.jar").toAbsolutePath
     components.writers should contain only
       ComponentDescriptor(DummyStreamWriterTwo, s"${dummyPackage}DummyStreamWriterTwo$$", expectedJar)
   }
@@ -180,7 +178,7 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val fakeServiceProviders = Map(
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}NonExistentLoader")
     )
-    JarTestUtils.createJar(baseDir, "jar1.jar", filesFakeJar, fakeServiceProviders)
+    JarTestUtils.createJar(baseDirPath, "jar1.jar", filesFakeJar, fakeServiceProviders)
 
     val filesJar = List(
       s"${dummyJarPath}DummyStreamWriterTwo.class",
@@ -188,13 +186,13 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     val serviceProviders = Map(
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterTwoLoader")
     )
-    JarTestUtils.createJar(baseDir, "jar2.jar", filesJar, serviceProviders)
+    JarTestUtils.createJar(baseDirPath, "jar2.jar", filesJar, serviceProviders)
 
     // when
-    val components = ComponentScanner.getComponents(baseDir).get
+    val components = ComponentScanner.getComponents(baseDirPath).get
 
     // then
-    val expectedJar = baseDir.resolve("jar2.jar").toAbsolutePath
+    val expectedJar = baseDirPath.resolve("jar2.jar").toAbsolutePath
     components.writers should contain only
       ComponentDescriptor(DummyStreamWriterTwo, s"${dummyPackage}DummyStreamWriterTwo$$", expectedJar)
   }

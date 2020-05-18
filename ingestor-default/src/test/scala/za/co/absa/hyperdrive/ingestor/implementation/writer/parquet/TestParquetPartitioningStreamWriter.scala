@@ -15,21 +15,23 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
-import java.nio.file.Files
-
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.functions.lit
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.hyperdrive.testutils.SparkTestBase
 
 class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
+
   import spark.implicits._
-  private val baseDir = Files.createTempDirectory("testparquetpartitioning").toUri.toString
-  private val destinationDir = s"$baseDir/destination"
-  private val checkpointDir = s"$baseDir/checkpoint"
+
+  private val baseDir = TempDirectory("testparquetpartitioning")
+  private val baseDirPath = baseDir.path.toUri.toString
+  private val destinationDir = s"$baseDirPath/destination"
+  private val checkpointDir = s"$baseDirPath/checkpoint"
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
@@ -125,7 +127,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   }
 
   after {
-    fs.delete(new Path(baseDir), true)
+    baseDir.delete()
   }
 
   private def createCheckpointOffsetManager() = {
