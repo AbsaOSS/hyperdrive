@@ -15,12 +15,12 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import java.io.File
+import java.nio.file.{Files, Paths}
 
-import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
@@ -54,7 +54,7 @@ object PropertiesIngestionDriver extends IngestionDriver {
     new FileBasedConfigurationBuilder[PropertiesConfiguration](classOf[PropertiesConfiguration])
       .configure(parameters.fileBased()
         .setListDelimiterHandler(new DefaultListDelimiterHandler(ListDelimiter))
-        .setFile(new File(path)))
+        .setPath(path))
       .getConfiguration
   }
 
@@ -69,8 +69,8 @@ object PropertiesIngestionDriver extends IngestionDriver {
     }
   }
 
-  private def isInvalid(path: String): Boolean = {
-    val file = new File(path)
-    !file.exists() || !file.isFile
+  private def isInvalid(pathStr: String): Boolean = {
+    val path = Paths.get(pathStr)
+    !Files.exists(path) || !Files.isReadable(path)
   }
 }
