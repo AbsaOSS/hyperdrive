@@ -15,23 +15,20 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
-import java.io.File
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
+import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
-import za.co.absa.hyperdrive.testutils.TempDir
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
 
-  private val tempDir = TempDir.getNew
-  private val parquetDestination = new File(tempDir, "test-parquet")
+  private val tempDir = TempDirectory().deleteOnExit()
+  private val parquetDestination = tempDir.path.resolve("test-parquet")
   private val configuration = new Configuration()
 
   behavior of "ParquetStreamWriter"
@@ -85,7 +82,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val streamManager = getStreamManager(dataStreamWriter)
 
     invokeWriter(dataStreamWriter, streamManager, Map())
-    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+    verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
   }
 
   it should " include extra options in case they exist" in {
@@ -95,7 +92,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
 
     invokeWriter(dataStreamWriter, streamManager, extraConfs)
-    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+    verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
 
     verify(dataStreamWriter).options(extraConfs)
   }
@@ -112,7 +109,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
                            extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
                            partitionColumns: Option[Seq[String]] = None): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, trigger, partitionColumns, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, partitionColumns, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 

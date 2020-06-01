@@ -15,7 +15,6 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import java.nio.file.Files
 import java.time.Duration
 import java.util.UUID.randomUUID
 import java.util.{Collections, Properties}
@@ -26,9 +25,9 @@ import org.apache.avro.util.Utf8
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
-import org.apache.logging.log4j.LogManager
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.testutils.SparkTestBase
 
 
@@ -38,9 +37,9 @@ import za.co.absa.hyperdrive.testutils.SparkTestBase
 class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-  private val baseDirPath = Files.createTempDirectory("hyperdriveE2eTest")
-  private val baseDir = baseDirPath.toUri
-  private val checkpointDir = s"$baseDir/checkpoint"
+  private val baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
+  private val baseDirPath = baseDir.path.toUri
+  private val checkpointDir = s"$baseDirPath/checkpoint"
 
   behavior of "CommandLineIngestionDriver"
 
@@ -148,7 +147,6 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
 
   after {
     SchemaManager.reset()
-    fs.delete(new Path(baseDir), true)
   }
 
   def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
