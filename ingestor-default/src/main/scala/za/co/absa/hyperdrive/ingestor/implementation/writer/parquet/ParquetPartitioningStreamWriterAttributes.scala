@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.{KEY_DESTINATION_DIRECTORY, KEY_METADATA_CHECK}
 
 trait ParquetPartitioningStreamWriterAttributes extends HasComponentAttributes {
 

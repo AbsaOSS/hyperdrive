@@ -97,7 +97,8 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
 
       // Sink(Parquet) settings
       "writer.parquet.destination.directory" -> destinationDir,
-      "writer.parquet.partition.columns" -> "field3, field1"
+      "writer.parquet.partition.columns" -> "field3, field1",
+      "writer.parquet.metadata.check" -> "true"
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
