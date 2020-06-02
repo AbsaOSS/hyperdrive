@@ -21,44 +21,50 @@ import org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat
 import org.apache.spark.sql.execution.datasources.{DataSource, HadoopFsRelation}
 import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
+import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 import scala.util.{Failure, Success, Try}
 
 object MetadataLogUtil {
   def getParquetFilesNotListedInMetadataLog(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-    for {
-      fileSystemFiles <- getFileSystemFiles(spark, rootPath)
-      metadataLogFiles <- getMetadataLogFiles(spark, rootPath)
-    } yield fileSystemFiles.diff(metadataLogFiles)
+    val config = spark.sparkContext.hadoopConfiguration
+    if(FileUtils.notExists(rootPath, config) || FileUtils.isEmpty(rootPath, config)) {
+      Success(Set.empty)
+    } else {
+      for {
+        fileSystemFiles <- getFileSystemFiles(spark, rootPath)
+        metadataLogFiles <- getMetadataLogFiles(spark, rootPath)
+      } yield fileSystemFiles.diff(metadataLogFiles)
+    }
   }
 
   private def getFileSystemFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-    val dummySchemaToAvoidSchemaInference = new StructType()
-      .add(StructField("dummy", IntegerType, nullable = true))
-    val parquetDataSource = DataSource(
-      spark,
-      classOf[ParquetFileFormat].getCanonicalName,
-      Seq(s"$rootPath/*"),
-      userSpecifiedSchema = Some(dummySchemaToAvoidSchemaInference)
-    )
-    val fileSystemRelation = parquetDataSource.resolveRelation().asInstanceOf[HadoopFsRelation]
-    val parquetFilesArr = fileSystemRelation.location.inputFiles
-    val parquetFiles = parquetFilesArr.toSet
-    if (parquetFiles.size != parquetFilesArr.length) {
-      Failure(new IllegalStateException("Parquet file paths on filesystem are not unique"))
-    }
+      val dummySchemaToAvoidSchemaInference = new StructType()
+        .add(StructField("dummy", IntegerType, nullable = true))
+      val parquetDataSource = DataSource(
+        spark,
+        classOf[ParquetFileFormat].getCanonicalName,
+        Seq(s"$rootPath/*"),
+        userSpecifiedSchema = Some(dummySchemaToAvoidSchemaInference)
+      )
+      val fileSystemRelation = parquetDataSource.resolveRelation().asInstanceOf[HadoopFsRelation]
+      val parquetFilesArr = fileSystemRelation.location.inputFiles
+      val parquetFiles = parquetFilesArr.toSet
+      if (parquetFiles.size != parquetFilesArr.length) {
+        Failure(new IllegalStateException("Parquet file paths on filesystem are not unique"))
+      }
 
-    Success(parquetFiles)
+      Success(parquetFiles)
   }
 
   private def getMetadataLogFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-    val metadataLogFileIndex = new MetadataLogFileIndex(spark, new Path(rootPath), None)
-    val parquetFilesArr = metadataLogFileIndex.inputFiles
-    val parquetFiles = parquetFilesArr.toSet
-    if (parquetFiles.size != parquetFilesArr.length) {
-      Failure(new IllegalStateException("Parquet file paths in metadata log are not unique"))
-    }
+      val metadataLogFileIndex = new MetadataLogFileIndex(spark, new Path(rootPath), None)
+      val parquetFilesArr = metadataLogFileIndex.inputFiles
+      val parquetFiles = parquetFilesArr.toSet
+      if (parquetFiles.size != parquetFilesArr.length) {
+        Failure(new IllegalStateException("Parquet file paths in metadata log are not unique"))
+      }
 
-    Success(parquetFiles)
+      Success(parquetFiles)
   }
 }

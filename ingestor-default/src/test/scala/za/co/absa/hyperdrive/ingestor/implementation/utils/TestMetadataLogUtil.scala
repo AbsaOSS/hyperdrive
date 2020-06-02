@@ -64,6 +64,22 @@ class TestMetadataLogUtil extends FlatSpec with Matchers with SparkTestBase with
     diff.get shouldBe empty
   }
 
+  it should "return the empty set if the root folder doesn't exist" in {
+    val diff = MetadataLogUtil.getParquetFilesNotListedInMetadataLog(spark, "/tmp/non-existing")
+
+    diff.isSuccess shouldBe true
+    diff.get shouldBe empty
+  }
+
+  it should "return the empty set if the root folder is empty" in {
+    val dir = TempDirectory()
+    val diff = MetadataLogUtil.getParquetFilesNotListedInMetadataLog(spark, dir.path.toAbsolutePath.toString)
+
+    diff.isSuccess shouldBe true
+    diff.get shouldBe empty
+    dir.delete()
+  }
+
   it should "return the filenames that are missing in the metadata log" in {
     val destinationPath = s"$baseDirPath/destination"
     val input = MemoryStream[Int](1, spark.sqlContext)
