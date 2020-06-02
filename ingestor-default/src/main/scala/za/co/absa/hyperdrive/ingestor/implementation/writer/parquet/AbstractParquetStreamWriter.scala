@@ -47,6 +47,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
           "Inconsistent Metadata Log. The following files are on the filesystem, but not in the metadata log," +
             "most probably due to a previous partial write. If that is the case, they should be removed.\n " +
             s"${inconsistentFiles.reduce(_ + "\n" + _)}")
+        case _ => // do nothing
       }
     }
 
