@@ -26,6 +26,7 @@ import za.co.absa.hyperdrive.driver.utils.DriverUtil
 object CommandLineIngestionDriver extends IngestionDriver {
 
   private val logger = LogManager.getLogger
+  private val PropertyDelimiter = "="
 
   def main(args: Array[String]): Unit = {
     if (args.isEmpty) {
@@ -52,10 +53,11 @@ object CommandLineIngestionDriver extends IngestionDriver {
   }
 
   private def setOrThrow(setting: String, configuration: Configuration): Unit = {
-    val settingKeyValue = setting.trim.split("=", 2)
-    if (settingKeyValue.length != 2 || settingKeyValue.exists(_.isEmpty)) {
+    if(!setting.contains(PropertyDelimiter)) {
       throw new IllegalArgumentException(s"Invalid setting format: $setting")
+    } else {
+      val settingKeyValue = setting.split(PropertyDelimiter, 2)
+      configuration.setProperty(settingKeyValue(0).trim, settingKeyValue(1).trim)
     }
-    configuration.setProperty(settingKeyValue(0), settingKeyValue(1))
   }
 }
