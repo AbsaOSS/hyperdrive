@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.shared.utils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 
-object FileUtils {
+private[hyperdrive] object FileUtils {
 
   def exists(file: String, configuration: Configuration): Boolean = {
     val fileSystem = getFileSystem(configuration)

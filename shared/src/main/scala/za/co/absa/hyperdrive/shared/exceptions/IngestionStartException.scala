@@ -18,4 +18,4 @@ package za.co.absa.hyperdrive.shared.exceptions
 /**
   * This exception is expected to be thrown when an ingestion cannot be started (e.g. failed Spark execution plan).
   */
-class IngestionStartException(message: String, cause: Throwable) extends IngestionException(message, cause)
+private[hyperdrive] class IngestionStartException(message: String, cause: Throwable) extends IngestionException(message, cause)

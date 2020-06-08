@@ -24,7 +24,7 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSele
  * However, it is not sufficient to rely on the default configuration only, because for some properties
  * no meaningful defaults exist.
  */
-object DefaultConfiguration {
+private[hyperdrive] object DefaultConfiguration {
   val values: Map[String, String] = Map(
     StreamTransformerAbstractFactory.componentConfigKey -> ColumnSelectorStreamTransformer.getClass.getName,
     ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT -> "*"

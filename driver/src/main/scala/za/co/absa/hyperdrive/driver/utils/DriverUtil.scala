@@ -20,7 +20,7 @@ import java.util.Properties
 import scala.util.Try
 
 
-object DriverUtil {
+private[hyperdrive] object DriverUtil {
 
   private val VERSIONS_FILE = "version.properties"
   private val PROJECT_VERSION_KEY = "project.version"

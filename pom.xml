@@ -28,6 +28,7 @@
     <url>https://github.com/AbsaOSS/hyperdrive</url>
 
     <modules>
+        <module>hyperdrive-release</module>
         <module>driver</module>
         <module>parent-conf</module>
         <module>component-archetype</module>
@@ -93,8 +94,6 @@
 
     <properties>
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
-        <!--Deployment-->
-        <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
         <directory.maven.plugin.version>0.1</directory.maven.plugin.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
