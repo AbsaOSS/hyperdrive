@@ -18,22 +18,9 @@
     <parent>
         <artifactId>parent-conf</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>3.1.1-SNAPSHOT</version>
+        <version>3.2.3-SNAPSHOT</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>testutils</artifactId>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${nexus.staging.plugin.version}</version>
-                <configuration>
-                    <skipNexusStagingDeployMojo>${skip.internal.modules.deployment}</skipNexusStagingDeployMojo>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

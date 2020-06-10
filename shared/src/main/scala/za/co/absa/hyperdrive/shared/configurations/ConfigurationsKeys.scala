@@ -15,7 +15,7 @@
 
 package za.co.absa.hyperdrive.shared.configurations
 
-object ConfigurationsKeys {
+private[hyperdrive] object ConfigurationsKeys {
 
   object HyperdriveComponentsKeys {
     val rootComponentConfKey = "component"

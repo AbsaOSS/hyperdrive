@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.driver
 
 import scala.util.{Failure, Success, Try}
 
-object TerminationMethodEnum {
+private[hyperdrive] object TerminationMethodEnum {
   sealed abstract class TerminationMethod(val name: String) {
     override def toString: String = name
   }

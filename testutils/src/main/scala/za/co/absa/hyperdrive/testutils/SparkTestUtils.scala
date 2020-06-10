@@ -19,7 +19,7 @@ import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 
 import scala.annotation.tailrec
 
-object SparkTestUtils {
+private[hyperdrive] object SparkTestUtils {
 
   def areAllFieldsNullable(schema: StructType): Boolean = {
     allFieldsContainNullability(schema, expectedNullability = true)
