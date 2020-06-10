@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.shared.exceptions
 /**
   * This exception is expected to be thrown by an ingestion pipeline.
   */
-class IngestionException(message: String) extends Exception(message) {
+private[hyperdrive] class IngestionException(message: String) extends Exception(message) {
 
   def this(message: String, cause: Throwable) {
     this(message)

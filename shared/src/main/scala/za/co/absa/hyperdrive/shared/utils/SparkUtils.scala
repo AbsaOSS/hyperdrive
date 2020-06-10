@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.shared.utils
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 
-object SparkUtils {
+private[hyperdrive] object SparkUtils {
 
   def setAllColumnsNullable(df: DataFrame): DataFrame = {
     val newSchema = setSchemaNullability(df.schema, desiredNullability = true)
