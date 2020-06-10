@@ -28,7 +28,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, Produce
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.testutils.SparkTestBase
+import za.co.absa.commons.spark.SparkTestBase
 
 
 /**

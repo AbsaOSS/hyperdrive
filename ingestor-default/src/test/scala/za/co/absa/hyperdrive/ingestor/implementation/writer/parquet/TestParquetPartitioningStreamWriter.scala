@@ -22,7 +22,7 @@ import org.apache.spark.sql.functions.lit
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
-import za.co.absa.hyperdrive.testutils.SparkTestBase
+import za.co.absa.commons.spark.SparkTestBase
 
 class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
 
