@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.testutils
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
-trait SparkTestBase {
+private[hyperdrive] trait SparkTestBase {
   System.setProperty("user.timezone", "UTC")
 
   // Do not display INFO entries for tests
