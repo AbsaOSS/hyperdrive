@@ -36,6 +36,8 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
     config.getString("key.equals.sign.in.value") shouldBe "value1=value2"
     config.getLong("some.long") shouldBe 3000000000L
     config.getLong("some.interpolated.value") shouldBe 3000000000999L
+    config.getString("key.with.whitespace") shouldBe "the-value"
+    config.containsKey("key.without.value") shouldBe true
 
     val properties = config.getProperties("some.properties")
     properties.getProperty("key1") shouldBe "value1"
@@ -44,7 +46,7 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
   }
 
   it should "throw if any configuration is malformed" in {
-    val invalidSetting = "key2="
+    val invalidSetting = "key2"
     val invalidConfString = Array("key1=value1,value2", invalidSetting, "key3=value3")
     val throwable = intercept[IllegalArgumentException](CommandLineIngestionDriver.parseConfiguration(invalidConfString))
     assert(throwable.getMessage.toLowerCase.contains(invalidSetting))
@@ -61,7 +63,9 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
       "key.equals.sign.in.value=value1=value2",
       "some.long=3000000000",
       "some.interpolated.value=${some.long}999",
-      "some.properties=key1 = value1, key2=value2, key3=value3"
+      "some.properties=key1 = value1, key2=value2, key3=value3",
+      " key.with.whitespace = the-value",
+      "key.without.value="
     )
   }
 }

@@ -36,6 +36,8 @@ class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
     config.getString("key.equals.sign.in.value") shouldBe "value1=value2"
     config.getLong("some.long") shouldBe 3000000000L
     config.getLong("some.interpolated.value") shouldBe 3000000000999L
+    config.getString("key.with.whitespace") shouldBe "the-value"
+    config.containsKey("key.without.value") shouldBe true
 
     val properties = config.getProperties("some.properties")
     properties.getProperty("key1") shouldBe "value1"
