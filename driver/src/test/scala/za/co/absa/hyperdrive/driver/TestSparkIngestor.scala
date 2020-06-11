@@ -32,7 +32,7 @@ import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.testutils.SparkTestBase
+import za.co.absa.commons.spark.SparkTestBase
 
 class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSugar with SparkTestBase with Matchers {
 
