@@ -19,7 +19,7 @@ import java.time.Duration
 import java.util.UUID.randomUUID
 import java.util.{Collections, Properties}
 
-import org.apache.avro.Schema.Parser
+import org.apache.avro.Schema.{Parser, Type}
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -59,7 +59,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
 
     val valueSchemaString = raw"""{"type": "record", "name": "$sourceTopic", "fields": [
       {"type": "int", "name": "some_id"},
-      {"type": "string", "name": "value_field"}
+      {"type": ["string", "null"], "name": "value_field"}
       ]}"""
     val valueSchema = new Parser().parse(valueSchemaString)
 
@@ -138,6 +138,10 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
     keyFieldNames should contain theSameElementsAs List("some_id", "key_field")
     records.map(_.key().get("some_id")) should contain theSameElementsInOrderAs List.tabulate(numberOfRecords)(_ / 5)
     records.map(_.key().get("key_field")).distinct should contain theSameElementsAs List(new Utf8("keyHello"))
+    
+    records.head.value().getSchema.getField("some_id").schema().getType shouldBe Type.INT
+    records.head.value().getSchema.getField("value_field").schema().getTypes
+      .asScala.map(_.getType) should contain theSameElementsAs Seq(Type.STRING, Type.NULL)
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
     valueFieldNames should contain theSameElementsAs List("some_id", "value_field")
