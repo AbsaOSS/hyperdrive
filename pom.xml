@@ -37,7 +37,6 @@
         <module>api</module>
         <module>ingestor-default</module>
         <module>shared</module>
-        <module>testutils</module>
     </modules>
 
     <distributionManagement>
