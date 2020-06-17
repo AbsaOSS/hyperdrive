@@ -22,7 +22,6 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.StreamManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
@@ -35,18 +34,17 @@ private[driver] class IngestionDriver {
 
   def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
-    applyDefaults(configuration)
     printConfiguration(configuration)
 
     val sparkIngestor = SparkIngestor(configuration)
     val streamReader = getStreamReader(configuration)
     val streamManager = getStreamManager(configuration)
     val streamDecoder = getStreamDecoder(configuration)
-    val streamTransformer = getStreamTransformer(configuration)
+    val streamTransformers = getStreamTransformers(configuration)
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
+    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, streamTransformers, streamWriter)
   }
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
@@ -55,7 +53,7 @@ private[driver] class IngestionDriver {
 
   private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 
-  private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.build(conf)
+  private def getStreamTransformers(conf: Configuration): Seq[StreamTransformer] = StreamTransformerAbstractFactory.build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
@@ -65,12 +63,5 @@ private[driver] class IngestionDriver {
       .getKeys
       .asScala
       .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
-  }
-
-  private def applyDefaults(configuration: Configuration): Unit = {
-    DefaultConfiguration.values
-      .filter{case (key, _) => !configuration.containsKey(key)}
-      .foreach{case (key, value) => configuration.addProperty(key, value)}
-
   }
 }

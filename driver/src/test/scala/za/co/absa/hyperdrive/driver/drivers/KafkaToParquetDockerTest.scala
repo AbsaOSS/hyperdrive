@@ -15,7 +15,6 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import java.nio.file.Files
 import java.util.Properties
 
 import org.apache.avro.Schema.Parser
@@ -72,7 +71,8 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "component.reader" -> "za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader",
       "component.decoder" -> "za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder",
       "component.manager" -> "za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager",
-      "component.transformer" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
+      "component.transformer.id.1" -> "column.selector",
+      "component.transformer.class.column.selector" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter",
 
       // Spark settings
@@ -93,7 +93,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
-      "transformer.columns.to.select" -> "*",
+      "transformer.column.selector.columns.to.select" -> "*",
 
       // Sink(Parquet) settings
       "writer.parquet.destination.directory" -> destinationDir,
