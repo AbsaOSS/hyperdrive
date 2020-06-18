@@ -51,7 +51,9 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
     val schemaString = raw"""{"type": "record", "name": "$topic", "fields": [
       {"type": "string", "name": "field1"},
       {"type": "int", "name": "field2"},
-      {"type": "int", "name": "field3"}
+      {"type": "int", "name": "field3"},
+      {"type": "int", "name": "field4"}
+
       ]}"""
     val schema = new Parser().parse(schemaString)
 
@@ -61,6 +63,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       record.put("field1", "hello")
       record.put("field2", i)
       record.put("field3", i / 5)
+      record.put("field4", 0)
       val producerRecord = new ProducerRecord[Int, GenericRecord](topic, 1, record)
       producer.send(producerRecord)
     }
@@ -93,7 +96,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
-      "transformer.column.selector.columns.to.select" -> "*",
+      "transformer.column.selector.columns.to.select" -> "field1, field2, field3",
 
       // Sink(Parquet) settings
       "writer.parquet.destination.directory" -> destinationDir,
