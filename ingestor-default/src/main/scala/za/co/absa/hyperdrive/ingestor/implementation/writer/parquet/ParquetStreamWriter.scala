@@ -26,13 +26,15 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 
 private[writer] class ParquetStreamWriter(destination: String, trigger: Trigger,
                                           partitionColumns: Option[Seq[String]],
+                                          doMetadataCheck: Boolean,
                                           extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, extraConfOptions)
+  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, doMetadataCheck, extraConfOptions)
 
 object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterAttributes {
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
+    val doMetadataCheck = getMetadataCheck(config)
     val trigger = StreamWriterUtil.getTrigger(config)
     val partitionColumns = ConfigUtils.getSeqOrNone(ParquetStreamWriterKeys.KEY_PARTITION_COLUMNS, config)
     val extraOptions = getExtraOptions(config)
@@ -40,7 +42,7 @@ object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterA
     LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
 
-    new ParquetStreamWriter(destinationDirectory, trigger, partitionColumns, extraOptions)
+    new ParquetStreamWriter(destinationDirectory, trigger, partitionColumns, doMetadataCheck, extraOptions)
   }
 
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)

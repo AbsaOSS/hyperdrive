@@ -21,13 +21,17 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
-import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.implementation.utils.MetadataLogUtil
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
+
+import scala.util.{Failure, Success}
 
 private[writer] abstract class AbstractParquetStreamWriter(destination: String, trigger: Trigger,
                                                            val partitionColumns: Option[Seq[String]],
+                                                           val doMetadataCheck: Boolean,
                                                            val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LogManager.getLogger
   if (StringUtils.isBlank(destination)) {
@@ -35,6 +39,18 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
   }
 
   override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
+
+    if (doMetadataCheck) {
+      MetadataLogUtil.getParquetFilesNotListedInMetadataLog(dataFrame.sparkSession, destination) match {
+        case Failure(exception) => throw exception
+        case Success(inconsistentFiles) if inconsistentFiles.nonEmpty => throw new IllegalStateException(
+          "Inconsistent Metadata Log. The following files are on the filesystem, but not in the metadata log," +
+            "most probably due to a previous partial write. If that is the case, they should be removed.\n " +
+            s"${inconsistentFiles.reduce(_ + "\n" + _)}")
+        case _ => // do nothing
+      }
+    }
+
     val outDataframe = transformDataframe(dataFrame)
     val outStream = getOutStream(outDataframe)
 
@@ -76,6 +92,8 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
 object AbstractParquetStreamWriter {
 
   def getDestinationDirectory(configuration: Configuration): String = getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
+
+  def getMetadataCheck(configuration: Configuration): Boolean = getOrNone(KEY_METADATA_CHECK, configuration).isDefined
 
   def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 }

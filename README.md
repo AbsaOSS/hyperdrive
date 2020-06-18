@@ -145,6 +145,7 @@ For detailed information on the subject name strategy, please take a look at the
 | :--- | :---: | :--- |
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `writer.parquet.partition.columns` | No | Comma-separated list of columns to partition by. |
+| `writer.parquet.metadata.check` | No | Set this option to `true` if the consistency of the metadata log should be checked prior to the query. For very large tables, the check may be very expensive |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
@@ -180,7 +181,9 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
 #### Common writer properties
+
 | Property Name | Description |
+| :--- | :--- | 
 | `writer.common.trigger.type` | Either `Once` for one-time execution or `ProcessingTime` for micro-batch executions for micro-batch execution. Default: `Once`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `writer.common.trigger.processing.time` | Interval in ms for micro-batch execution (using `ProcessingTime`). Default: 0ms, i.e. execution as fast as possible. |
 

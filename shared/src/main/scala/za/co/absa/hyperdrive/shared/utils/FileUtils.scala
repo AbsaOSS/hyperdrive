@@ -34,6 +34,12 @@ private[hyperdrive] object FileUtils {
 
   def isNotDirectory(file: String, configuration: Configuration): Boolean = !isDirectory(file, configuration)
 
+  def isEmpty(directory: String, configuration: Configuration): Boolean = {
+    val fs = getFileSystem(configuration)
+    val path = new Path(directory)
+    fs.exists(path) && !fs.listLocatedStatus(path).hasNext
+  }
+
   private def getFileSystem(configuration: Configuration): FileSystem = {
     FileSystem.get(configuration)
   }

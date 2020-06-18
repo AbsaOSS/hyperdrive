@@ -34,8 +34,9 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 
 private[writer] class ParquetPartitioningStreamWriter(destination: String, trigger: Trigger,
                                                       partitionColumns: Option[Seq[String]],
+                                                      doMetadataCheck: Boolean,
                                                       reportDate: String, extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, extraConfOptions) {
+  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, doMetadataCheck, extraConfOptions) {
 
   import ParquetPartitioningStreamWriter.{COL_DATE, COL_VERSION}
   override protected def transformDataframe(dataFrame: DataFrame): DataFrame = {
@@ -78,6 +79,7 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetP
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
+    val doMetadataCheck = getMetadataCheck(config)
     val trigger = StreamWriterUtil.getTrigger(config)
     val partitionColumns = Some(Seq(COL_DATE, COL_VERSION))
     val reportDateString = getReportDateString(config)
@@ -86,7 +88,7 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetP
     LogManager.getLogger.info(s"Going to create ParquetPartitioningStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
 
-    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, partitionColumns, reportDateString, extraOptions)
+    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, partitionColumns, doMetadataCheck, reportDateString, extraOptions)
   }
 
   private def getReportDateString(configuration: Configuration): String = {

@@ -17,15 +17,17 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.mockito.Mockito._
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.commons.io.TempDirectory
+import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 
-class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
+class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 
   private val tempDir = TempDirectory().deleteOnExit()
   private val parquetDestination = tempDir.path.resolve("test-parquet")
@@ -34,7 +36,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), None, Map()))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), None, false, Map()))
   }
 
   it should "set format as 'parquet'" in {
@@ -105,11 +107,33 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     verify(dataStreamWriter).partitionBy("column1", "column2")
   }
 
+  it should "throw an exception if the metadata log is inconsistent" in {
+    import spark.implicits._
+    val baseDir = TempDirectory("TestParquetStreamWriter")
+    val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
+    val input = MemoryStream[Int](1, spark.sqlContext)
+    input.addData(List.range(0, 100))
+    val df = input.toDF()
+
+    // simulate partial write
+    (1000 to 1500).toDF()
+      .write
+      .mode(SaveMode.Append)
+      .parquet(s"$destinationPath/partition1=value1")
+
+    val writer = new ParquetStreamWriter(destinationPath, Trigger.Once(), None, true, Map())
+    val throwable = intercept[IllegalStateException](writer.write(df, mock[StreamManager]))
+
+    throwable.getMessage should include("Inconsistent Metadata Log.")
+  }
+
   private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
                            extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
-                           partitionColumns: Option[Seq[String]] = None): Unit = {
+                           partitionColumns: Option[Seq[String]] = None,
+                           doMetadataCheck: Boolean = false): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, partitionColumns, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, partitionColumns,
+      doMetadataCheck, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 
