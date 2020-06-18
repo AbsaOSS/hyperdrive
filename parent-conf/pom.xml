@@ -82,7 +82,7 @@
 
         <!--Configurations-->
         <commons.configuration2.version>2.7</commons.configuration2.version>
-        <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
 
