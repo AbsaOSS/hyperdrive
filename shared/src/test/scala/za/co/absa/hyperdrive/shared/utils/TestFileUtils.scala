@@ -28,10 +28,12 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val config = spark.sparkContext.hadoopConfiguration
   private var baseDirectory: TempDirectory = _
+  private var baseDirPath: String = _
 
   before {
     baseDirectory = TempDirectory("FileUtilsTest")
     baseDirectory.deleteOnExit()
+    baseDirPath = baseDirectory.path.toAbsolutePath.toString
   }
 
   after {
@@ -40,7 +42,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
 
   "isEmpty" should "return true if the directory is empty" in {
     // given
-    val directory = s"$baseDirectory/empty"
+    val directory = s"$baseDirPath/empty"
     fs.mkdirs(new Path(directory))
 
     // when, then
@@ -49,7 +51,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
 
   it should "return false if the directory is not empty" in {
     // given
-    val directory = s"$baseDirectory/empty"
+    val directory = s"$baseDirPath/empty"
     fs.mkdirs(new Path(directory))
     fs.create(new Path(directory, "_INFO"))
 
@@ -59,7 +61,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
 
   it should "return false if the directory does not exist" in {
     // given
-    val doesNotExist = s"$baseDirectory/${UUID.randomUUID().toString}"
+    val doesNotExist = s"$baseDirPath/${UUID.randomUUID().toString}"
 
     // when, then
     FileUtils.isEmpty(doesNotExist, config) shouldBe false
@@ -67,7 +69,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
 
   it should "return false if the argument is a file" in {
     // given
-    val file = s"$baseDirectory/empty"
+    val file = s"$baseDirPath/empty"
     fs.create(new Path(file))
 
     // when, then
