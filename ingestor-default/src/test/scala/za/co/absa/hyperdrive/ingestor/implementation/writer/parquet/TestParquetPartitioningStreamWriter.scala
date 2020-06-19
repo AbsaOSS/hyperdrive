@@ -28,26 +28,18 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
 
   import spark.implicits._
 
-  private var baseDir: TempDirectory = _
-  private var baseDirPath: String = _
-  private var destinationDir: String = _
-  private var checkpointDir: String = _
+  private val baseDir = TempDirectory("testparquetpartitioning")
+  private val baseDirPath = baseDir.path.toUri.toString
+  private val destinationDir = s"$baseDirPath/destination"
+  private val checkpointDir = s"$baseDirPath/checkpoint"
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
   behavior of "ParquetPartitioningStreamWriter"
 
   before {
-    baseDir = TempDirectory("testparquetpartitioning")
-    baseDirPath = baseDir.path.toUri.toString
-    destinationDir = s"$baseDirPath/destination"
-    checkpointDir = s"$baseDirPath/checkpoint"
     fs.mkdirs(new Path(destinationDir))
     fs.mkdirs(new Path(checkpointDir))
-  }
-  
-  after {
-    baseDir.delete()
   }
 
   it should "write partitioned by date and version=1 where destination directory is empty" in {
@@ -132,6 +124,10 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=2")) shouldBe false
     val df = spark.read.parquet(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")
     df.count() shouldBe 100
+  }
+
+  after {
+    baseDir.delete()
   }
 
   private def createCheckpointOffsetManager() = {
