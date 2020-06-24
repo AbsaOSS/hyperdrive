@@ -89,8 +89,14 @@ The configuration file may be created from the template located at `driver/src/r
 | `component.reader`      | Yes |  Fully qualified name of reader component, e.g.`za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader` |
 | `component.manager`     | Yes |  Fully qualified name of manager component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager` |
 | `component.decoder`     | Yes |  Fully qualified name of decoder component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder` |
-| `component.transformer` | Yes |  Fully qualified name of transformer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer` |
+| `component.transformer.id.{order}` | No  | An arbitrary but unique string, referenced in this documentation as `{transformer-id}` |
+| `component.transformer.class.{transformer-id}` | No  |  Fully qualified name of transformer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer` |
 | `component.writer`      | Yes |  Fully qualified name of writer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter` |
+
+Multiple transformers can be configured in the pipeline, including multiple instances of the same transformer.
+For each transformer instance, `component.transformer.id.{order}` and `component.transformer.class.{transformer-id}` have to specified, where `{order}` and `{transformer-id}` need to be unique.
+In the above table, `{order}` must be an integer and may be negative. `{transformer-id}` is only used within the configuration
+to identify which configuration options belong to a certain transformer instance. 
 
 ##### Spark settings
 | Property Name | Required | Description |
@@ -138,8 +144,9 @@ For detailed information on the subject name strategy, please take a look at the
 ##### ColumnSelectorStreamTransformer
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
-| `transformer.columns.to.select` | Yes |  Comma-separated list of columns to select. `*` can be used to select all columns. Only existing columns using column names may be selected (i.e. expressions cannot be constructed) |
+| `transformer.{transformer-id}.columns.to.select` | Yes |  Comma-separated list of columns to select. `*` can be used to select all columns. Only existing columns using column names may be selected (i.e. expressions cannot be constructed) |
 
+See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.
 ##### ParquetStreamWriter
 | Property Name | Required | Description |
 | :--- | :---: | :--- |

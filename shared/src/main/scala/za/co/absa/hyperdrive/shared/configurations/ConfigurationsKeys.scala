@@ -45,9 +45,8 @@ private[hyperdrive] object ConfigurationsKeys {
     val WORD_STARTING_OFFSETS = "startingOffsets"
     val KEY_STARTING_OFFSETS = s"$rootFactoryOptionalKafkaKey.$WORD_STARTING_OFFSETS"
   }
-
   object ColumnSelectorStreamTransformerKeys {
-    val KEY_COLUMNS_TO_SELECT = "transformer.columns.to.select"
+    val KEY_COLUMNS_TO_SELECT = "columns.to.select"
   }
 
   object AvroKafkaStreamDecoderKeys {

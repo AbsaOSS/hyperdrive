@@ -53,11 +53,11 @@ class SparkIngestor(val spark: SparkSession,
     * IF this method is invoked to ingest from a continuous source (e.g. a topic that is receiving data no-stop), it WILL
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
-    * @param streamReader      [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param streamManager     [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
-    * @param decoder           [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
-    * @param streamTransformer [[za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
-    * @param streamWriter      [[za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter]] implementation responsible for defining how and where the stream will be sent.
+    * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
+    * @param streamManager      [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
+    * @param decoder            [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
+    * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
+    * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
   @throws(classOf[IllegalArgumentException])
   @throws(classOf[IngestionStartException])
@@ -65,7 +65,7 @@ class SparkIngestor(val spark: SparkSession,
   def ingest(streamReader: StreamReader,
              streamManager: StreamManager,
              decoder: StreamDecoder,
-             streamTransformer: StreamTransformer,
+             streamTransformers: Seq[StreamTransformer],
              streamWriter: StreamWriter): Unit = {
 
     val ingestionId = generateIngestionId
@@ -76,7 +76,7 @@ class SparkIngestor(val spark: SparkSession,
       val inputStreamReader = streamReader.read(spark) // gets the source stream
       val configuredStreamReader = streamManager.configure(inputStreamReader, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
       val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
-      val transformedDataFrame = streamTransformer.transform(decodedDataFrame) // applies any transformations to the data
+      val transformedDataFrame = streamTransformers.foldLeft(decodedDataFrame)((dataFrame, streamTransformer) => streamTransformer.transform(dataFrame)) // applies any transformations to the data
       streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
     } catch {
       case NonFatal(e) =>
