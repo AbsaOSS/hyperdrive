@@ -20,7 +20,7 @@
     <groupId>za.co.absa.hyperdrive</groupId>
     <artifactId>hyperdrive</artifactId>
     <packaging>pom</packaging>
-    <version>3.2.3-SNAPSHOT</version>
+    <version>3.3.1-SNAPSHOT</version>
     <name>hyperdrive</name>
     <description>Hyperdrive is a configurable and scalable ingestion platform that allows data movement and
         transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
@@ -193,8 +193,7 @@
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
                         </configuration>
                     </plugin>
                 </plugins>

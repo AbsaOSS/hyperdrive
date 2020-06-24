@@ -32,6 +32,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   private val baseDirPath = baseDir.path.toUri.toString
   private val destinationDir = s"$baseDirPath/destination"
   private val checkpointDir = s"$baseDirPath/checkpoint"
+  private val random = scala.util.Random
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
@@ -112,7 +113,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     val underTest = ParquetPartitioningStreamWriter(config)
     val streamManager = createCheckpointOffsetManager()
 
-    val emptyStream = MemoryStream[Int](1, spark.sqlContext)
+    val emptyStream = MemoryStream[Int](random.nextInt(), spark.sqlContext)
 
     // when
     underTest.write(emptyStream.toDF(), streamManager).processAllAvailable()
@@ -138,7 +139,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   }
 
   private def getDummyReadStream() = {
-    val input = MemoryStream[Int](1, spark.sqlContext)
+    val input = MemoryStream[Int](random.nextInt(), spark.sqlContext)
     input.addData(List.range(0, 100))
     input
   }
