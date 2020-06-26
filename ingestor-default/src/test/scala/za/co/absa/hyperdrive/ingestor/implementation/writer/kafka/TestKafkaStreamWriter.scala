@@ -29,7 +29,6 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyCheckpointBaseLocation, keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter._
@@ -52,10 +51,9 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
 
     val dataStreamWriterMock = getDataStreamWriterMock()
     val dataFrameMock = getDataFrameMock(dataStreamWriterMock)
-    val streamManagerMock = getStreamManagerMock()
 
     val writer = KafkaStreamWriter(config).asInstanceOf[KafkaStreamWriter]
-    writer.write(dataFrameMock, streamManagerMock)
+    writer.write(dataFrameMock)
 
     verify(dataStreamWriterMock).options(eqTo(Map("extra-key" -> "ExtraValue", "extra-key-2" -> "ExtraValue2")))
     verify(dataStreamWriterMock).option("topic", "thetopic")
@@ -63,13 +61,6 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     verify(dataStreamWriterMock).option(StreamWriterProperties.CheckpointLocation, "/tmp/checkpoint-location")
     verify(dataStreamWriterMock).format("kafka")
     verify(dataStreamWriterMock).trigger(eqTo(Trigger.ProcessingTime(10000L, TimeUnit.MILLISECONDS)))
-  }
-
-  private def getStreamManagerMock() = {
-    val streamManagerMock = mock[StreamManager]
-    when(streamManagerMock.configure(any(classOf[DataStreamWriter[Row]]), any(classOf[Configuration])))
-      .thenAnswer(returnsFirstArg())
-    streamManagerMock
   }
 
   private def getDataStreamWriterMock() = {

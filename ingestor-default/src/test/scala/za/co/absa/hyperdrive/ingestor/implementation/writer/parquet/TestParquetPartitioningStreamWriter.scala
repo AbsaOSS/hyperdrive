@@ -21,7 +21,6 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.functions.lit
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 
@@ -52,11 +51,10 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val underTest = ParquetPartitioningStreamWriter(config)
 
-    val streamManager = createCheckpointOffsetManager()
     val df = getDummyReadStream().toDF()
 
     // when
-    val streamingQuery = underTest.write(df, streamManager)
+    val streamingQuery = underTest.write(df)
     streamingQuery.processAllAvailable()
 
     // then
@@ -79,18 +77,16 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     previousDayConfig.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val previousDayWriter = ParquetPartitioningStreamWriter(previousDayConfig)
 
-    val streamManager = createCheckpointOffsetManager()
-
     // when
     val stream = getDummyReadStream()
-    previousDayWriter.write(stream.toDF(), streamManager).processAllAvailable()
+    previousDayWriter.write(stream.toDF()).processAllAvailable()
     stream.addData(List.range(1000, 1100))
-    previousDayWriter.write(stream.toDF(), streamManager).processAllAvailable()
+    previousDayWriter.write(stream.toDF()).processAllAvailable()
 
     stream.addData(List.range(2000, 2100))
-    underTest.write(stream.toDF(), streamManager).processAllAvailable()
+    underTest.write(stream.toDF()).processAllAvailable()
     stream.addData(List.range(3000, 3100))
-    underTest.write(stream.toDF(), streamManager).processAllAvailable()
+    underTest.write(stream.toDF()).processAllAvailable()
 
     // then
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
@@ -116,14 +112,13 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val underTest = ParquetPartitioningStreamWriter(config)
-    val streamManager = createCheckpointOffsetManager()
 
     val emptyStream = MemoryStream[Int](random.nextInt(), spark.sqlContext)
 
     // when
-    underTest.write(emptyStream.toDF(), streamManager).processAllAvailable()
+    underTest.write(emptyStream.toDF()).processAllAvailable()
     emptyStream.addData(List.range(0, 100))
-    underTest.write(emptyStream.toDF(), streamManager).processAllAvailable()
+    underTest.write(emptyStream.toDF()).processAllAvailable()
 
     // then
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")) shouldBe true
@@ -134,13 +129,6 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
 
   after {
     baseDir.delete()
-  }
-
-  private def createCheckpointOffsetManager() = {
-    val config = new BaseConfiguration()
-    config.addProperty("reader.kafka.topic", "testparquetpartitioning")
-    config.addProperty("ingestor.spark.checkpoint.base.location", checkpointDir)
-    CheckpointOffsetManager(config)
   }
 
   private def getDummyReadStream() = {

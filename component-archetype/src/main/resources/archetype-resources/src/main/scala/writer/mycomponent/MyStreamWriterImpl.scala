@@ -22,7 +22,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 
@@ -31,7 +30,7 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
  */
 
 private[writer] class MyStreamWriterImpl(val destination: String) extends StreamWriter {
-  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
+  override def write(dataFrame: DataFrame): StreamingQuery = ???
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory with MyStreamWriterImplAttributes {

@@ -17,7 +17,6 @@ package za.co.absa.hyperdrive.ingestor.api.writer
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 
 /**
   * Base class for all StreamDecoders.
@@ -25,5 +24,5 @@ import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
   */
 abstract class StreamWriter {
 
-  def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery
+  def write(dataFrame: DataFrame): StreamingQuery
 }

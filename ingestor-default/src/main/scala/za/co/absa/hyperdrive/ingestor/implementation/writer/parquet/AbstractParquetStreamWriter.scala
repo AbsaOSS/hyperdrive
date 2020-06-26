@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{DataFrame, Row}
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterProperties}
@@ -39,7 +38,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
 
-  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = {
+  override def write(dataFrame: DataFrame): StreamingQuery = {
 
     if (doMetadataCheck) {
       MetadataLogUtil.getParquetFilesNotListedInMetadataLog(dataFrame.sparkSession, destination) match {

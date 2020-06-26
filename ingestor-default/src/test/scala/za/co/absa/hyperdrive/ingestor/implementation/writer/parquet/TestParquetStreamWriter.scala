@@ -25,7 +25,6 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 
@@ -41,51 +40,45 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
 
   it should "set format as 'parquet'" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, streamManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).format("parquet")
   }
 
   it should "set Trigger.Once" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, streamManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).trigger(Trigger.Once)
   }
 
   it should "set Trigger.ProcessingTime" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map(), Trigger.ProcessingTime(1L))
+    invokeWriter(dataStreamWriter, Map(), Trigger.ProcessingTime(1L))
     verify(dataStreamWriter).trigger(Trigger.ProcessingTime(1L))
   }
 
   it should "set output mode as 'append'" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, streamManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).outputMode(OutputMode.Append())
   }
 
   it should "start DataStreamWriter" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, streamManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
   }
 
   it should " include extra options in case they exist" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
     val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
 
-    invokeWriter(dataStreamWriter, streamManager, extraConfs)
+    invokeWriter(dataStreamWriter, extraConfs)
     verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
 
     verify(dataStreamWriter).options(extraConfs)
@@ -93,9 +86,8 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
 
   it should "partition by given column names" in {
     val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, streamManager, Map(), partitionColumns = Some(Seq("column1", "column2")))
+    invokeWriter(dataStreamWriter, Map(), partitionColumns = Some(Seq("column1", "column2")))
     verify(dataStreamWriter).partitionBy("column1", "column2")
   }
 
@@ -114,12 +106,12 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
       .parquet(s"$destinationPath/partition1=value1")
 
     val writer = new ParquetStreamWriter(destinationPath, Trigger.Once(), "/tmp/checkpoint", None, true, Map())
-    val throwable = intercept[IllegalStateException](writer.write(df, mock[StreamManager]))
+    val throwable = intercept[IllegalStateException](writer.write(df))
 
     throwable.getMessage should include("Inconsistent Metadata Log.")
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row],
                            extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
                            checkpointLocation: String = "/tmp/checkpoint-location",
                            partitionColumns: Option[Seq[String]] = None,
@@ -127,7 +119,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
     val dataFrame = getDataFrame(dataStreamWriter)
     val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, checkpointLocation,
       partitionColumns, doMetadataCheck, extraOptions)
-    writer.write(dataFrame, streamManager)
+    writer.write(dataFrame)
   }
 
   private def getDataStreamWriter: DataStreamWriter[Row] =
@@ -144,11 +136,5 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
     when(dataFrame.writeStream).thenReturn(dataStreamWriter)
     when(dataFrame.sparkSession).thenReturn(sparkSession)
     dataFrame
-  }
-
-  private def getStreamManager(dataStreamWriter: DataStreamWriter[Row]): StreamManager = {
-    val streamManager = mock[StreamManager]
-    when(streamManager.configure(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
-    streamManager
   }
 }

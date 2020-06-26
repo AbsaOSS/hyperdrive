@@ -18,11 +18,10 @@ package za.co.absa.hyperdrive.scanner.dummyjar
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
 
 class DummyStreamWriterOne extends StreamWriter {
-  override def write(dataFrame: DataFrame, streamManager: StreamManager): StreamingQuery = ???
+  override def write(dataFrame: DataFrame): StreamingQuery = ???
 }
 
 object DummyStreamWriterOne extends StreamWriterFactory with DummyAttributes {
