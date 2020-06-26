@@ -36,7 +36,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), None, false, Map()))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), "/tmp/checkpoint", None, false, Map()))
   }
 
   it should "set format as 'parquet'" in {
@@ -69,14 +69,6 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
 
     invokeWriter(dataStreamWriter, streamManager, Map())
     verify(dataStreamWriter).outputMode(OutputMode.Append())
-  }
-
-  it should "invoke OffsetManager passing DataStreamWriter" in {
-    val dataStreamWriter = getDataStreamWriter
-    val streamManager = getStreamManager(dataStreamWriter)
-
-    invokeWriter(dataStreamWriter, streamManager, Map())
-    verify(streamManager).configure(dataStreamWriter, configuration)
   }
 
   it should "start DataStreamWriter" in {
@@ -121,7 +113,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
       .mode(SaveMode.Append)
       .parquet(s"$destinationPath/partition1=value1")
 
-    val writer = new ParquetStreamWriter(destinationPath, Trigger.Once(), None, true, Map())
+    val writer = new ParquetStreamWriter(destinationPath, Trigger.Once(), "/tmp/checkpoint", None, true, Map())
     val throwable = intercept[IllegalStateException](writer.write(df, mock[StreamManager]))
 
     throwable.getMessage should include("Inconsistent Metadata Log.")
@@ -129,11 +121,12 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
 
   private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], streamManager: StreamManager,
                            extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
+                           checkpointLocation: String = "/tmp/checkpoint-location",
                            partitionColumns: Option[Seq[String]] = None,
                            doMetadataCheck: Boolean = false): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, partitionColumns,
-      doMetadataCheck, extraOptions)
+    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, checkpointLocation,
+      partitionColumns, doMetadataCheck, extraOptions)
     writer.write(dataFrame, streamManager)
   }
 

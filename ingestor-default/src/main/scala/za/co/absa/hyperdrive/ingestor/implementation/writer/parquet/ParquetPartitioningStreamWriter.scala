@@ -33,10 +33,11 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 
 
 private[writer] class ParquetPartitioningStreamWriter(destination: String, trigger: Trigger,
+                                                      checkpointLocation: String,
                                                       partitionColumns: Option[Seq[String]],
                                                       doMetadataCheck: Boolean,
                                                       reportDate: String, extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, doMetadataCheck, extraConfOptions) {
+  extends AbstractParquetStreamWriter(destination, trigger, checkpointLocation, partitionColumns, doMetadataCheck, extraConfOptions) {
 
   import ParquetPartitioningStreamWriter.{COL_DATE, COL_VERSION}
   override protected def transformDataframe(dataFrame: DataFrame): DataFrame = {
@@ -81,14 +82,15 @@ object ParquetPartitioningStreamWriter extends StreamWriterFactory with ParquetP
     val destinationDirectory = getDestinationDirectory(config)
     val doMetadataCheck = getMetadataCheck(config)
     val trigger = StreamWriterUtil.getTrigger(config)
+    val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
     val partitionColumns = Some(Seq(COL_DATE, COL_VERSION))
     val reportDateString = getReportDateString(config)
     val extraOptions = getExtraOptions(config)
 
     LogManager.getLogger.info(s"Going to create ParquetPartitioningStreamWriter instance using: " +
-      s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
+      s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, partitionColumns, doMetadataCheck, reportDateString, extraOptions)
+    new ParquetPartitioningStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, doMetadataCheck, reportDateString, extraOptions)
   }
 
   private def getReportDateString(configuration: Configuration): String = {

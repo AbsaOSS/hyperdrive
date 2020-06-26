@@ -27,6 +27,7 @@ component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.Pa
 
 # Spark settings
 ingestor.spark.app.name=ingestor-app-pane
+ingestor.spark.checkpoint.base.location=/tmp/checkpoint-location
 
 # Source(Kafka) settings
 reader.kafka.topic=souce-payload-topic
@@ -40,7 +41,6 @@ reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
 #reader.option.failOnDataLoss=false
 
 # Offset management(checkpointing) settings
-manager.checkpoint.base.location=/tmp/checkpoint-location
 
 # Format(ABRiS) settings
 decoder.avro.schema.registry.url=http://localhost:8081

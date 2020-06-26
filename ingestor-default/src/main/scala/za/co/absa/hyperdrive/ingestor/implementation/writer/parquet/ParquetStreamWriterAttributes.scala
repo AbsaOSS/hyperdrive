@@ -30,6 +30,7 @@ trait ParquetStreamWriterAttributes extends HasComponentAttributes {
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
     KEY_METADATA_CHECK -> PropertyMetadata("Metadata check", Some("Set this option if the consistency of the metadata log should be checked prior to the query. " +
       "For very large tables, the check may be very expensive"), required = false),
-    StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata
+    StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
+    StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )
 }

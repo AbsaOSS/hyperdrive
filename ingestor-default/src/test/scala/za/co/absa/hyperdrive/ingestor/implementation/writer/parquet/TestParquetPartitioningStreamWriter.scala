@@ -23,6 +23,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 
 class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
 
@@ -48,6 +49,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     val config = new BaseConfiguration()
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val underTest = ParquetPartitioningStreamWriter(config)
 
     val streamManager = createCheckpointOffsetManager()
@@ -68,11 +70,13 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     val config = new BaseConfiguration()
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val underTest = ParquetPartitioningStreamWriter(config)
 
     val previousDayConfig = new BaseConfiguration()
     previousDayConfig.addProperty("writer.parquet.destination.directory", destinationDir)
     previousDayConfig.addProperty("writer.parquet.partitioning.report.date", "2020-02-28")
+    previousDayConfig.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val previousDayWriter = ParquetPartitioningStreamWriter(previousDayConfig)
 
     val streamManager = createCheckpointOffsetManager()
@@ -110,6 +114,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     val config = new BaseConfiguration()
     config.addProperty("writer.parquet.destination.directory", destinationDir)
     config.addProperty("writer.parquet.partitioning.report.date", "2020-02-29")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir)
     val underTest = ParquetPartitioningStreamWriter(config)
     val streamManager = createCheckpointOffsetManager()
 
@@ -134,7 +139,7 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   private def createCheckpointOffsetManager() = {
     val config = new BaseConfiguration()
     config.addProperty("reader.kafka.topic", "testparquetpartitioning")
-    config.addProperty("manager.checkpoint.base.location", checkpointDir)
+    config.addProperty("ingestor.spark.checkpoint.base.location", checkpointDir)
     CheckpointOffsetManager(config)
   }
 

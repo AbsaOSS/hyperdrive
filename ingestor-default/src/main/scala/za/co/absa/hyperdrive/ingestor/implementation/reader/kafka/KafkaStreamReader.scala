@@ -20,17 +20,19 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
-import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
+import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
+import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
+import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 private[reader] object KafkaStreamReaderProps {
   val STREAM_FORMAT_KAFKA_NAME = "kafka"
   val BROKERS_SETTING_KEY = "bootstrap.servers"
   val SPARK_BROKERS_SETTING_KEY = "kafka.bootstrap.servers"
   val TOPIC_SUBSCRIPTION_KEY = "subscribe"
+  val WORD_STARTING_OFFSETS = "startingOffsets"
+  val STARTING_OFFSETS_EARLIEST = "earliest"
 }
 
 /**
@@ -40,7 +42,9 @@ private[reader] object KafkaStreamReaderProps {
  * @param brokers    String containing the brokers
  * @param extraConfs Extra configurations, e.g. SSL params.
  */
-private[reader] class KafkaStreamReader(val topic: String, val brokers: String, val extraConfs: Map[String, String]) extends StreamReader {
+private[reader] class KafkaStreamReader(
+  val topic: String, val brokers: String, val checkpointLocation: String, val extraConfs: Map[String, String]) extends StreamReader {
+  import KafkaStreamReaderProps._
 
   private val logger = LogManager.getLogger()
 
@@ -66,15 +70,38 @@ private[reader] class KafkaStreamReader(val topic: String, val brokers: String, 
 
     logger.info(s"Will read from topic $topic")
 
-    import KafkaStreamReaderProps._
     val streamReader = spark
       .readStream
       .format(STREAM_FORMAT_KAFKA_NAME)
       .option(TOPIC_SUBSCRIPTION_KEY, topic)
       .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
-    streamReader.options(extraConfs)
+    val streamReaderWithStartingOffsets = configureStartingOffsets(streamReader, spark.sparkContext.hadoopConfiguration)
+    streamReaderWithStartingOffsets.options(extraConfs)
   }
+
+  private def configureStartingOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
+    val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
+
+    startingOffsets match {
+      case Some(startOffset) =>
+        logger.info(s"Setting starting offsets for $startOffset.")
+        streamReader.option(WORD_STARTING_OFFSETS, startOffset)
+      case _ =>
+        logger.info(s"No offsets to set for.")
+        streamReader
+    }
+  }
+
+  private def getStartingOffsets(checkpointLocation: String, configuration: org.apache.hadoop.conf.Configuration): Option[String] = {
+    if (FileUtils.exists(checkpointLocation, configuration)) {
+      Option.empty
+    }
+    else {
+      Option(STARTING_OFFSETS_EARLIEST)
+    }
+  }
+
 }
 
 object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttributes {
@@ -84,10 +111,11 @@ object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttri
     val topic = getTopic(conf)
     val brokers = getBrokers(conf)
     val extraOptions = getExtraOptions(conf)
+    val checkpointLocation = StreamWriterUtil.getCheckpointLocation(conf)
 
     logger.info(s"Going to create KafkaStreamReader with: topic='$topic', brokers='$brokers', extraOptions=${filterKeysContaining(extraOptions, exclusionToken = "password")}")
 
-    new KafkaStreamReader(topic, brokers, extraOptions)
+    new KafkaStreamReader(topic, brokers, checkpointLocation, extraOptions)
   }
 
   private def getTopic(configuration: Configuration): String = {

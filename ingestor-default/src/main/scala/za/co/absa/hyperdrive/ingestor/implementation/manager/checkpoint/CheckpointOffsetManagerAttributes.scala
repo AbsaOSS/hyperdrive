@@ -16,8 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.KEY_CHECKPOINT_BASE_LOCATION
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.KEY_STARTING_OFFSETS
 
 trait CheckpointOffsetManagerAttributes extends HasComponentAttributes {
 
@@ -26,12 +24,8 @@ trait CheckpointOffsetManagerAttributes extends HasComponentAttributes {
   override def getDescription: String = "Configures the checkpoint location for both reader and writer."
 
   override def getProperties: Map[String, PropertyMetadata] = {
-    val checkpointDescription = "Path to the checkpoint location. The checkpoint location has to be unique for each workflow"
-    val offsetDescription = "The starting offset is only considered if the checkpoint location does not already exist," +
-      "i.e. the ingestion has not been started yet."
+
     Map(
-      KEY_CHECKPOINT_BASE_LOCATION -> PropertyMetadata("Checkpoint Location", Some(checkpointDescription), required = true),
-      KEY_STARTING_OFFSETS -> PropertyMetadata("Starting offset", Some(offsetDescription), required = false)
     )
   }
 }

@@ -19,7 +19,6 @@ import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, Pro
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait SparkIngestorAttributes extends HasComponentAttributes {
-
   val keysPrefix = "ingestor.spark"
   val KEY_APP_NAME = s"$keysPrefix.app.name"
   val KEY_TERMINATION_METHOD = s"$keysPrefix.termination.method"

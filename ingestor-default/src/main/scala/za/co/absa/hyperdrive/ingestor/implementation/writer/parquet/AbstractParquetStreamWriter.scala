@@ -23,13 +23,14 @@ import org.apache.spark.sql.{DataFrame, Row}
 import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterProperties}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.MetadataLogUtil
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 import scala.util.{Failure, Success}
 
 private[writer] abstract class AbstractParquetStreamWriter(destination: String, trigger: Trigger,
+                                                           val checkpointLocation: String,
                                                            val partitionColumns: Option[Seq[String]],
                                                            val doMetadataCheck: Boolean,
                                                            val extraConfOptions: Map[String, String]) extends StreamWriter {
@@ -52,14 +53,11 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
     }
 
     val outDataframe = transformDataframe(dataFrame)
-    val outStream = getOutStream(outDataframe)
-
-    val streamWithOptions = addOptions(outStream, extraConfOptions)
-
-    val streamWithOptionsAndOffset = configureOffsets(streamWithOptions, streamManager, outDataframe.sparkSession.sparkContext.hadoopConfiguration)
-
     logger.info(s"Writing to $destination")
-    streamWithOptionsAndOffset.start(destination)
+    getOutStream(outDataframe)
+      .options(extraConfOptions)
+      .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
+      .start(destination)
   }
 
   def getDestination: String = destination
@@ -83,10 +81,6 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
       .format(source = "parquet")
       .outputMode(OutputMode.Append())
   }
-
-  private def addOptions(outStream: DataStreamWriter[Row], extraConfOptions: Map[String, String]): DataStreamWriter[Row] = outStream.options(extraConfOptions)
-
-  private def configureOffsets(outStream: DataStreamWriter[Row], streamManager: StreamManager, configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = streamManager.configure(outStream, configuration)
 }
 
 object AbstractParquetStreamWriter {

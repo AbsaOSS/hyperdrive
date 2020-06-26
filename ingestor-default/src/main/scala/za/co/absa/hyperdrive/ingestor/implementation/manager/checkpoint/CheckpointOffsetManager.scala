@@ -21,66 +21,21 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManager, StreamManagerFactory}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.CheckpointOffsetManagerKeys.KEY_CHECKPOINT_BASE_LOCATION
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_STARTING_OFFSETS, WORD_STARTING_OFFSETS}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
-import za.co.absa.hyperdrive.shared.utils.FileUtils
-
-private[manager] object CheckpointOffsetManagerProps {
-  val CHECKPOINT_LOCATION_KEY = "checkpointLocation"
-  val STARTING_OFFSETS_EARLIEST = "earliest"
-}
 
 private[manager] class CheckpointOffsetManager(val checkpointLocation: String,
                                                val startingOffsets: Option[String]) extends StreamManager {
 
-  import CheckpointOffsetManagerProps._
-
-  if (StringUtils.isBlank(checkpointLocation)) {
-    throw new IllegalArgumentException(s"Invalid checkpoint location: '$checkpointLocation'")
-  }
-
-  private val logger = LogManager.getLogger
-
   override def configure(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
-    val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
-
-    startingOffsets match {
-      case Some(startOffset) =>
-        logger.info(s"Setting starting offsets for $startOffset.")
-        streamReader.option(WORD_STARTING_OFFSETS, startOffset)
-      case _ =>
-        logger.info(s"No offsets to set for.")
-        streamReader
-    }
+    streamReader
   }
 
   override def configure(streamWriter: DataStreamWriter[Row], configuration: org.apache.hadoop.conf.Configuration): DataStreamWriter[Row] = {
-    logger.info(s"Checkpoint location resolved to: '$checkpointLocation'")
-    streamWriter.option(CHECKPOINT_LOCATION_KEY, checkpointLocation)
-  }
-
-  private def getStartingOffsets(checkpointLocation: String, configuration: org.apache.hadoop.conf.Configuration): Option[String] = {
-    if (FileUtils.exists(checkpointLocation, configuration)) {
-      Option.empty
-    }
-    else {
-      if (startingOffsets.isDefined) startingOffsets else Option(STARTING_OFFSETS_EARLIEST)
-    }
+    streamWriter
   }
 }
 
 object CheckpointOffsetManager extends StreamManagerFactory with CheckpointOffsetManagerAttributes {
   override def apply(config: Configuration): StreamManager = {
-    val checkpointLocation = getCheckpointLocation(config)
-    val startingOffsets = getStartingOffsets(config)
-
-    LogManager.getLogger.info(s"Going to create CheckpointOffsetManager instance using: checkpoint base location='$checkpointLocation'")
-
-    new CheckpointOffsetManager(checkpointLocation, startingOffsets)
+    new CheckpointOffsetManager("", None)
   }
-
-  private def getCheckpointLocation(configuration: Configuration): String = getOrThrow(KEY_CHECKPOINT_BASE_LOCATION, configuration, errorMessage = s"Could not find checkpoint location. Is '$KEY_CHECKPOINT_BASE_LOCATION' defined?")
-
-  private def getStartingOffsets(configuration: Configuration): Option[String] = getOrNone(KEY_STARTING_OFFSETS, configuration)
 }

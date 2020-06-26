@@ -54,7 +54,6 @@ class SparkIngestor(val spark: SparkSession,
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
     * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param streamManager      [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder            [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.

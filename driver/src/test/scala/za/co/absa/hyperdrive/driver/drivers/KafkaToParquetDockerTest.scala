@@ -86,9 +86,6 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "reader.kafka.topic" -> topic,
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
-      // Offset management(checkpointing) settings
-      "manager.checkpoint.base.location" -> (checkpointDir + "/${reader.kafka.topic}"),
-
       // Format(ABRiS) settings
       "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "decoder.avro.value.schema.id" -> "latest",
@@ -99,6 +96,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "transformer.column.selector.columns.to.select" -> "field1, field2, field3",
 
       // Sink(Parquet) settings
+      "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),
       "writer.parquet.destination.directory" -> destinationDir,
       "writer.parquet.partition.columns" -> "field3, field1",
       "writer.parquet.metadata.check" -> "true"

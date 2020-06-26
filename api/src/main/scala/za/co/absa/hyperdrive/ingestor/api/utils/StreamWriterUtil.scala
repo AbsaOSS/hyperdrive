@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.streaming.Trigger
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.writer.TriggerTypeEnum._
 
@@ -56,4 +57,8 @@ object StreamWriterUtil {
         s"Expected number, but got $processingTime", e))
     }
   }
+
+  def getCheckpointLocation(configuration: Configuration): String =
+    getOrThrow(StreamWriterCommonAttributes.keyCheckpointBaseLocation, configuration,
+      errorMessage = s"Could not find checkpoint location. Is '${StreamWriterCommonAttributes.keyCheckpointBaseLocation}' defined?")
 }

@@ -25,10 +25,11 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStr
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys.KEY_EXTRA_CONFS_ROOT
 
 private[writer] class ParquetStreamWriter(destination: String, trigger: Trigger,
+                                          checkpointLocation: String,
                                           partitionColumns: Option[Seq[String]],
                                           doMetadataCheck: Boolean,
                                           extraConfOptions: Map[String, String])
-  extends AbstractParquetStreamWriter(destination, trigger, partitionColumns, doMetadataCheck, extraConfOptions)
+  extends AbstractParquetStreamWriter(destination, trigger, checkpointLocation, partitionColumns, doMetadataCheck, extraConfOptions)
 
 object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterAttributes {
 
@@ -36,13 +37,14 @@ object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterA
     val destinationDirectory = getDestinationDirectory(config)
     val doMetadataCheck = getMetadataCheck(config)
     val trigger = StreamWriterUtil.getTrigger(config)
+    val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
     val partitionColumns = ConfigUtils.getSeqOrNone(ParquetStreamWriterKeys.KEY_PARTITION_COLUMNS, config)
     val extraOptions = getExtraOptions(config)
 
     LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +
-      s"destination directory='$destinationDirectory', trigger='$trigger', extra options='$extraOptions'")
+      s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new ParquetStreamWriter(destinationDirectory, trigger, partitionColumns, doMetadataCheck, extraOptions)
+    new ParquetStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, doMetadataCheck, extraOptions)
   }
 
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)

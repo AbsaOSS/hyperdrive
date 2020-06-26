@@ -42,8 +42,6 @@ private[hyperdrive] object ConfigurationsKeys {
     val KEY_KEYSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.keystore.location"
     val KEY_KEYSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.keystore.password"
     val KEY_KEY_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.key.password"
-    val WORD_STARTING_OFFSETS = "startingOffsets"
-    val KEY_STARTING_OFFSETS = s"$rootFactoryOptionalKafkaKey.$WORD_STARTING_OFFSETS"
   }
   object ColumnSelectorStreamTransformerKeys {
     val KEY_COLUMNS_TO_SELECT = "columns.to.select"
@@ -66,14 +64,6 @@ private[hyperdrive] object ConfigurationsKeys {
     val KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID = s"$rootFactoryConfKey.key.schema.id"
     val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = s"$rootFactoryConfKey.key.schema.record.name"
     val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = s"$rootFactoryConfKey.key.schema.record.namespace"
-  }
-
-  object CheckpointOffsetManagerKeys {
-    val rootComponentRootKey = "manager"
-    val rootFactoryConfKey = s"$rootComponentRootKey.checkpoint"
-
-    val KEY_TOPIC: String = KafkaStreamReaderKeys.KEY_TOPIC
-    val KEY_CHECKPOINT_BASE_LOCATION = s"$rootFactoryConfKey.base.location"
   }
 
   object ParquetStreamWriterKeys {

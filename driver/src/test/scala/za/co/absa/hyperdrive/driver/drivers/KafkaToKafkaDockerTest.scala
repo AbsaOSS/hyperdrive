@@ -96,9 +96,6 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "reader.kafka.topic" -> sourceTopic,
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
-      // Offset management(checkpointing) settings
-      "manager.checkpoint.base.location" -> (checkpointDir + "/${reader.kafka.topic}"),
-
       // Format(ABRiS) settings
       "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "decoder.avro.value.schema.id" -> "latest",
@@ -112,6 +109,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "transformer.column.selector.columns.to.select" -> "*",
 
       // Sink(Kafka) settings
+      "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),
       "writer.common.trigger.type" -> "ProcessingTime",
       "writer.common.trigger.processing.time" -> "1000",
       "writer.kafka.topic" -> destinationTopic,
@@ -139,7 +137,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
     keyFieldNames should contain theSameElementsAs List("some_id", "key_field")
     records.map(_.key().get("some_id")) should contain theSameElementsInOrderAs List.tabulate(numberOfRecords)(_ / 5)
     records.map(_.key().get("key_field")).distinct should contain theSameElementsAs List(new Utf8("keyHello"))
-    
+
     records.head.value().getSchema.getField("some_id").schema().getType shouldBe Type.INT
     records.head.value().getSchema.getField("value_field").schema().getTypes
       .asScala.map(_.getType) should contain theSameElementsAs Seq(Type.STRING, Type.NULL)

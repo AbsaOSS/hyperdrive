@@ -102,6 +102,7 @@ to identify which configuration options belong to a certain transformer instance
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
+| `ingestor.spark.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
 | `ingestor.spark.termination.method` | No | Either `processAllAvailable` (stop query when no more messages are incoming) or `awaitTermination` (stop query on signal, e.g. Ctrl-C). Default: `processAllAvailable`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `ingestor.spark.await.termination.timeout` | No | Timeout in milliseconds. Stops query when timeout is reached. This option is only valid with termination method `awaitTermination` |
 
@@ -115,12 +116,6 @@ to identify which configuration options belong to a certain transformer instance
 Any additional properties for kafka can be added with the prefix `reader.option.`. E.g. the property `kafka.security.protocol` can be added as `reader.option.kafka.security.protocol`
 
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
-
-##### CheckpointOffsetManager
-
-| Property Name | Required | Description |
-| :--- | :---: | :--- |
-| `manager.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
 
 ##### ConfluentAvroKafkaStreamDecoder
 The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
