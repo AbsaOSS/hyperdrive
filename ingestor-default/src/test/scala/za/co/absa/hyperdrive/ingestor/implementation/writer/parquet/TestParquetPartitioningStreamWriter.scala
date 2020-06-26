@@ -28,10 +28,10 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
 
   import spark.implicits._
 
-  private val baseDir = TempDirectory("testparquetpartitioning")
-  private val baseDirPath = baseDir.path.toUri.toString
-  private val destinationDir = s"$baseDirPath/destination"
-  private val checkpointDir = s"$baseDirPath/checkpoint"
+  private var baseDir: TempDirectory = _
+  private def baseDirPath = baseDir.path.toUri.toString
+  private def destinationDir = s"$baseDirPath/destination"
+  private def checkpointDir = s"$baseDirPath/checkpoint"
   private val random = scala.util.Random
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
@@ -39,8 +39,11 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
   behavior of "ParquetPartitioningStreamWriter"
 
   before {
-    fs.mkdirs(new Path(destinationDir))
-    fs.mkdirs(new Path(checkpointDir))
+    baseDir = TempDirectory("testparquetpartitioning").deleteOnExit()
+  }
+
+  after {
+    baseDir.delete()
   }
 
   it should "write partitioned by date and version=1 where destination directory is empty" in {
@@ -125,10 +128,6 @@ class TestParquetPartitioningStreamWriter extends FlatSpec with SparkTestBase wi
     fs.exists(new Path(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=2")) shouldBe false
     val df = spark.read.parquet(s"$destinationDir/hyperdrive_date=2020-02-29/hyperdrive_version=1")
     df.count() shouldBe 100
-  }
-
-  after {
-    baseDir.delete()
   }
 
   private def getDummyReadStream() = {

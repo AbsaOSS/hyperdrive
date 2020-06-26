@@ -93,7 +93,7 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers w
 
   it should "throw an exception if the metadata log is inconsistent" in {
     import spark.implicits._
-    val baseDir = TempDirectory("TestParquetStreamWriter")
+    val baseDir = TempDirectory("TestParquetStreamWriter").deleteOnExit()
     val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
     val input = MemoryStream[Int](1, spark.sqlContext)
     input.addData(List.range(0, 100))

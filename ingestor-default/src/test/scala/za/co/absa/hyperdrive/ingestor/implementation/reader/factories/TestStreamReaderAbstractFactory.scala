@@ -26,7 +26,7 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStrea
 class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamReaderAbstractFactory.getClass.getSimpleName
-  private val baseDir = TempDirectory("TestStreamReaderAbstractFactory")
+  private val baseDir = TempDirectory("TestStreamReaderAbstractFactory").deleteOnExit()
 
   it should "create KafkaStreamReader" in {
     val config = new BaseConfiguration()
