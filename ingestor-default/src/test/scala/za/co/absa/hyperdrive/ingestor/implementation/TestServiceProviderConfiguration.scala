@@ -18,13 +18,12 @@ package za.co.absa.hyperdrive.ingestor.implementation
 import java.util.ServiceLoader
 
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.{ComponentFactory, ComponentFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.{ParquetPartitioningStreamWriter, ParquetStreamWriter}
@@ -35,19 +34,14 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
 
   behavior of "Service Provider Interface (META-INF/services)"
 
-  it should "load ConfluentAvroKafkaStreamDecoder" in {
-    val factoryProviders = loadServices[StreamDecoderFactoryProvider, StreamDecoderFactory]()
-    factoryProviders should contain only ConfluentAvroKafkaStreamDecoder
-  }
-
   it should "load KafkaStreamReader" in {
     val factoryProviders = loadServices[StreamReaderFactoryProvider, StreamReaderFactory]()
     factoryProviders should contain only KafkaStreamReader
   }
 
-  it should "load ColumnSelectorStreamTransformer" in {
+  it should "load StreamTransformers" in {
     val factoryProviders = loadServices[StreamTransformerFactoryProvider, StreamTransformerFactory]()
-    factoryProviders should contain only ColumnSelectorStreamTransformer
+    factoryProviders should contain theSameElementsAs Seq(ColumnSelectorStreamTransformer, ConfluentAvroDecodingTransformer)
   }
 
   it should "load StreamWriters" in {

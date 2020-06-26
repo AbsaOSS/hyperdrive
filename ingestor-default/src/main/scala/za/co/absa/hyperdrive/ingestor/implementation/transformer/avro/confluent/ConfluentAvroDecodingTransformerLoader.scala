@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 
-class ConfluentAvroKafkaStreamDecoderLoader extends StreamDecoderFactoryProvider {
-  override def getComponentFactory: StreamDecoderFactory = ConfluentAvroKafkaStreamDecoder
+class ConfluentAvroDecodingTransformerLoader extends StreamTransformerFactoryProvider {
+  override def getComponentFactory: StreamTransformerFactory = ConfluentAvroDecodingTransformer
 }

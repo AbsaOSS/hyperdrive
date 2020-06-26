@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
-trait ConfluentAvroKafkaStreamDecoderAttributes extends HasComponentAttributes {
+trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes {
 
   override def getName: String = "Confluent Avro Stream Decoder"
 

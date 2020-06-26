@@ -47,22 +47,19 @@ private[hyperdrive] object ConfigurationsKeys {
   }
 
   object AvroKafkaStreamDecoderKeys {
-    val rootComponentRootKey = "decoder"
-    val rootFactoryConfKey = s"$rootComponentRootKey.avro"
-
     val KEY_TOPIC: String = KafkaStreamReaderKeys.KEY_TOPIC
-    val KEY_SCHEMA_REGISTRY_URL = s"$rootFactoryConfKey.schema.registry.url"
+    val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
 
-    val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = s"$rootFactoryConfKey.value.schema.naming.strategy"
-    val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = s"$rootFactoryConfKey.value.schema.id"
-    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = s"$rootFactoryConfKey.value.schema.record.name"
-    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = s"$rootFactoryConfKey.value.schema.record.namespace"
+    val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
+    val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = "value.schema.id"
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = "value.schema.record.name"
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = "value.schema.record.namespace"
 
-    val KEY_CONSUME_KEYS = s"$rootFactoryConfKey.consume.keys"
-    val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = s"$rootFactoryConfKey.key.schema.naming.strategy"
-    val KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID = s"$rootFactoryConfKey.key.schema.id"
-    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = s"$rootFactoryConfKey.key.schema.record.name"
-    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = s"$rootFactoryConfKey.key.schema.record.namespace"
+    val KEY_CONSUME_KEYS = "consume.keys"
+    val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = "key.schema.naming.strategy"
+    val KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID = "key.schema.id"
+    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = "key.schema.record.name"
+    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = "key.schema.record.namespace"
   }
 
   object ParquetStreamWriterKeys {

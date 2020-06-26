@@ -19,7 +19,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
-import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
@@ -141,12 +140,9 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     sparkContext
   }
 
-  private def getMockedDataStreamReader: DataStreamReader = {
-    val dataStreamReader = mock[DataStreamReader]
-    when(dataStreamReader.format(STREAM_FORMAT_KAFKA_NAME)).thenReturn(dataStreamReader)
-    when(dataStreamReader.option(anyString(), anyString())).thenReturn(dataStreamReader)
-    dataStreamReader
-  }
+  private def getMockedDataStreamReader: DataStreamReader =
+    mock[DataStreamReader](withSettings().defaultAnswer(RETURNS_SELF))
+
 
   private def getConfiguredMockedSparkSession(sparkContext: SparkContext, dataStreamReader: DataStreamReader) = {
     val sparkSession = mock[SparkSession]

@@ -20,7 +20,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_SCHEMA_REGISTRY_URL, SchemaStorageNamingStrategies}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 
-private [hyperdrive] object SchemaRegistrySettingsUtil {
+private[hyperdrive] object SchemaRegistrySettingsUtil {
   def getConsumerSettings(configuration: Configuration, topic: String, configKeys: SchemaRegistryConsumerConfigKeys): Map[String, String] = {
     getCommonSettings(configuration, topic, configKeys) +
       (configKeys.paramSchemaId -> getOrThrow(configKeys.schemaId, configuration,

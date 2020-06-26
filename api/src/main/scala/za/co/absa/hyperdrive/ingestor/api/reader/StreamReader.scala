@@ -15,8 +15,7 @@
 
 package za.co.absa.hyperdrive.ingestor.api.reader
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.streaming.DataStreamReader
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
   * Base class for all StreamReaders.
@@ -24,5 +23,5 @@ import org.apache.spark.sql.streaming.DataStreamReader
   * The process for adding a new StreamReader implementation is:
   */
 abstract class StreamReader {
-  def read(spark: SparkSession): DataStreamReader
+  def read(spark: SparkSession): DataFrame
 }

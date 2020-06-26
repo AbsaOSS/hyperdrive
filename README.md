@@ -113,22 +113,22 @@ Any additional properties for kafka can be added with the prefix `reader.option.
 
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
 
-##### ConfluentAvroKafkaStreamDecoder
-The `ConfluentAvroKafkaStreamDecoder` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
-**Caution**: The `ConfluentAvroKafkaStreamDecoder` requires the property `reader.kafka.topic` to be set.
+##### ConfluentAvroStreamDecodingTransformer
+The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+**Caution**: The `ConfluentAvroStreamDecodingTransformer` requires the property `reader.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
-| `decoder.avro.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
-| `decoder.avro.value.schema.id` | Yes | The schema id. Use `latest` or explicitly provide a number. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_ID` |
-| `decoder.avro.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
-| `decoder.avro.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
-| `decoder.avro.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
-| `decoder.avro.consume.keys` | No | If set to `true`, keys will be consumed and added as columns to the dataframe. Key columns will be prefixed with `key__` |
-| `decoder.avro.key.schema.id` | Yes if `decoder.avro.consume.keys` is true | The schema id for the key. |
-| `decoder.avro.key.schema.naming.strategy` | Yes if `decoder.avro.consume.keys` is true | Subject name strategy for key |
-| `decoder.avro.key.schema.record.name` | Yes for key naming strategies `record.name` and `topic.record.name` | Name of the record. |
-| `decoder.avro.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
+| `transformer.{transformer-id}.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
+| `transformer.{transformer-id}.value.schema.id` | Yes | The schema id. Use `latest` or explicitly provide a number. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_ID` |
+| `transformer.{transformer-id}.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
+| `transformer.{transformer-id}.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
+| `transformer.{transformer-id}.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+| `transformer.{transformer-id}.consume.keys` | No | If set to `true`, keys will be consumed and added as columns to the dataframe. Key columns will be prefixed with `key__` |
+| `transformer.{transformer-id}.key.schema.id` | Yes if `consume.keys` is true | The schema id for the key. |
+| `transformer.{transformer-id}.key.schema.naming.strategy` | Yes if `consume.keys` is true | Subject name strategy for key |
+| `transformer.{transformer-id}.key.schema.record.name` | Yes for key naming strategies `record.name` and `topic.record.name` | Name of the record. |
+| `transformer.{transformer-id}.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
 
 For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
 

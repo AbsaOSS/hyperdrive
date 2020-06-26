@@ -17,11 +17,9 @@ package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
@@ -36,17 +34,14 @@ private[driver] class IngestionDriver {
 
     val sparkIngestor = SparkIngestor(configuration)
     val streamReader = getStreamReader(configuration)
-    val streamDecoder = getStreamDecoder(configuration)
     val streamTransformers = getStreamTransformers(configuration)
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    sparkIngestor.ingest(streamReader, streamDecoder, streamTransformers, streamWriter)
+    sparkIngestor.ingest(streamReader, streamTransformers, streamWriter)
   }
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
-
-  private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
 
   private def getStreamTransformers(conf: Configuration): Seq[StreamTransformer] = StreamTransformerAbstractFactory.build(conf)
 
