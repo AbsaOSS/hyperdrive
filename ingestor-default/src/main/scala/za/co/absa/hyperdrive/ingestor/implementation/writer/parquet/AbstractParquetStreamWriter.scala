@@ -62,7 +62,7 @@ private[writer] abstract class AbstractParquetStreamWriter(destination: String, 
   def getDestination: String = destination
 
   /**
-   * This method has only been added to preserve existing functionality of ParquetPartitioningStreamWriter.
+   * This method has only been added to preserve existing functionality of Parquet3PartitioningStreamWriter.
    * This method will be removed when ParquetPartitioningStreamWriter has been refactored to a Transformer.
    * @see https://github.com/AbsaOSS/hyperdrive/issues/118
    */

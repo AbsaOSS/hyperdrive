@@ -74,9 +74,4 @@ private[hyperdrive] object ConfigurationsKeys {
     val KEY_METADATA_CHECK = s"$rootFactoryConfKey.metadata.check"
     val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
   }
-
-  object ParquetPartitioningStreamWriterKeys {
-    val rootFactoryConfKey = s"${ParquetStreamWriterKeys.rootFactoryConfKey}.partitioning"
-    val KEY_REPORT_DATE = s"$rootFactoryConfKey.report.date"
-  }
 }

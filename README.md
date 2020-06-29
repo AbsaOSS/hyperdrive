@@ -40,8 +40,8 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 - `KafkaStreamReader` - reads from a Kafka topic.
 - `ConfluentAvroKafkaStreamDecoder` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This decoder is capable of seamlessly handling whatever schemas the payload messages are using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
-- `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's `processAllAvailable` method on the stream writer.
-- `ParquetPartitioningStreamWriter` - writes the DataFrame as Parquet, partitioned by the ingestion date and an auto-incremented version number.
+- `AddDateVersionTransformerStreamWriter` - adds columns for ingestion date and an auto-incremented version number, to be used for partitioning.
+- `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode.
 - `KafkaStreamWriter` - writes to a Kafka topic.
 
 ### Custom components
@@ -88,7 +88,7 @@ The configuration file may be created from the template located at `driver/src/r
 | `component.decoder`     | Yes |  Fully qualified name of decoder component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder` |
 | `component.transformer.id.{order}` | No  | An arbitrary but unique string, referenced in this documentation as `{transformer-id}` |
 | `component.transformer.class.{transformer-id}` | No  |  Fully qualified name of transformer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer` |
-| `component.writer`      | Yes |  Fully qualified name of writer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter` |
+| `component.writer`      | Yes |  Fully qualified name of writer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter` |
 
 Multiple transformers can be configured in the pipeline, including multiple instances of the same transformer.
 For each transformer instance, `component.transformer.id.{order}` and `component.transformer.class.{transformer-id}` have to specified, where `{order}` and `{transformer-id}` need to be unique.
@@ -137,6 +137,15 @@ For detailed information on the subject name strategy, please take a look at the
 | :--- | :---: | :--- |
 | `transformer.{transformer-id}.columns.to.select` | Yes |  Comma-separated list of columns to select. `*` can be used to select all columns. Only existing columns using column names may be selected (i.e. expressions cannot be constructed) |
 
+##### AddDateVersionTransformer
+The `AddDateVersionTransformer` adds the columns `hyperdrive_date` and `hyperdrive_version`. `hyperdrive_date` is the ingestion date (or a user-defined date), while `hyperdrive_version` is a number automatically incremented with every ingestion, starting at 1.
+For the auto-increment to work, `hyperdrive_date` and `hyperdrive_version` need to be defined as partition columns.
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.{transformer-id}.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `transformer.{transformer-id}.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
+
 See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.
 ##### ParquetStreamWriter
 | Property Name | Required | Description |
@@ -144,18 +153,6 @@ See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`
 | `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `writer.parquet.partition.columns` | No | Comma-separated list of columns to partition by. |
 | `writer.parquet.metadata.check` | No | Set this option to `true` if the consistency of the metadata log should be checked prior to the query. For very large tables, the check may be very expensive |
-| `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
-| `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
-
-Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.parquet.options`, e.g. `writer.parquet.options.key=value`
-
-##### ParquetPartitioningStreamWriter
-The `ParquetPartitioningStreamWriter` partitions every ingestion in the columns `hyperdrive_date` and `hyperdrive_version`. `hyperdrive_date` is the ingestion date (or a user-defined date), while `hyperdrive_version` is a number automatically incremented with every ingestion, starting at 1.
-
-| Property Name | Required | Description |
-| :--- | :---: | :--- |
-| `writer.parquet.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
-| `writer.parquet.partitioning.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
