@@ -26,7 +26,6 @@ component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.Pa
 
 # Spark settings
 ingestor.spark.app.name=ingestor-app-pane
-ingestor.spark.checkpoint.base.location=/tmp/checkpoint-location
 
 # Source(Kafka) settings
 reader.kafka.topic=souce-payload-topic
@@ -56,6 +55,7 @@ decoder.avro.value.schema.naming.strategy=topic.name
 transformer.columns.to.select=*
 
 # Sink(Parquet) settings
+writer.common.checkpoint.location=/tmp/checkpoint-location
 writer.parquet.destination.directory=/tmp/ingestion/destination-directory
 #these configurations are going to be added to the Parquet DataStreamWriter
 writer.parquet.options.key1=value1

@@ -23,14 +23,14 @@
 
 Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from streaming sources with exactly-once fault-tolerance semantics by using Apache Spark Structured Streaming.
 
-In Hyperdrive, each ingestion is defined by the five components reader, decoder, transformer and writer. This separation allows adapting to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
+In Hyperdrive, each ingestion is defined by the four components reader, decoder, transformer and writer. This separation allows adapting to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
 ## Motivation
 Similar to batch processing, data ingestion pipelines are needed to process streaming data sources. While solutions for data pipelines exist, exactly-once fault-tolerance in streaming processing is an intricate problem and cannot be solved with the same strategies that exist for batch processing.
 
 This is the gap the Hyperdrive aims to fill, by leveraging the exactly-once guarantee of Spark's Structured Streaming and by providing a flexible data pipeline. 
 
 ## Architecture
-The data ingestion pipeline of Hyperdrive consists of five components: readers, decoders, transformers, writers.
+The data ingestion pipeline of Hyperdrive consists of four components: readers, decoders, transformers, writers.
 - **Readers** define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
 - **Decoders** define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
 - **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns.
@@ -99,7 +99,6 @@ to identify which configuration options belong to a certain transformer instance
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
-| `ingestor.spark.checkpoint.base.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
 | `ingestor.spark.termination.method` | No | Either `processAllAvailable` (stop query when no more messages are incoming) or `awaitTermination` (stop query on signal, e.g. Ctrl-C). Default: `processAllAvailable`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `ingestor.spark.await.termination.timeout` | No | Timeout in milliseconds. Stops query when timeout is reached. This option is only valid with termination method `awaitTermination` |
 
@@ -183,6 +182,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 | Property Name | Description |
 | :--- | :--- | 
+| `writer.common.checkpoint.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
 | `writer.common.trigger.type` | Either `Once` for one-time execution or `ProcessingTime` for micro-batch executions for micro-batch execution. Default: `Once`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `writer.common.trigger.processing.time` | Interval in ms for micro-batch execution (using `ProcessingTime`). Default: 0ms, i.e. execution as fast as possible. |
 
