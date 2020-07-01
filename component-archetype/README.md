@@ -49,7 +49,7 @@ mvn archetype:generate \
 
 ## Implementing a Hyperdrive component
 
-There are five types of Hyperdrive components: Reader, Decoder, Transformer, Writer and Manager.
+There are five types of Hyperdrive components: Reader, Decoder, Transformer and Writer.
 
 ### Component stubs
 

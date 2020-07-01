@@ -32,7 +32,7 @@ class TestMetadataLogUtil extends FlatSpec with Matchers with SparkTestBase with
   behavior of MetadataLogUtil.getClass.getName
 
   before {
-    baseDir = TempDirectory("TestMetadataLogUtil")
+    baseDir = TempDirectory("TestMetadataLogUtil").deleteOnExit()
     baseDirPath = baseDir.path.toAbsolutePath.toString
   }
 

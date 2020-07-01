@@ -15,24 +15,6 @@
 
 package za.co.absa.hyperdrive
 
-import java.util.UUID
-
-import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable, TerminationMethod}
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
-import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
-import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
-import za.co.absa.hyperdrive.ingestor.api.utils.ComponentFactoryUtil
-import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-
-import scala.util.{Failure, Success}
-import scala.util.control.NonFatal
-
 /**
   * This object is only a placeholder to make sure that a sources jar and a javadoc jar will be generated for this module.
   * This is a requirement of maven central. The purpose of this module is to have a separate module for the fat-jar

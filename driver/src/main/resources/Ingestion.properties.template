@@ -21,7 +21,6 @@
 component.ingestor=spark
 component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 component.decoder=za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
-component.manager=za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 component.transformer=za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
@@ -40,7 +39,6 @@ reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
 #reader.option.failOnDataLoss=false
 
 # Offset management(checkpointing) settings
-manager.checkpoint.base.location=/tmp/checkpoint-location
 
 # Format(ABRiS) settings
 decoder.avro.schema.registry.url=http://localhost:8081
@@ -57,6 +55,7 @@ decoder.avro.value.schema.naming.strategy=topic.name
 transformer.columns.to.select=*
 
 # Sink(Parquet) settings
+writer.common.checkpoint.location=/tmp/checkpoint-location
 writer.parquet.destination.directory=/tmp/ingestion/destination-directory
 #these configurations are going to be added to the Parquet DataStreamWriter
 writer.parquet.options.key1=value1

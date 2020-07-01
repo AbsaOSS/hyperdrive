@@ -19,13 +19,11 @@ import java.util.ServiceLoader
 
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManagerFactory, StreamManagerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.{ComponentFactory, ComponentFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
-import za.co.absa.hyperdrive.ingestor.implementation.manager.checkpoint.CheckpointOffsetManager
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
@@ -40,11 +38,6 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
   it should "load ConfluentAvroKafkaStreamDecoder" in {
     val factoryProviders = loadServices[StreamDecoderFactoryProvider, StreamDecoderFactory]()
     factoryProviders should contain only ConfluentAvroKafkaStreamDecoder
-  }
-
-  it should "load CheckpointOffsetManager" in {
-    val factoryProviders = loadServices[StreamManagerFactoryProvider, StreamManagerFactory]()
-    factoryProviders should contain only CheckpointOffsetManager
   }
 
   it should "load KafkaStreamReader" in {

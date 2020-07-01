@@ -21,7 +21,6 @@ import java.util.ServiceLoader
 
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
-import za.co.absa.hyperdrive.ingestor.api.manager.{StreamManagerFactory, StreamManagerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
@@ -33,8 +32,7 @@ import scala.util.{Failure, Success, Try}
 case class ComponentDescriptors(readers: Seq[ComponentDescriptor],
                                 decoders: Seq[ComponentDescriptor],
                                 transformers: Seq[ComponentDescriptor],
-                                writers: Seq[ComponentDescriptor],
-                                managers: Seq[ComponentDescriptor])
+                                writers: Seq[ComponentDescriptor])
 
 case class ComponentDescriptor(attributes: HasComponentAttributes,
                                fullyQualifiedName: String,
@@ -59,8 +57,7 @@ object ComponentScanner {
       componentDescriptors.flatMap(_.readers),
       componentDescriptors.flatMap(_.decoders),
       componentDescriptors.flatMap(_.transformers),
-      componentDescriptors.flatMap(_.writers),
-      componentDescriptors.flatMap(_.managers)
+      componentDescriptors.flatMap(_.writers)
     )
   }
 
@@ -87,8 +84,7 @@ object ComponentScanner {
       loadService[StreamReaderFactoryProvider, StreamReaderFactory](classLoader, jar),
       loadService[StreamDecoderFactoryProvider, StreamDecoderFactory](classLoader, jar),
       loadService[StreamTransformerFactoryProvider, StreamTransformerFactory](classLoader, jar),
-      loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar),
-      loadService[StreamManagerFactoryProvider, StreamManagerFactory](classLoader, jar)
+      loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar)
     )
   }
 

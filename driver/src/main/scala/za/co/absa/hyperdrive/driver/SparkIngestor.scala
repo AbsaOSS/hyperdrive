@@ -22,16 +22,14 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable, TerminationMethod}
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
-import za.co.absa.hyperdrive.ingestor.api.utils.ComponentFactoryUtil
+import za.co.absa.hyperdrive.ingestor.api.utils.{ComponentFactoryUtil, ConfigUtils}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 /**
   * This object is responsible for running the ingestion job by using the components it
@@ -54,7 +52,6 @@ class SparkIngestor(val spark: SparkSession,
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
     * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param streamManager      [[StreamManager]] implementation responsible for cross-cutting concerns, e.g. defining offsets on the source stream and checkpoints on the destination stream.
     * @param decoder            [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
@@ -63,7 +60,6 @@ class SparkIngestor(val spark: SparkSession,
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(streamReader: StreamReader,
-             streamManager: StreamManager,
              decoder: StreamDecoder,
              streamTransformers: Seq[StreamTransformer],
              streamWriter: StreamWriter): Unit = {
@@ -74,10 +70,9 @@ class SparkIngestor(val spark: SparkSession,
 
     val ingestionQuery = try {
       val inputStreamReader = streamReader.read(spark) // gets the source stream
-      val configuredStreamReader = streamManager.configure(inputStreamReader, spark.sparkContext.hadoopConfiguration) // configures DataStreamReader and DataStreamWriter
-      val decodedDataFrame = decoder.decode(configuredStreamReader) // decodes the payload from whatever encoding it has
+      val decodedDataFrame = decoder.decode(inputStreamReader) // decodes the payload from whatever encoding it has
       val transformedDataFrame = streamTransformers.foldLeft(decodedDataFrame)((dataFrame, streamTransformer) => streamTransformer.transform(dataFrame)) // applies any transformations to the data
-      streamWriter.write(transformedDataFrame, streamManager) // sends the stream to the destination
+      streamWriter.write(transformedDataFrame) // sends the stream to the destination
     } catch {
       case NonFatal(e) =>
         throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)

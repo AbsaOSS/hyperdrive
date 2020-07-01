@@ -20,7 +20,6 @@ import java.nio.file.{Files, Paths}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactoryProvider
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManagerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
@@ -50,9 +49,6 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
       s"${dummyJarPath}DummyStreamReaderTwo.class",
       s"${dummyJarPath}DummyStreamReaderTwo$$.class",
       s"${dummyJarPath}DummyStreamReaderTwoLoader.class",
-      s"${dummyJarPath}DummyStreamManager.class",
-      s"${dummyJarPath}DummyStreamManager$$.class",
-      s"${dummyJarPath}DummyStreamManagerLoader.class",
       s"${dummyJarPath}DummyStreamDecoder.class",
       s"${dummyJarPath}DummyStreamDecoder$$.class",
       s"${dummyJarPath}DummyStreamDecoderLoader.class",
@@ -68,7 +64,6 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
       classOf[StreamReaderFactoryProvider].getName -> List(
         s"${dummyPackage}DummyStreamReaderOneLoader",
         s"${dummyPackage}DummyStreamReaderTwoLoader"),
-      classOf[StreamManagerFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamManagerLoader"),
       classOf[StreamDecoderFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamDecoderLoader"),
       classOf[StreamTransformerFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamTransformerLoader"),
       classOf[StreamWriterFactoryProvider].getName -> List(s"${dummyPackage}DummyStreamWriterOneLoader"))
@@ -83,8 +78,6 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     components.readers should contain theSameElementsAs List(
       ComponentDescriptor(DummyStreamReaderOne, s"${dummyPackage}DummyStreamReaderOne$$", expectedJarPath),
       ComponentDescriptor(DummyStreamReaderTwo, s"${dummyPackage}DummyStreamReaderTwo$$", expectedJarPath))
-    components.managers should contain only
-      ComponentDescriptor(DummyStreamManager, s"${dummyPackage}DummyStreamManager$$", expectedJarPath)
     components.decoders should contain only
       ComponentDescriptor(DummyStreamDecoder, s"${dummyPackage}DummyStreamDecoder$$", expectedJarPath)
     components.transformers should contain only
@@ -146,7 +139,6 @@ class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
     components.decoders shouldBe empty
     components.transformers shouldBe empty
     components.writers shouldBe empty
-    components.managers shouldBe empty
   }
 
   it should "skip but not fail if a jar is not a zip file" in {

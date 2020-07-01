@@ -25,8 +25,8 @@ trait KafkaStreamReaderAttributes extends HasComponentAttributes {
   override def getDescription: String = "This component ingests data from a kafka topic."
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_TOPIC -> PropertyMetadata("Topic name", Some("Name of the kafka topic"), required = true),
-    KEY_BROKERS -> PropertyMetadata("Brokers", Some("Comma-separated list of kafka broker urls"), required = true))
+      KEY_TOPIC -> PropertyMetadata("Topic name", Some("Name of the kafka topic"), required = true),
+      KEY_BROKERS -> PropertyMetadata("Brokers", Some("Comma-separated list of kafka broker urls"), required = true))
 
   override def getExtraConfigurationPrefix: Option[String] = Some(rootFactoryOptionalConfKey)
 }

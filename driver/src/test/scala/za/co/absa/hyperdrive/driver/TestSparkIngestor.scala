@@ -27,7 +27,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.driver.TerminationMethodEnum.AwaitTermination
 import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.StreamManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -37,7 +36,6 @@ import za.co.absa.commons.spark.SparkTestBase
 class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSugar with SparkTestBase with Matchers {
 
   private val streamReader: StreamReader = mock[StreamReader]
-  private val streamManager: StreamManager = mock[StreamManager]
   private val streamDecoder: StreamDecoder = mock[StreamDecoder]
   private val streamTransformer: StreamTransformer = mock[StreamTransformer]
   private val streamWriter: StreamWriter = mock[StreamWriter]
@@ -54,7 +52,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   override def beforeEach(): Unit = {
     reset(
       streamReader,
-      streamManager,
       streamDecoder,
       streamTransformer,
       streamWriter,
@@ -67,70 +64,57 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   it should "throw IngestionStartException if stream reader fails during setup" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
-  }
-
-  it should "throw IngestionStartException if stream manager fails during setup" in {
-    val sparkIngestor = SparkIngestor(configuration)
-    when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
+    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter))
   }
 
   it should "throw IngestionStartException if format decoder fails during setup" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
+    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter))
   }
 
   it should "throw IngestionStartException if stream transformer fails during setup" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
+    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter))
   }
 
   it should "throw IngestionStartException if stream writer fails during setup" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, streamManager)).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
+    when(streamWriter.write(dataFrame)).thenThrow(classOf[RuntimeException])
+    assertThrows[IngestionStartException](sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter))
   }
 
   it should "throw IngestionException if ingestion fails during execution" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+    when(streamWriter.write(dataFrame)).thenReturn(streamingQuery)
     when(streamingQuery.stop()).thenThrow(classOf[RuntimeException])
-    assertThrows[IngestionException](sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter))
+    assertThrows[IngestionException](sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter))
   }
 
   it should "invoke the components in correct order" in {
     val sparkIngestor = SparkIngestor(configuration)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+    when(streamWriter.write(dataFrame)).thenReturn(streamingQuery)
 
-    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter)
+    sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter)
 
-    val inOrderCheck = Mockito.inOrder(streamReader, streamManager, streamDecoder, streamTransformer, streamWriter)
+    val inOrderCheck = Mockito.inOrder(streamReader, streamDecoder, streamTransformer, streamWriter)
     inOrderCheck.verify(streamReader).read(any[SparkSession])
-    inOrderCheck.verify(streamManager).configure(eqTo(dataStreamReaderMock), any[Configuration])
     inOrderCheck.verify(streamDecoder).decode(dataStreamReaderMock)
     inOrderCheck.verify(streamTransformer).transform(dataFrame)
-    inOrderCheck.verify(streamWriter).write(dataFrame, streamManager)
+    inOrderCheck.verify(streamWriter).write(dataFrame)
     verify(streamingQuery).processAllAvailable
     verify(streamingQuery).stop
   }
@@ -155,12 +139,11 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", AwaitTermination)
     val sparkIngestor = SparkIngestor(config)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+    when(streamWriter.write(dataFrame)).thenReturn(streamingQuery)
 
-    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter)
+    sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter)
 
     verify(streamingQuery).awaitTermination()
   }
@@ -172,12 +155,11 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     config.addProperty(s"${SparkIngestor.KEY_AWAIT_TERMINATION_TIMEOUT}", "10000")
     val sparkIngestor = SparkIngestor(config)
     when(streamReader.read(any[SparkSession])).thenReturn(dataStreamReaderMock)
-    when(streamManager.configure(eqTo(dataStreamReaderMock), any[Configuration])).thenReturn(dataStreamReaderMock)
     when(streamDecoder.decode(dataStreamReaderMock)).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
-    when(streamWriter.write(dataFrame, streamManager)).thenReturn(streamingQuery)
+    when(streamWriter.write(dataFrame)).thenReturn(streamingQuery)
 
-    sparkIngestor.ingest(streamReader, streamManager, streamDecoder, Seq(streamTransformer), streamWriter)
+    sparkIngestor.ingest(streamReader, streamDecoder, Seq(streamTransformer), streamWriter)
 
     verify(streamingQuery).awaitTermination(eqTo(10000L))
   }
