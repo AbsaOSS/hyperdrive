@@ -56,7 +56,7 @@
         <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
 
         <!--Log4J2-->
-        <log4j.version>2.11.1</log4j.version>
+        <log4j.version>2.13.3</log4j.version>
         <slf4j.log4j2.version>1.7.26</slf4j.log4j2.version>
 
         <!--Kafka-->
