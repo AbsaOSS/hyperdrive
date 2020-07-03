@@ -29,7 +29,7 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
 
   it should "create transformer instances in the correct order" in {
     import StreamTransformerAbstractFactory._
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
     config.addProperty(s"${classKeyPrefix}.dummy.transformer.A", DummyStreamTransformer.getClass.getName)
     config.addProperty(s"${transformerKeyPrefix}.dummy.transformer.A.$DummyProperty1Name", "value1")
@@ -47,14 +47,18 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
     val firstTransformer = transformers.head.asInstanceOf[DummyStreamTransformer]
     firstTransformer.dummyProperty1 shouldBe "value1"
     firstTransformer.dummyProperty2 shouldBe 100
+    firstTransformer.dummyProperty3 shouldBe "global.value.1"
+    firstTransformer.dummyProperty4 shouldBe "global.value.2"
     val secondTransformer = transformers(1).asInstanceOf[DummyStreamTransformer]
     secondTransformer.dummyProperty1 shouldBe "value2"
     secondTransformer.dummyProperty2 shouldBe 200
+    firstTransformer.dummyProperty3 shouldBe "global.value.1"
+    firstTransformer.dummyProperty4 shouldBe "global.value.2"
   }
 
   it should "support negative orders" in {
     import StreamTransformerAbstractFactory._
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.2", "[column.transformer]")
     config.addProperty(s"${classKeyPrefix}.[column.transformer]", ColumnSelectorStreamTransformer.getClass.getName)
 
@@ -68,13 +72,13 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   }
 
   it should "return an empty list if no configuration is given" in {
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     val transformers = StreamTransformerAbstractFactory.build(config)
     transformers shouldBe empty
   }
 
   it should "throw if transformer ids are not unique" in {
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
     config.addProperty(s"${idsKeyPrefix}.2", "dummy.transformer.A")
 
@@ -83,7 +87,7 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   }
 
   it should "throw if transformer id is non-numeric" in {
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.First", "dummy.transformer.A")
 
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
@@ -91,7 +95,7 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   }
 
   it should "throw if no class name is associated to the transformer id" in {
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
 
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
@@ -100,12 +104,20 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
 
   it should "throw if data transformer parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
-    val config = new BaseConfiguration
+    val config = getBaseConfiguration
     config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
     config.addProperty(s"${classKeyPrefix}.dummy.transformer.A", invalidFactoryName)
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
 
     assert(throwable.getMessage.contains(invalidFactoryName))
+  }
+
+  private def getBaseConfiguration = {
+    val config = new BaseConfiguration
+    config.addProperty(GlobalConfigKeys.GlobalKey1, "global.value.1")
+    config.addProperty(GlobalConfigKeys.GlobalKey2, "global.value.2")
+    config.addProperty(GlobalConfigKeys.GlobalKey3, "global.value.3")
+    config
   }
 
 }

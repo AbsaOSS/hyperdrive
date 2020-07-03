@@ -15,6 +15,19 @@
 
 package za.co.absa.hyperdrive.ingestor.api.transformer
 
+import org.apache.commons.configuration2.Configuration
 import za.co.absa.hyperdrive.ingestor.api.ComponentFactory
 
-trait StreamTransformerFactory extends ComponentFactory[StreamTransformer]
+trait StreamTransformerFactory extends ComponentFactory[StreamTransformer] {
+  /**
+   * In the apply-method, only the subset of keys with the prefix of the transformer is available. E.g. the property
+   * reader.kafka.topic would not be available to the transformer. If any such key from the global config should be
+   * retained and available to the transformer, it should be specified in this method.
+   * To avoid key clashes, the global key may be mapped. If the global config key should not be renamed, key and value
+   * of the map entry should be the same.
+   * @param globalConfig The global configuration, containing all keys passed to the program
+   * @return a mapping for each key in the global configuration to an arbitrary key which will be available in the
+   *         configuration passed in by the apply method.
+   */
+  def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map()
+}
