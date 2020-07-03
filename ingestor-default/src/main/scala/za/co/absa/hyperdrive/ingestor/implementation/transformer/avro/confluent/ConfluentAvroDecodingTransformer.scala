@@ -127,6 +127,10 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     new ConfluentAvroDecodingTransformer(topic, valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
   }
 
+  override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
+    KEY_TOPIC -> KEY_TOPIC
+  )
+
   private def getTopic(configuration: Configuration): String =
     getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
 
