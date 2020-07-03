@@ -22,7 +22,7 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
 
   override def getName: String = "Confluent Avro Stream Decoder"
 
-  override def getDescription: String = "Decoder for Kafka messages in Avro format. The decoder connects to a Schema Registry instance to retrieve the schema information."
+  override def getDescription: String = "Decoder for records in Avro format. The decoder connects to a Schema Registry instance to retrieve the schema information."
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_SCHEMA_REGISTRY_URL -> PropertyMetadata("Schema Registry URL", None, required = true),

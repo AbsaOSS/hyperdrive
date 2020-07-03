@@ -22,7 +22,6 @@ private[hyperdrive] object ConfigurationsKeys {
 
     val KEY_INGESTOR = s"$rootComponentConfKey.ingestor"
     val KEY_READER = s"$rootComponentConfKey.reader"
-    val KEY_DECODER = s"$rootComponentConfKey.decoder"
     val KEY_TRANSFORMER = s"$rootComponentConfKey.transformer"
     val KEY_WRITER = s"$rootComponentConfKey.writer"
   }

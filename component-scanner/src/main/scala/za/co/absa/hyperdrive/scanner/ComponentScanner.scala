@@ -20,7 +20,6 @@ import java.nio.file.{Files, Path}
 import java.util.ServiceLoader
 
 import org.apache.logging.log4j.LogManager
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoderFactory, StreamDecoderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
@@ -30,7 +29,6 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 case class ComponentDescriptors(readers: Seq[ComponentDescriptor],
-                                decoders: Seq[ComponentDescriptor],
                                 transformers: Seq[ComponentDescriptor],
                                 writers: Seq[ComponentDescriptor])
 
@@ -55,7 +53,6 @@ object ComponentScanner {
   private def flatten(componentDescriptors: Seq[ComponentDescriptors]) = {
     ComponentDescriptors(
       componentDescriptors.flatMap(_.readers),
-      componentDescriptors.flatMap(_.decoders),
       componentDescriptors.flatMap(_.transformers),
       componentDescriptors.flatMap(_.writers)
     )
@@ -82,7 +79,6 @@ object ComponentScanner {
     val classLoader = new URLClassLoader(Array(jar.toUri.toURL))
     ComponentDescriptors(
       loadService[StreamReaderFactoryProvider, StreamReaderFactory](classLoader, jar),
-      loadService[StreamDecoderFactoryProvider, StreamDecoderFactory](classLoader, jar),
       loadService[StreamTransformerFactoryProvider, StreamTransformerFactory](classLoader, jar),
       loadService[StreamWriterFactoryProvider, StreamWriterFactory](classLoader, jar)
     )

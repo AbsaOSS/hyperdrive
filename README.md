@@ -23,22 +23,21 @@
 
 Hyperdrive is a configurable and scalable ingestion platform that allows data movement and transformation from streaming sources with exactly-once fault-tolerance semantics by using Apache Spark Structured Streaming.
 
-In Hyperdrive, each ingestion is defined by the four components reader, decoder, transformer and writer. This separation allows adapting to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
+In Hyperdrive, each ingestion is defined by the three components reader, transformer and writer. This separation allows adapting to different streaming sources and sinks, while reusing transformations common across multiple ingestion pipelines.
 ## Motivation
 Similar to batch processing, data ingestion pipelines are needed to process streaming data sources. While solutions for data pipelines exist, exactly-once fault-tolerance in streaming processing is an intricate problem and cannot be solved with the same strategies that exist for batch processing.
 
 This is the gap the Hyperdrive aims to fill, by leveraging the exactly-once guarantee of Spark's Structured Streaming and by providing a flexible data pipeline. 
 
 ## Architecture
-The data ingestion pipeline of Hyperdrive consists of four components: readers, decoders, transformers, writers.
+The data ingestion pipeline of Hyperdrive consists of four components: readers, transformers, writers.
 - **Readers** define how to connect to sources, e.g. how to connect to Kafka in a secure cluster by providing security directives, which topic and brokers to connect to.
-- **Decoders** define how to convert the payload into DataFrames, e.g. decoding from binary into Avro after retrieving the schema from schema registry. 
 - **Transformers** define transformations to be applied to the decoded DataFrame, e.g. dropping columns.
 - **Writers** define where DataFrames should be sent after the transformations, e.g. into HDFS as Parquet files.
 
 ### Built-in components
 - `KafkaStreamReader` - reads from a Kafka topic.
-- `ConfluentAvroKafkaStreamDecoder` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This decoder is capable of seamlessly handling whatever schemas the payload messages are using.
+- `ConfluentAvroDecodingTransformer` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This transformer is capable of seamlessly handling whatever schemas the payload messages are using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode, by invoking Spark's `processAllAvailable` method on the stream writer.
 - `ParquetPartitioningStreamWriter` - writes the DataFrame as Parquet, partitioned by the ingestion date and an auto-incremented version number.
@@ -46,8 +45,8 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
-- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `StreamDecoder`, `StreamTransformer` or `StreamWriter` 
-- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `StreamDecoderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
+- A custom component has to be a class which extends either of the abstract classes `StreamReader`, `StreamTransformer` or `StreamWriter` 
+- The class needs to have a companion object which implements the corresponding trait `StreamReaderFactory`, `StreamTransformerFactory` or `StreamWriterFactory`
 - The implemented components have to be packaged to a jar file, which can then be added to the classpath of the driver. To use a component, it has to be configured as described under [Usage](#usage)
 
 After that, the new component will be able to be seamlessly invoked from the driver.
@@ -85,7 +84,6 @@ The configuration file may be created from the template located at `driver/src/r
 | :--- | :---: | :--- |
 | `component.ingestor`    | Yes |  Defines the ingestion pipeline. Only `spark` is currently supported. |
 | `component.reader`      | Yes |  Fully qualified name of reader component, e.g.`za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader` |
-| `component.decoder`     | Yes |  Fully qualified name of decoder component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder` |
 | `component.transformer.id.{order}` | No  | An arbitrary but unique string, referenced in this documentation as `{transformer-id}` |
 | `component.transformer.class.{transformer-id}` | No  |  Fully qualified name of transformer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer` |
 | `component.writer`      | Yes |  Fully qualified name of writer component, e.g. `za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetPartitioningStreamWriter` |
@@ -204,15 +202,15 @@ where the key is a string and the value can be of any type. The following contex
 
 | Name | Type | Description |
 | :--- | :--- | :--- |
-| key.column.prefix | String | If `ConfluentAvroKafkaStreamDecoder` is configured to consume keys, it prefixes the key columns with `key__` such that they can be distinguished in the dataframe. If `key__` happens to be a prefix of a value column, a random alphanumeric string is used instead. |
-| key.column.names | Seq[String] | If `ConfluentAvroKafkaStreamDecoder` is configured to consume keys, it contains the original column names (without prefix) in the key schema. |
+| key.column.prefix | String | If `ConfluentAvroDecodingTransformer` is configured to consume keys, it prefixes the key columns with `key__` such that they can be distinguished in the dataframe. If `key__` happens to be a prefix of a value column, a random alphanumeric string is used instead. |
+| key.column.names | Seq[String] | If `ConfluentAvroDecodingTransformer` is configured to consume keys, it contains the original column names (without prefix) in the key schema. |
  
 #### Other
 Hyperdrive uses [Apache Commons Configuration 2](https://github.com/apache/commons-configuration). This allows
 properties to be referenced, e.g. like so
 ```
-decoder.avro.schema.registry.url=http://localhost:8081
-writer.kafka.schema.registry.url=${decoder.avro.schema.registry.url}
+transformer.[avro.decoder].schema.registry.url=http://localhost:8081
+writer.kafka.schema.registry.url=${transformer.[avro.decoder].schema.registry.url}
 ```
 
 ### Workflow Manager
