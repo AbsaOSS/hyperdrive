@@ -26,6 +26,7 @@ import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys
 
 private[transformer] class AddDateVersionTransformer(val reportDate: String, val destination: String) extends StreamTransformer {
 
@@ -77,6 +78,10 @@ object AddDateVersionTransformer extends StreamTransformerFactory with AddDateVe
     new AddDateVersionTransformer(reportDate, destinationDirectory)
   }
 
+  override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
+    ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY -> ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY
+  )
+
   private def getReportDateString(configuration: Configuration): String = {
     configuration.getString(KeyReportDate) match {
       case value: String => value
@@ -85,6 +90,7 @@ object AddDateVersionTransformer extends StreamTransformerFactory with AddDateVe
   }
 
   def getDestinationDirectory(configuration: Configuration): String =
-    getOrThrow(KeyDestinationDirectory, configuration, errorMessage = s"Destination directory not found. Is '$KeyDestinationDirectory' defined?")
+    getOrThrow(ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY, configuration,
+      errorMessage = s"Destination directory not found. Is '${ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY}' defined?")
 
 }

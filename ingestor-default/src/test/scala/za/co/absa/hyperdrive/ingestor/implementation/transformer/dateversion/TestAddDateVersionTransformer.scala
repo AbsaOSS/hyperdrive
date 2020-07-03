@@ -25,6 +25,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties
+import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys
 
 class TestAddDateVersionTransformer extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
 
@@ -52,7 +53,7 @@ class TestAddDateVersionTransformer extends FlatSpec with SparkTestBase with Mat
 
   it should "write partitioned by date and version=1 where destination directory is empty" in {
     val config = new BaseConfiguration()
-    config.addProperty(AddDateVersionTransformer.KeyDestinationDirectory, destinationDir)
+    config.addProperty(ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY, destinationDir)
     config.addProperty(AddDateVersionTransformer.KeyReportDate, "2020-02-29")
     val underTest = AddDateVersionTransformer(config)
     val df = getDummyReadStream().toDF()
@@ -63,7 +64,7 @@ class TestAddDateVersionTransformer extends FlatSpec with SparkTestBase with Mat
   it should "write to partition version=2 when version=1 already exists for the same date" in {
     // given
     val config = new BaseConfiguration()
-    config.addProperty(AddDateVersionTransformer.KeyDestinationDirectory, destinationDir)
+    config.addProperty(ParquetStreamWriterKeys.KEY_DESTINATION_DIRECTORY, destinationDir)
     config.addProperty(AddDateVersionTransformer.KeyReportDate, "2020-02-29")
     val underTest = AddDateVersionTransformer(config)
 

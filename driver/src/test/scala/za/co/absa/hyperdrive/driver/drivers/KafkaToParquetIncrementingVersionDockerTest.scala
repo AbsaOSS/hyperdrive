@@ -81,7 +81,6 @@ class KafkaToParquetIncrementingVersionDockerTest extends FlatSpec with Matchers
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
       "transformer.[version.incrementer].report.date" -> "2020-03-31",
-      "transformer.[version.incrementer].destination.directory" -> "${writer.parquet.destination.directory}",
 
       // Sink(Parquet) settings
       "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),

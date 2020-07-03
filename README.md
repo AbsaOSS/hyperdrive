@@ -140,10 +140,10 @@ For detailed information on the subject name strategy, please take a look at the
 ##### AddDateVersionTransformer
 The `AddDateVersionTransformer` adds the columns `hyperdrive_date` and `hyperdrive_version`. `hyperdrive_date` is the ingestion date (or a user-defined date), while `hyperdrive_version` is a number automatically incremented with every ingestion, starting at 1.
 For the auto-increment to work, `hyperdrive_date` and `hyperdrive_version` need to be defined as partition columns.
+Caution: This transformer requires a writer which defines `writer.parquet.destination.directory`.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
-| `transformer.{transformer-id}.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
 | `transformer.{transformer-id}.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
 
 See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.

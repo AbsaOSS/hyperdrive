@@ -21,15 +21,14 @@ import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSele
 trait AddDateVersionTransformerAttributes extends HasComponentAttributes {
 
   val KeyReportDate = "report.date"
-  val KeyDestinationDirectory = "destination.directory"
 
   override def getName: String = "Add Date Version Transformer"
 
   override def getDescription: String = "This transformer adds a date and an incrementing version number as columns hyperdrive_date and hyperdrive_version." +
-    " hyperdrive_date and hyperdrive_version need to be specified in that order as partition columns for the increment to work."
+    " hyperdrive_date and hyperdrive_version need to be specified in that order as partition columns for the increment to work." +
+    " This transformer depends on a writer which defines writer.parquet.destination.directory"
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    KeyDestinationDirectory -> PropertyMetadata("Destination directory", Some("The next version number is determined by the existing partition column in the destination"), required = true),
     KeyReportDate -> PropertyMetadata("Date", Some("Date to add as a column, e.g. 2018-01-23. By default, the current date will be taken."), required = false)
   )
 }
