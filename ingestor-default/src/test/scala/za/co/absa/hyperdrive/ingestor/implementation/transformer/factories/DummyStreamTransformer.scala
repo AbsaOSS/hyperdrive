@@ -22,18 +22,29 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 import scala.util.Try
 
-class DummyStreamTransformer (val dummyProperty1: String, val dummyProperty2: Int) extends StreamTransformer {
+class DummyStreamTransformer (val dummyProperty1: String, val dummyProperty2: Int,
+                              val dummyProperty3: String, val dummyProperty4: String) extends StreamTransformer {
   override def transform(streamData: DataFrame): DataFrame = ???
 }
 
 object DummyStreamTransformer extends StreamTransformerFactory with HasComponentAttributes {
   val DummyProperty1Name = "dummy.property.one"
   val DummyProperty2Name = "dummy.property.two"
+  val DummyProperty3Name = "dummy.property.three"
+
   override def apply(config: Configuration): StreamTransformer = {
     val dummyProperty1 = Try(config.getString(DummyProperty1Name)).getOrElse("defaultValue")
     val dummyProperty2 = Try(config.getInt(DummyProperty2Name)).getOrElse(0)
-    new DummyStreamTransformer(dummyProperty1, dummyProperty2)
+    val dummyProperty3 = Try(config.getString(DummyProperty3Name)).getOrElse("defaultValue3")
+    val dummyProperty4 = Try(config.getString(GlobalConfigKeys.GlobalKey2)).getOrElse("defaultValue4")
+    new DummyStreamTransformer(dummyProperty1, dummyProperty2, dummyProperty3, dummyProperty4)
   }
+
+  override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
+    GlobalConfigKeys.GlobalKey1 -> DummyProperty3Name,
+    GlobalConfigKeys.GlobalKey2 -> GlobalConfigKeys.GlobalKey2
+  )
+
 
   override def getName: String = ???
   override def getDescription: String = ???

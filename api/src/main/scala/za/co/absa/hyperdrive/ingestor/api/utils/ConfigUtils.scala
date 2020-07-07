@@ -65,4 +65,29 @@ object ConfigUtils {
       case _ => Map()
     }
   }
+
+  /**
+   * Copies properties defined in sourceToTargetMapping from source to target. If source config keys don't exist, the
+   * method returns a Failure. If the specified target keys already exist, the method returns a Failure.
+   * @param source config to copy properties from. Won't be mutated by this method.
+   * @param target config to copy properties into. This method mutates the target configuration.
+   * @param sourceToTargetMapping mapping from source config keys to target config keys
+   * @return target configuration, wrapped in Try
+   */
+  def copyAndMapConfig(source: Configuration, target: Configuration, sourceToTargetMapping: Map[String, String]): Try[Configuration] = {
+    def missingSourceKeys = sourceToTargetMapping.keys.filterNot(source.containsKey)
+    def conflictingTargetKeys = sourceToTargetMapping.values.filter(target.containsKey)
+
+    if (missingSourceKeys.nonEmpty) {
+      Failure(new IllegalArgumentException(s"Keys $missingSourceKeys don't exist in the source configuration."))
+    } else if (conflictingTargetKeys.nonEmpty) {
+      Failure(new IllegalArgumentException(s"Cannot add key $conflictingTargetKeys to target configuration because they already exist."))
+    } else {
+      sourceToTargetMapping.foreach { case (sourceKey, targetKey) =>
+        val value = source.getProperty(sourceKey)
+        target.addProperty(targetKey, value)
+      }
+      Success(target)
+    }
+  }
 }

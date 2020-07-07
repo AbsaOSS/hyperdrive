@@ -17,9 +17,11 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.factories
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
+
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 
@@ -59,7 +61,13 @@ object StreamTransformerAbstractFactory {
 
     transformerClassNames
       .map { case (id, className) => id -> ClassLoaderUtils.loadSingletonClassOfType[StreamTransformerFactory](className) }
-      .map { case (id, factory) => factory.apply(config.subset(s"$transformerKeyPrefix.$id")) }
+      .map { case (id, factory) => factory -> ConfigUtils.copyAndMapConfig(config, config.subset(s"$transformerKeyPrefix.$id"), factory.getMappingFromRetainedGlobalConfigToLocalConfig(config)) }
+      .map { case (factory, configTry) => configTry match {
+        case Failure(exception) => throw exception
+        case Success(value) => factory -> value
+      }
+      }
+      .map { case (factory, config) => factory.apply(config) }
   }
 
   private def validateConfiguration(config: Configuration): Unit = {
