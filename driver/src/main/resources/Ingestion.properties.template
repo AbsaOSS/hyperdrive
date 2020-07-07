@@ -20,8 +20,8 @@
 # Pipeline settings
 component.ingestor=spark
 component.reader=za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-component.decoder=za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder
-component.transformer=za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
+component.transformer.id.0=[avro.decoder]
+component.transformer.class.[avro.decoder]=za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer
 component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
 # Spark settings
@@ -38,21 +38,15 @@ reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092
 #reader.option.kafka.ssl.key.password=your_ssl_password
 #reader.option.failOnDataLoss=false
 
-# Offset management(checkpointing) settings
-
 # Format(ABRiS) settings
-decoder.avro.schema.registry.url=http://localhost:8081
-decoder.avro.value.schema.id=latest
+transformer.[avro.decoder].schema.registry.url=http://localhost:8081
+transformer.[avro.decoder].value.schema.id=latest
 # options = {topic.name, record.name, topic.record.name}
-decoder.avro.value.schema.naming.strategy=topic.name
+transformer.[avro.decoder].value.schema.naming.strategy=topic.name
 
 # for the case when the naming strategy is either record.name or topic.record.name
-#decoder.avro.value.schema.record.name = recordName
-#decoder.avro.value.schema.record.namespace = recordNamespace
-
-# Transformations(Enceladus) settings
-# comma separated list of columns to select
-transformer.columns.to.select=*
+#transformer.[avro.decoder].value.schema.record.name = recordName
+#transformer.[avro.decoder].value.schema.record.namespace = recordNamespace
 
 # Sink(Parquet) settings
 writer.common.checkpoint.location=/tmp/checkpoint-location

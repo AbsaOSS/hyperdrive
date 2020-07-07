@@ -13,30 +13,29 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.{RandomStringUtils, StringUtils}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Column, DataFrame}
 import za.co.absa.abris.avro.functions.from_confluent_avro
 import za.co.absa.abris.avro.read.confluent.SchemaManager._
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
-import za.co.absa.hyperdrive.ingestor.api.decoder.{StreamDecoder, StreamDecoderFactory}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, SchemaRegistrySettingsUtil}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
-private[decoder] class ConfluentAvroKafkaStreamDecoder(
+private[transformer] class ConfluentAvroDecodingTransformer(
   val topic: String,
   val valueSchemaRegistrySettings: Map[String, String],
   val keySchemaRegistrySettings: Option[Map[String, String]])
-  extends StreamDecoder {
+  extends StreamTransformer {
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException("Blank topic.")
@@ -49,10 +48,9 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(
 
   private val logger = LogManager.getLogger
 
-  override def decode(streamReader: DataStreamReader): DataFrame = {
+  override def transform(dataFrame: DataFrame): DataFrame = {
     logger.info(s"SchemaRegistry settings: $valueSchemaRegistrySettings")
 
-    val dataFrame = streamReader.load()
     keySchemaRegistrySettings match {
       case Some(keySettings) => getKeyValueDataFrame(dataFrame, keySettings)
       case None => getValueDataFrame(dataFrame)
@@ -68,7 +66,7 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(
 
     val keyColumnNames = keyValueDf.select("key.*").columns.toSeq
     val valueColumnNames = keyValueDf.select("value.*").columns.toSeq
-    val prefix = ConfluentAvroKafkaStreamDecoder.determineKeyColumnPrefix(valueColumnNames)
+    val prefix = ConfluentAvroDecodingTransformer.determineKeyColumnPrefix(valueColumnNames)
 
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnNames, keyColumnNames)
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnPrefix, prefix)
@@ -93,7 +91,7 @@ private[decoder] class ConfluentAvroKafkaStreamDecoder(
 
 }
 
-object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with ConfluentAvroKafkaStreamDecoderAttributes {
+object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
 
   object ValueSchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
@@ -116,18 +114,22 @@ object ConfluentAvroKafkaStreamDecoder extends StreamDecoderFactory with Conflue
     override val paramSchemaNamingStrategy: String = PARAM_KEY_SCHEMA_NAMING_STRATEGY
   }
 
-  override def apply(config: Configuration): StreamDecoder = {
+  override def apply(config: Configuration): StreamTransformer = {
     val topic = getTopic(config)
     val valueSchemaRegistrySettings = SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, ValueSchemaConfigKeys)
 
     val keySchemaRegistrySettingsOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
       .flatMap(_ => Some(SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, KeySchemaConfigKeys)))
     LogManager.getLogger.info(
-      s"Going to create AvroKafkaStreamDecoder instance using: topic='$topic', " +
+      s"Going to create ConfluentAvroDecodingTransformer instance using: topic='$topic', " +
         s"value schema registry settings='$valueSchemaRegistrySettings', key schema registry settings='$keySchemaRegistrySettingsOpt'.")
 
-    new ConfluentAvroKafkaStreamDecoder(topic, valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
+    new ConfluentAvroDecodingTransformer(topic, valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
   }
+
+  override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
+    KEY_TOPIC -> KEY_TOPIC
+  )
 
   private def getTopic(configuration: Configuration): String =
     getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")

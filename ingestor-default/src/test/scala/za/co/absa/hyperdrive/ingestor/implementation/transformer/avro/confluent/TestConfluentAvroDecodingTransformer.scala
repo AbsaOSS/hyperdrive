@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{FlatSpec, Matchers}
@@ -21,18 +21,18 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_REGISTRY_URL
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
-class TestConfluentAvroKafkaStreamDecoder extends FlatSpec with Matchers {
+class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers {
 
   private val topic = "topic"
   private val schemaRegistryURL = "http://localhost:8081"
   private val schemaRegistryValueSchemaId = "latest"
 
-  behavior of ConfluentAvroKafkaStreamDecoder.getClass.getSimpleName
+  behavior of ConfluentAvroDecodingTransformer.getClass.getSimpleName
 
   "apply" should "throw if topic is not configured" in {
     val config = new BaseConfiguration
 
-    val throwable = intercept[IllegalArgumentException](ConfluentAvroKafkaStreamDecoder(config))
+    val throwable = intercept[IllegalArgumentException](ConfluentAvroDecodingTransformer(config))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
   }
 
@@ -43,7 +43,7 @@ class TestConfluentAvroKafkaStreamDecoder extends FlatSpec with Matchers {
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, schemaRegistryValueSchemaId)
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
 
-    val decoder = ConfluentAvroKafkaStreamDecoder(config).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+    val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
     decoder.topic shouldBe topic
     decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
@@ -60,7 +60,7 @@ class TestConfluentAvroKafkaStreamDecoder extends FlatSpec with Matchers {
     config.addProperty(KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID, schemaRegistryValueSchemaId)
     config.addProperty(KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
 
-    val decoder = ConfluentAvroKafkaStreamDecoder(config).asInstanceOf[ConfluentAvroKafkaStreamDecoder]
+    val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
     decoder.topic shouldBe topic
     decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
@@ -69,14 +69,14 @@ class TestConfluentAvroKafkaStreamDecoder extends FlatSpec with Matchers {
 
   "determineKeyColumnPrefix" should "return prefix key__ by default" in {
     val columnNames = Seq("abcdef", "foo", "ba")
-    val prefix = ConfluentAvroKafkaStreamDecoder.determineKeyColumnPrefix(columnNames)
+    val prefix = ConfluentAvroDecodingTransformer.determineKeyColumnPrefix(columnNames)
     prefix shouldBe "key__"
   }
 
   it should "return a non-conflicting prefix" in {
     val columnNames = Seq("key__abc", "foo", "ba")
 
-    val prefix = ConfluentAvroKafkaStreamDecoder.determineKeyColumnPrefix(columnNames)
+    val prefix = ConfluentAvroDecodingTransformer.determineKeyColumnPrefix(columnNames)
     import scala.math.min
     val columnNamesPrefixes = columnNames.map(c => c.substring(0, min(c.length, 5)))
     columnNamesPrefixes should not contain prefix

@@ -82,7 +82,8 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       // Pipeline settings
       "component.ingestor" -> "spark",
       "component.reader" -> "za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader",
-      "component.decoder" -> "za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder",
+      "component.transformer.id.0" -> "[avro.decoder]",
+      "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
       "component.transformer.id.1" -> "column.selector",
       "component.transformer.class.column.selector" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
@@ -96,12 +97,12 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
       // Format(ABRiS) settings
-      "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
-      "decoder.avro.value.schema.id" -> "latest",
-      "decoder.avro.value.schema.naming.strategy" -> "topic.name",
-      "decoder.avro.consume.keys" -> "true",
-      "decoder.avro.key.schema.id" -> "latest",
-      "decoder.avro.key.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
+      "transformer.[avro.decoder].value.schema.id" -> "latest",
+      "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.decoder].consume.keys" -> "true",
+      "transformer.[avro.decoder].key.schema.id" -> "latest",
+      "transformer.[avro.decoder].key.schema.naming.strategy" -> "topic.name",
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select

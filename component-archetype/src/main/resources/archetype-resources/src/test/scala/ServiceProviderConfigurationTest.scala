@@ -18,11 +18,9 @@ package ${package}
 import java.util.ServiceLoader
 
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
-import ${package}.decoder.mycomponent.MyStreamDecoderImpl
 import ${package}.reader.mycomponent.MyStreamReaderImpl
 import ${package}.transformer.mycomponent.MyStreamTransformerImpl
 import ${package}.writer.mycomponent.MyStreamWriterImpl
@@ -37,10 +35,6 @@ class ServiceProviderConfigurationTest extends FlatSpec with Matchers {
     val readerFactory = ServiceLoader.load(classOf[StreamReaderFactoryProvider], classLoader).asScala
       .map(_.getComponentFactory).toList
     readerFactory should contain only MyStreamReaderImpl
-
-    val decoderFactory = ServiceLoader.load(classOf[StreamDecoderFactoryProvider], classLoader).asScala
-      .map(_.getComponentFactory).toList
-    decoderFactory should contain only MyStreamDecoderImpl
 
     val transformerFactory = ServiceLoader.load(classOf[StreamTransformerFactoryProvider], classLoader).asScala
       .map(_.getComponentFactory).toList
