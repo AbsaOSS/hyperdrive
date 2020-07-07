@@ -60,4 +60,3 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
       .toList
   }
 }
-,
