@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion
 
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 
-class ParquetPartitioningStreamWriterLoader extends StreamWriterFactoryProvider {
-  override def getComponentFactory: StreamWriterFactory = ParquetPartitioningStreamWriter
+class AddDateVersionTransformerLoader extends StreamTransformerFactoryProvider {
+  override def getComponentFactory: StreamTransformerFactory = AddDateVersionTransformer
 }

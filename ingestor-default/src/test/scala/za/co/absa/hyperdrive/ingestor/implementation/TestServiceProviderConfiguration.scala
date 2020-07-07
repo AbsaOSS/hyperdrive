@@ -25,8 +25,9 @@ import za.co.absa.hyperdrive.ingestor.api.{ComponentFactory, ComponentFactoryPro
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion.AddDateVersionTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
-import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.{ParquetPartitioningStreamWriter, ParquetStreamWriter}
+import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
 import scala.reflect.ClassTag
 
@@ -41,12 +42,12 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
 
   it should "load StreamTransformers" in {
     val factoryProviders = loadServices[StreamTransformerFactoryProvider, StreamTransformerFactory]()
-    factoryProviders should contain theSameElementsAs Seq(ColumnSelectorStreamTransformer, ConfluentAvroDecodingTransformer)
+    factoryProviders should contain theSameElementsAs Seq(AddDateVersionTransformer, ColumnSelectorStreamTransformer, ConfluentAvroDecodingTransformer)
   }
 
   it should "load StreamWriters" in {
     val factoryProviders = loadServices[StreamWriterFactoryProvider, StreamWriterFactory]()
-    factoryProviders should contain theSameElementsAs Seq(ParquetPartitioningStreamWriter, ParquetStreamWriter, KafkaStreamWriter)
+    factoryProviders should contain theSameElementsAs Seq(ParquetStreamWriter, KafkaStreamWriter)
   }
 
   private def loadServices[P <: ComponentFactoryProvider[F], F <: ComponentFactory[_]]()(implicit classTag: ClassTag[P]): Iterable[F] = {
