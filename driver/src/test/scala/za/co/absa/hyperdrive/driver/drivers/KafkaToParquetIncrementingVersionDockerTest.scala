@@ -60,7 +60,8 @@ class KafkaToParquetIncrementingVersionDockerTest extends FlatSpec with Matchers
       // Pipeline settings
       "component.ingestor" -> "spark",
       "component.reader" -> "za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader",
-      "component.decoder" -> "za.co.absa.hyperdrive.ingestor.implementation.decoder.avro.confluent.ConfluentAvroKafkaStreamDecoder",
+      "component.transformer.id.0" -> "[avro.decoder]",
+      "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
       "component.transformer.id.1" -> "[version.incrementer]",
       "component.transformer.class.[version.incrementer]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion.AddDateVersionTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter",
@@ -74,9 +75,9 @@ class KafkaToParquetIncrementingVersionDockerTest extends FlatSpec with Matchers
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
       // Format(ABRiS) settings
-      "decoder.avro.schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
-      "decoder.avro.value.schema.id" -> "latest",
-      "decoder.avro.value.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
+      "transformer.[avro.decoder].value.schema.id" -> "latest",
+      "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
