@@ -25,7 +25,7 @@ This is a Maven archetype for creating custom Hyperdrive components.
 
 Download the artifact to your local maven repository
 ```
-mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:3.0.0 
+mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:4.0.0 
 ```
 
 Update the local archetype catalog
@@ -38,7 +38,7 @@ Generate a skeleton project by executing the following command
 mvn archetype:generate \
     -DarchetypeGroupId=za.co.absa.hyperdrive \
     -DarchetypeArtifactId=component-archetype \
-    -DarchetypeVersion=3.0.0 \
+    -DarchetypeVersion=4.0.0 \
     -DgroupId=<groupId> \
     -DartifactId=<artifactId> \
     -Dversion=<artifact-version> 
@@ -49,7 +49,7 @@ mvn archetype:generate \
 
 ## Implementing a Hyperdrive component
 
-There are five types of Hyperdrive components: Reader, Decoder, Transformer and Writer.
+There are three types of Hyperdrive components: Reader, Transformer and Writer.
 
 ### Component stubs
 

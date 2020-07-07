@@ -16,12 +16,11 @@
 package za.co.absa.hyperdrive.scanner.dummyjar
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.streaming.DataStreamReader
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
 
 class DummyStreamReaderTwo extends DummyTrait {
-  override def read(spark: SparkSession): DataStreamReader = ???
+  override def read(spark: SparkSession): DataFrame = ???
 }
 
 object DummyStreamReaderTwo extends AbstractDummyStreamReaderFactory with DummyAttributes {

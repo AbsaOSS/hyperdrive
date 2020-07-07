@@ -21,7 +21,6 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable, TerminationMethod}
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.utils.{ComponentFactoryUtil, ConfigUtils}
@@ -52,7 +51,6 @@ class SparkIngestor(val spark: SparkSession,
     * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
     *
     * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param decoder            [[StreamDecoder]] implementation responsible for handling differently encoded payloads.
     * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
     * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
     */
@@ -60,7 +58,6 @@ class SparkIngestor(val spark: SparkSession,
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
   def ingest(streamReader: StreamReader,
-             decoder: StreamDecoder,
              streamTransformers: Seq[StreamTransformer],
              streamWriter: StreamWriter): Unit = {
 
@@ -69,10 +66,9 @@ class SparkIngestor(val spark: SparkSession,
     logger.info(s"STARTING ingestion (id = $ingestionId)")
 
     val ingestionQuery = try {
-      val inputStreamReader = streamReader.read(spark) // gets the source stream
-      val decodedDataFrame = decoder.decode(inputStreamReader) // decodes the payload from whatever encoding it has
-      val transformedDataFrame = streamTransformers.foldLeft(decodedDataFrame)((dataFrame, streamTransformer) => streamTransformer.transform(dataFrame)) // applies any transformations to the data
-      streamWriter.write(transformedDataFrame) // sends the stream to the destination
+      val inputDataframe = streamReader.read(spark)
+      val transformedDataFrame = streamTransformers.foldLeft(inputDataframe)((dataFrame, streamTransformer) => streamTransformer.transform(dataFrame))
+      streamWriter.write(transformedDataFrame)
     } catch {
       case NonFatal(e) =>
         throw new IngestionStartException(s"NOT STARTED ingestion $ingestionId. This exception was thrown during the starting of the ingestion job. Check the logs for details.", e)

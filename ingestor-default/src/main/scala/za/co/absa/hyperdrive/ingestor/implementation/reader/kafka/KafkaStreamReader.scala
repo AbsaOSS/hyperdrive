@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -62,7 +62,7 @@ private[reader] class KafkaStreamReader(
    * IMPORTANT: this method does not check against malformed data (e.g. invalid broker protocols or certificate locations),
    * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
    */
-  override def read(spark: SparkSession): DataStreamReader = {
+  override def read(spark: SparkSession): DataFrame = {
 
     if (spark.sparkContext.isStopped) {
       throw new IllegalStateException("SparkSession is stopped.")
@@ -77,7 +77,9 @@ private[reader] class KafkaStreamReader(
       .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
     val streamReaderWithStartingOffsets = configureStartingOffsets(streamReader, spark.sparkContext.hadoopConfiguration)
-    streamReaderWithStartingOffsets.options(extraConfs)
+    streamReaderWithStartingOffsets
+      .options(extraConfs)
+      .load()
   }
 
   private def configureStartingOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
