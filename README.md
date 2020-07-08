@@ -38,6 +38,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 ### Built-in components
 - `KafkaStreamReader` - reads from a Kafka topic.
 - `ConfluentAvroDecodingTransformer` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This transformer is capable of seamlessly handling whatever schemas the payload messages are using.
+- `ConfluentAvroEncodingTransformer` - encodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), updating the schema to the specified Schema Registry. This transformer is capable of seamlessly handling whatever schema the dataframe is using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
 - `AddDateVersionTransformerStreamWriter` - adds columns for ingestion date and an auto-incremented version number, to be used for partitioning.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode.
@@ -130,6 +131,21 @@ The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.
 
 For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
 
+##### ConfluentAvroStreamEncodingTransformer
+The `ConfluentAvroStreamEncodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+**Caution**: The `ConfluentAvroStreamEncodingTransformer` requires the property `writer.kafka.topic` to be set.
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.{transformer-id}.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
+| `transformer.{transformer-id}.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
+| `transformer.{transformer-id}.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
+| `transformer.{transformer-id}.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
+| `transformer.{transformer-id}.produce.keys` | No | If set to `true`, keys will be produced according to the properties `key.column.prefix` and `key.column.names` of the [Hyperdrive Context](#hyperdrive-context) |
+| `transformer.{transformer-id}.key.schema.naming.strategy` | Yes if `produce.keys` is true | Subject name strategy for key |
+| `transformer.{transformer-id}.key.schema.record.name` | Yes for key naming strategies `record.name` and `topic.record.name` | Name of the record. |
+| `transformer.{transformer-id}.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
+
 ##### ColumnSelectorStreamTransformer
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
@@ -162,14 +178,6 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | :--- | :---: | :--- |
 | `writer.kafka.topic` | Yes | The name of the kafka topic to ingest data from. Equivalent to Spark property `topic` |
 | `writer.kafka.brokers` | Yes | List of kafka broker URLs . Equivalent to Spark property `kafka.bootstrap.servers` |
-| `writer.kafka.schema.registry.url` | Yes | URL of Schema Registry, e.g. http://localhost:8081. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_REGISTRY_URL` |
-| `writer.kafka.value.schema.naming.strategy` | Yes | Subject name strategy of Schema Registry. Possible values are `topic.name`, `record.name` or `topic.record.name`. Equivalent to ABRiS property `SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY` |
-| `writer.kafka.value.schema.record.name` | Yes for naming strategies `record.name` and `topic.record.name` | Name of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY` |
-| `writer.kafka.value.schema.record.namespace` | Yes for naming strategies `record.name` and `topic.record.name` | Namespace of the record. Equivalent to ABRiS property `SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY` |
-| `writer.kafka.produce.keys` | No | If set to `true`, keys will be produced according to the properties `key.column.prefix` and `key.column.names` of the [Hyperdrive Context](#hyperdrive-context) |
-| `writer.kafka.key.schema.naming.strategy` | Yes if `writer.kafka.produce.keys` is true | Subject name strategy for the key |
-| `writer.kafka.key.schema.record.name` | Yes if key naming strategy is either `record.name` or `topic.record.name` | Name of the record. |
-| `writer.kafka.key.schema.record.namespace` | Yes if key naming strategy is either `record.name` or `topic.record.name` | Namespace of the record. |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
