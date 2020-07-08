@@ -41,8 +41,6 @@ class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar wit
     val config = new BaseConfiguration()
     config.addProperty(KEY_TOPIC, "thetopic")
     config.addProperty(KEY_BROKERS, "brokers")
-    config.addProperty(KEY_SCHEMA_REGISTRY_URL, "url")
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, "topic.name")
     config.addProperty("writer.kafka.option.extra-key", "ExtraValue")
     config.addProperty("writer.kafka.option.extra-key-2", "ExtraValue2")
     config.addProperty(keyTriggerType, "ProcessingTime")
