@@ -86,6 +86,8 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
       "component.transformer.id.1" -> "column.selector",
       "component.transformer.class.column.selector" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
+      "component.transformer.id.2" -> "[avro.encoder]",
+      "component.transformer.class.[avro.encoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
 
       // Spark settings
@@ -96,7 +98,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "reader.kafka.topic" -> sourceTopic,
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
 
-      // Format(ABRiS) settings
+      // Avro Decoder (ABRiS) settings
       "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "transformer.[avro.decoder].value.schema.id" -> "latest",
       "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
@@ -104,20 +106,21 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "transformer.[avro.decoder].key.schema.id" -> "latest",
       "transformer.[avro.decoder].key.schema.naming.strategy" -> "topic.name",
 
-      // Transformations(Enceladus) settings
       // comma separated list of columns to select
       "transformer.column.selector.columns.to.select" -> "*",
+
+      // Avro Encoder (ABRiS) settings
+      "transformer.[avro.encoder].schema.registry.url" -> "${decoder.avro.schema.registry.url}",
+      "transformer.[avro.encoder].value.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.encoder].produce.keys" -> "true",
+      "transformer.[avro.encoder].key.schema.naming.strategy" -> "topic.name",
 
       // Sink(Kafka) settings
       "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),
       "writer.common.trigger.type" -> "ProcessingTime",
       "writer.common.trigger.processing.time" -> "1000",
       "writer.kafka.topic" -> destinationTopic,
-      "writer.kafka.brokers" -> "${reader.kafka.brokers}",
-      "writer.kafka.schema.registry.url" -> "${decoder.avro.schema.registry.url}",
-      "writer.kafka.value.schema.naming.strategy" -> "topic.name",
-      "writer.kafka.produce.keys" -> "true",
-      "writer.kafka.key.schema.naming.strategy" -> "topic.name"
+      "writer.kafka.brokers" -> "${reader.kafka.brokers}"
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
