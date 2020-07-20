@@ -98,7 +98,6 @@ to identify which configuration options belong to a certain transformer instance
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
-| `ingestor.spark.termination.method` | No | Either `processAllAvailable` (stop query when no more messages are incoming) or `awaitTermination` (stop query on signal, e.g. Ctrl-C). Default: `processAllAvailable`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `ingestor.spark.await.termination.timeout` | No | Timeout in milliseconds. Stops query when timeout is reached. This option is only valid with termination method `awaitTermination` |
 
 #### Settings for built-in components
@@ -183,21 +182,24 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 #### Common writer properties
 
-| Property Name | Description |
-| :--- | :--- | 
+| Property Name | Required |Description |
+| :--- | :---: | :--- |
 | `writer.common.checkpoint.location` | Yes | Used for Spark property `checkpointLocation`. The checkpoint location has to be unique among different workflows. |
-| `writer.common.trigger.type` | Either `Once` for one-time execution or `ProcessingTime` for micro-batch executions for micro-batch execution. Default: `Once`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
-| `writer.common.trigger.processing.time` | Interval in ms for micro-batch execution (using `ProcessingTime`). Default: 0ms, i.e. execution as fast as possible. |
+| `writer.common.trigger.type` | No | Either `Once` for one-time execution or `ProcessingTime` for micro-batch executions for micro-batch execution. Default: `Once`. |
+| `writer.common.trigger.processing.time` | No | Interval in ms for micro-batch execution (using `ProcessingTime`). Default: 0ms, i.e. execution as fast as possible. |
 
-#### Combination of Trigger and termination method
+#### Behavior of Triggers
 
-| Trigger (`writer.common.trigger.type`) | Termination method (`ingestor.spark.termination.method`) | Runtime | Details |
+| Trigger (`writer.common.trigger.type`) | Timeout (`ingestor.spark.termination.timeout`) | Runtime | Details |
 | :--- | :--- | :--- | :--- |
-| Once | AwaitTermination or ProcessAllAvailable | Limited | Consumes all data that is available at the beginning of the micro-batch. The query processes exactly one micro-batch and stops then, even if more data would be available at the end of the micro-batch. |
-| Once | AwaitTermination with timeout | Limited | Same as above, but terminates at the timeout. If the timeout is reached before the micro-batch is processed, it won't be completed and no data will be committed. |
-| ProcessingTime | ProcessAllAvailable | Only long-running if topic continuously produces messages, otherwise limited | Consumes all available data in micro-batches and only stops when no new data arrives, i.e. when the available offsets are the same as in the previous micro-batch. Thus, it completely depends on the topic, if and when the query terminates. |
-| ProcessingTime | AwaitTermination with timeout | Limited | Consumes data in micro-batches and only stops when the timeout is reached or the query is killed. |
-| ProcessingTime | AwaitTermination | Long-running | Consumes data in micro-batches and only stops when the query is killed. |
+| Once | No timeout | Limited | Consumes all data that is available at the beginning of the micro-batch. The query processes exactly one micro-batch and stops then, even if more data would be available at the end of the micro-batch. |
+| ProcessingTime | With timeout | Limited | Consumes data in micro-batches and only stops when the timeout is reached or the query is killed. |
+| ProcessingTime | No timeout | Long-running | Consumes data in micro-batches and only stops when the query is killed. |
+
+- Note 1: The first micro-batch of the query will contain all available messages to consume and can therefore be quite large,
+ even if the trigger `ProcessingTime` is configured, and regardless of what micro-batch interval is configured.
+ To limit the size of a micro-batch, the property `reader.option.maxOffsetsPerTrigger` should be used. See also http://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
+- Note 2: It's possible to define a timeout for trigger `Once`. If the timeout is reached before the micro-batch is processed, it won't be completed and no data will be committed. Such a behavior seems quite unpredictable and therefore we don't recommend it.
 
 See the [Spark Documentation](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#triggers) for more information about triggers.
 
