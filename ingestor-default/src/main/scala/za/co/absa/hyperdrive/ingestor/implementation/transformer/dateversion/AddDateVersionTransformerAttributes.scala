@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT
 
 trait AddDateVersionTransformerAttributes extends HasComponentAttributes {
 

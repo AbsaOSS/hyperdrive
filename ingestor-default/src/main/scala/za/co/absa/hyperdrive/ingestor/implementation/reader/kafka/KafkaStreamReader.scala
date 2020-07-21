@@ -23,7 +23,6 @@ import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 private[reader] object KafkaStreamReaderProps {
@@ -129,7 +128,7 @@ object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttri
     brokers.mkString(",")
   }
 
-  private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, rootFactoryOptionalConfKey)
+  private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, getExtraConfigurationPrefix.get)
 
   private def filterKeysContaining(map: Map[String, String], exclusionToken: String) = map.filterKeys(!_.contains(exclusionToken))
 }

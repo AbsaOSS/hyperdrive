@@ -16,9 +16,20 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
 trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes {
+  val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
+
+  val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
+  val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = "value.schema.id"
+  val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = "value.schema.record.name"
+  val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = "value.schema.record.namespace"
+
+  val KEY_CONSUME_KEYS = "consume.keys"
+  val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = "key.schema.naming.strategy"
+  val KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID = "key.schema.id"
+  val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = "key.schema.record.name"
+  val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = "key.schema.record.namespace"
 
   override def getName: String = "Confluent Avro Stream Decoder"
 

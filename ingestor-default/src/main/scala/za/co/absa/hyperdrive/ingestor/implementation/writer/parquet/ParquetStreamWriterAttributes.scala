@@ -17,9 +17,13 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 trait ParquetStreamWriterAttributes extends HasComponentAttributes {
+  private val rootFactoryConfKey = "writer.parquet"
+  val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
+  val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
+  val KEY_METADATA_CHECK = s"$rootFactoryConfKey.metadata.check"
+  val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
 
   override def getName: String = "Parquet Stream Writer"
 

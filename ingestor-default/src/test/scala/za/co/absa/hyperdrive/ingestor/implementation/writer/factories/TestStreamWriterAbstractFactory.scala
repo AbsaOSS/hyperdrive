@@ -20,7 +20,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter.{KEY_DESTINATION_DIRECTORY, KEY_EXTRA_CONFS_ROOT}
 
 class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 

@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
 import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
 
 class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
@@ -53,7 +52,7 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
   }
 
   private def getSettings: Array[String] = {
-    import KafkaStreamReaderKeys._
+    import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_BROKERS
     Array(
       s"$KEY_APP_NAME=any_name",
       s"$KEY_BROKERS=localhost:9092,otherhost:9093",

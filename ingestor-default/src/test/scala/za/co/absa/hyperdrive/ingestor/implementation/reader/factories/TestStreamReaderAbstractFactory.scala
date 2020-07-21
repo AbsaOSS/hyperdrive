@@ -21,7 +21,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.{KEY_TOPIC, KEY_BROKERS}
 
 class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 

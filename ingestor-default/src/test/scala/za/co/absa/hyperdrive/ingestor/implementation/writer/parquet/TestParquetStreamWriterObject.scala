@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter.KEY_DESTINATION_DIRECTORY
 
 class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAndAfterEach {
 

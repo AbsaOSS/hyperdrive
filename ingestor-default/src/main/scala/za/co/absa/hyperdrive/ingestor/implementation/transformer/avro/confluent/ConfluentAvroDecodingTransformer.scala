@@ -29,17 +29,12 @@ import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, SchemaRegistrySettingsUtil}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
 
 private[transformer] class ConfluentAvroDecodingTransformer(
-  val topic: String,
   val valueSchemaRegistrySettings: Map[String, String],
   val keySchemaRegistrySettings: Option[Map[String, String]])
   extends StreamTransformer {
-
-  if (StringUtils.isBlank(topic)) {
-    throw new IllegalArgumentException("Blank topic.")
-  }
 
   if (valueSchemaRegistrySettings.isEmpty) {
     throw new IllegalArgumentException(
@@ -124,7 +119,7 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
       s"Going to create ConfluentAvroDecodingTransformer instance using: topic='$topic', " +
         s"value schema registry settings='$valueSchemaRegistrySettings', key schema registry settings='$keySchemaRegistrySettingsOpt'.")
 
-    new ConfluentAvroDecodingTransformer(topic, valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
+    new ConfluentAvroDecodingTransformer(valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(

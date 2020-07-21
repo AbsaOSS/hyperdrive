@@ -19,7 +19,8 @@ import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_REGISTRY_URL
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
 
 class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers {
 
@@ -45,7 +46,6 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers {
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
-    decoder.topic shouldBe topic
     decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
     decoder.keySchemaRegistrySettings shouldBe None
   }
@@ -62,7 +62,6 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers {
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
-    decoder.topic shouldBe topic
     decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
     decoder.keySchemaRegistrySettings.get(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
   }
