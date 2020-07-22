@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import org.apache.commons.configuration2.Configuration
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_SCHEMA_REGISTRY_URL, SchemaStorageNamingStrategies}
+import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 
 private[hyperdrive] object SchemaRegistrySettingsUtil {
@@ -47,8 +47,8 @@ private[hyperdrive] object SchemaRegistrySettingsUtil {
 
     if (SchemaRegistrySettingsUtil.namingStrategyInvolvesRecord(namingStrategy)) {
       Map(
-        PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> getOrThrow(configKeys.recordName, configuration, errorMessage = s"Record name not specified for value. Is '${configKeys.recordName}' configured?"),
-        PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> getOrThrow(configKeys.recordNamespace, configuration, errorMessage = s"Record namespace not specified for value. Is '${configKeys.recordNamespace}' configured?")
+        configKeys.paramSchemaNameForRecordStrategy -> getOrThrow(configKeys.recordName, configuration, errorMessage = s"Record name not specified for value. Is '${configKeys.recordName}' configured?"),
+        configKeys.paramSchemaNamespaceForRecordStrategy -> getOrThrow(configKeys.recordNamespace, configuration, errorMessage = s"Record namespace not specified for value. Is '${configKeys.recordNamespace}' configured?")
       )
     } else {
       Map()

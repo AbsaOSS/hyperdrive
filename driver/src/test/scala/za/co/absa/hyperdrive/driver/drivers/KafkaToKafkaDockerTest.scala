@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 
@@ -109,7 +109,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "transformer.column.selector.columns.to.select" -> "*",
 
       // Avro Encoder (ABRiS) settings
-      "transformer.[avro.encoder].schema.registry.url" -> "${decoder.avro.schema.registry.url}",
+      "transformer.[avro.encoder].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
       "transformer.[avro.encoder].value.schema.naming.strategy" -> "topic.name",
       "transformer.[avro.encoder].produce.keys" -> "true",
       "transformer.[avro.encoder].key.schema.naming.strategy" -> "topic.name",
@@ -150,7 +150,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
   }
 
   after {
-    SchemaManager.reset()
+    SchemaManagerFactory.resetClientInstance()
   }
 
   def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
