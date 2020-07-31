@@ -65,8 +65,8 @@ class TestSchemaRegistrySettingsUtil extends FlatSpec with Matchers {
       PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> TOPIC_RECORD_NAME,
       PARAM_SCHEMA_REGISTRY_URL -> SchemaRegistryURL,
       PARAM_VALUE_SCHEMA_ID -> SchemaRegistryValueSchemaId,
-      PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "any.name",
-      PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "any.namespace"
+      PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "any.name",
+      PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "any.namespace"
     )
   }
 
@@ -83,8 +83,8 @@ class TestSchemaRegistrySettingsUtil extends FlatSpec with Matchers {
       PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> RECORD_NAME,
       PARAM_SCHEMA_REGISTRY_URL -> SchemaRegistryURL,
       PARAM_VALUE_SCHEMA_ID -> SchemaRegistryValueSchemaId,
-      PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "any.name",
-      PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "any.namespace"
+      PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "any.name",
+      PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "any.namespace"
     )
   }
 
@@ -187,6 +187,8 @@ object TestSchemaRegistrySettingsUtil {
     override val recordNamespace: String = KeySchemaRegistryValueRecordNamespace
     override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   private object ValueSchemaConsumerConfigKeys extends SchemaRegistryConsumerConfigKeys {
@@ -197,6 +199,8 @@ object TestSchemaRegistrySettingsUtil {
     override val recordNamespace: String = KeySchemaRegistryValueRecordNamespace
     override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
 }

@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, struct}
 import za.co.absa.abris.avro.functions.to_confluent_avro
-import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_KEY_SCHEMA_ID, PARAM_KEY_SCHEMA_NAMING_STRATEGY, PARAM_VALUE_SCHEMA_ID, PARAM_VALUE_SCHEMA_NAMING_STRATEGY}
+import za.co.absa.abris.avro.read.confluent.SchemaManager.{PARAM_KEY_SCHEMA_ID, PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_KEY_SCHEMA_NAMING_STRATEGY, PARAM_VALUE_SCHEMA_ID, PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, PARAM_VALUE_SCHEMA_NAMING_STRATEGY}
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
@@ -79,6 +79,8 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
     override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   object KeySchemaConfigKeys extends SchemaRegistryProducerConfigKeys {
@@ -88,6 +90,8 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE
     override val paramSchemaId: String = PARAM_KEY_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_KEY_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   override def apply(config: Configuration): StreamTransformer = {

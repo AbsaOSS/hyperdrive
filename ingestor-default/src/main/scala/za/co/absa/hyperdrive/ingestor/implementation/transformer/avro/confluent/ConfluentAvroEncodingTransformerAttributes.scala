@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.AvroKafkaStreamDecoderKeys._
 
 trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes {
   val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"

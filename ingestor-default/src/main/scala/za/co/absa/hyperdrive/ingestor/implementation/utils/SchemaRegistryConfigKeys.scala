@@ -22,6 +22,8 @@ private[hyperdrive] trait SchemaRegistryConfigKeys {
   val recordNamespace: String
   val paramSchemaId: String
   val paramSchemaNamingStrategy: String
+  val paramSchemaNameForRecordStrategy: String
+  val paramSchemaNamespaceForRecordStrategy: String
 }
 
 private[hyperdrive] trait SchemaRegistryConsumerConfigKeys extends SchemaRegistryConfigKeys {
