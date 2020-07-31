@@ -16,9 +16,9 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT
 
 trait ColumnSelectorStreamTransformerAttributes extends HasComponentAttributes {
+  val KEY_COLUMNS_TO_SELECT = "columns.to.select"
 
   override def getName: String = "Column Selector Transformer"
 

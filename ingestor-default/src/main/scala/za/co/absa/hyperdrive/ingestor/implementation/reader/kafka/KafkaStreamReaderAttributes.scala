@@ -16,9 +16,13 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys.{KEY_BROKERS, KEY_TOPIC, rootFactoryOptionalConfKey}
 
 trait KafkaStreamReaderAttributes extends HasComponentAttributes {
+  private val rootComponentConfKey = "reader"
+  private val rootFactoryConfKey = s"$rootComponentConfKey.kafka"
+  private val rootFactoryOptionalConfKey = s"$rootComponentConfKey.option"
+  val KEY_TOPIC = s"$rootFactoryConfKey.topic"
+  val KEY_BROKERS = s"$rootFactoryConfKey.brokers"
 
   override def getName: String = "Kafka Reader"
 

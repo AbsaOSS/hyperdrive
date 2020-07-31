@@ -17,7 +17,6 @@ package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
 
 class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
 

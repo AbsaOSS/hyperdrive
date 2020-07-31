@@ -23,8 +23,6 @@ import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterProperties}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.MetadataLogUtil
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 import scala.util.{Failure, Success}
 
@@ -76,7 +74,7 @@ object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterA
     val doMetadataCheck = getMetadataCheck(config)
     val trigger = StreamWriterUtil.getTrigger(config)
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
-    val partitionColumns = ConfigUtils.getSeqOrNone(ParquetStreamWriterKeys.KEY_PARTITION_COLUMNS, config)
+    val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config)
     val extraOptions = getExtraOptions(config)
 
     LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +

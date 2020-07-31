@@ -20,9 +20,17 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.{KEY_TOPIC, KEY_BROKERS}
 
 class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
+  private val rootFactoryOptionalConfKey = KafkaStreamReader.getExtraConfigurationPrefix.get
+  private val rootFactoryOptionalKafkaKey = s"$rootFactoryOptionalConfKey.kafka"
+  private val KEY_SECURITY_PROTOCOL = s"$rootFactoryOptionalKafkaKey.security.protocol"
+  private val KEY_TRUSTSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.truststore.location"
+  private val KEY_TRUSTSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.truststore.password"
+  private val KEY_KEYSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.keystore.location"
+  private val KEY_KEYSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.keystore.password"
+  private val KEY_KEY_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.key.password"
 
   private val configStub  = new DynamicCombinedConfiguration()
 
@@ -121,7 +129,6 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
       .foreach {case(key,value) => stubProperty(key, value)}
   }
 
-  private def removeComponentFromKey(key: String): String = key.replaceAll(s"$rootComponentConfKey.", "")
-
-  private def removeOptionalComponentFromKey(key: String): String = key.replaceAll(s"$rootFactoryOptionalConfKey.", "")
+  private def removeOptionalComponentFromKey(key: String): String =
+    key.replaceAll(s"$rootFactoryOptionalConfKey.", "")
 }
