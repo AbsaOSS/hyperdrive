@@ -22,7 +22,7 @@ import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 
@@ -123,7 +123,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
   }
 
   after {
-    SchemaManager.reset()
+    SchemaManagerFactory.resetClientInstance()
   }
 
   private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[Int, GenericRecord] = {

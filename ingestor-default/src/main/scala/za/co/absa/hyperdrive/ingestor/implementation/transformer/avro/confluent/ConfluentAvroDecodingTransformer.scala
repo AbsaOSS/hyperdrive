@@ -97,6 +97,8 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
     override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   object KeySchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
@@ -107,6 +109,8 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE
     override val paramSchemaId: String = PARAM_KEY_SCHEMA_ID
     override val paramSchemaNamingStrategy: String = PARAM_KEY_SCHEMA_NAMING_STRATEGY
+    override val paramSchemaNameForRecordStrategy: String = PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY
+    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   override def apply(config: Configuration): StreamTransformer = {
