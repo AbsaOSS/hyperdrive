@@ -38,10 +38,6 @@ class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers w
 
   override def afterEach: Unit = tempDir.delete()
 
-  it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamReader(path = "  ", false, -1, Map()))
-  }
-
   it should "read from the source directory when the parquet file is already present" in {
     // given
     import spark.implicits._
@@ -88,7 +84,7 @@ class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers w
     val columnName = "dummy"
     val queryName = "dummyQuery"
 
-    val reader = new ParquetStreamReader(parquetSourcePath, true, 100L, Map())
+    val reader = new ParquetStreamReaderSpy(parquetSourcePath, true, 100L, Map())
     val createDataRunnable = new Runnable {
       override def run(): Unit = {
         reader.awaitWaitingForFiles()

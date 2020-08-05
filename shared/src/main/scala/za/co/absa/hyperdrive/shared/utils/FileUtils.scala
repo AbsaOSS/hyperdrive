@@ -18,7 +18,6 @@ package za.co.absa.hyperdrive.shared.utils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path, RemoteIterator}
 
-import scala.annotation.tailrec
 import scala.collection.AbstractIterator
 
 private[hyperdrive] object FileUtils {
@@ -45,10 +44,11 @@ private[hyperdrive] object FileUtils {
 
   def dirContainsNoParquetFilesOrDoesNotExist(directory: String, configuration: Configuration): Boolean = {
     val fs = getFileSystem(configuration)
-    if (!fs.exists(new Path(directory))) {
+    val dirPath = new Path(directory)
+    if (!fs.exists(dirPath)) {
       true
     } else {
-      !containsParquetFile(fs, new Path(directory))
+      !containsParquetFile(fs, dirPath)
     }
   }
 

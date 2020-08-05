@@ -278,4 +278,84 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     result.isFailure shouldBe true
     result.failed.get.getMessage should include ("key2, key3")
   }
+
+  "getBooleanOrNone" should "return true if property is empty" in {
+    // given
+    val config = new BaseConfiguration
+    config.addProperty("key1", "")
+
+    // when
+    val result = ConfigUtils.getBooleanOrNone("key1", config)
+
+    // then
+    result.isSuccess shouldBe true
+    result.get.get shouldBe true
+  }
+
+  it should "return true if property is true or True" in {
+    // given
+    val config = new BaseConfiguration
+    config.addProperty("key1", "true")
+    config.addProperty("key2", "True")
+
+    // when
+    val result1 = ConfigUtils.getBooleanOrNone("key1", config)
+    val result2 = ConfigUtils.getBooleanOrNone("key2", config)
+
+    // then
+    result1.isSuccess shouldBe true
+    result1.get.get shouldBe true
+    result2.isSuccess shouldBe true
+    result2.get.get shouldBe true
+  }
+
+  it should "return false if property is set to false" in {
+    // given
+    val config = new BaseConfiguration
+    config.addProperty("key1", "false")
+    config.addProperty("key2", "False")
+
+    // when
+    val result1 = ConfigUtils.getBooleanOrNone("key1", config)
+    val result2 = ConfigUtils.getBooleanOrNone("key2", config)
+
+    // then
+    result1.isSuccess shouldBe true
+    result1.get.get shouldBe false
+    result2.isSuccess shouldBe true
+    result2.get.get shouldBe false
+  }
+
+  it should "return a failure if property is not boolean" in {
+    // given
+    val config = new BaseConfiguration
+    config.addProperty("key1", "pravda")
+    config.addProperty("key2", "1")
+    config.addProperty("key3", "0")
+
+    // when
+    val result1 = ConfigUtils.getBooleanOrNone("key1", config)
+    val result2 = ConfigUtils.getBooleanOrNone("key2", config)
+    val result3 = ConfigUtils.getBooleanOrNone("key3", config)
+
+    // then
+    result1.isFailure shouldBe true
+    result1.failed.get.getMessage should include("key1")
+    result2.isFailure shouldBe true
+    result2.failed.get.getMessage should include("key2")
+    result3.isFailure shouldBe true
+    result3.failed.get.getMessage should include("key3")
+  }
+
+  it should "return None if property is absent" in {
+    // given
+    val config = new BaseConfiguration
+
+    // when
+    val result = ConfigUtils.getBooleanOrNone("key1", config)
+
+    // then
+    result.isSuccess shouldBe true
+    result.get shouldBe None
+  }
 }

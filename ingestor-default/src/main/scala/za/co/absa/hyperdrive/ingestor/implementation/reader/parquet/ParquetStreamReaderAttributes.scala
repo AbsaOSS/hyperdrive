@@ -19,9 +19,9 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 trait ParquetStreamReaderAttributes extends HasComponentAttributes {
   private val rootFactoryConfKey = "reader.parquet"
-  val KeySourceDirectory = s"$rootFactoryConfKey.source.directory"
-  val KeyWaitForFiles = s"$rootFactoryConfKey.wait.for.files"
-  val KeyCheckForInitialFileInterval = s"$rootFactoryConfKey.check.for.initial.file.interval"
+  val KeySourceDirectory = s"${rootFactoryConfKey}.source.directory"
+  val KeyWaitForFiles = s"${rootFactoryConfKey}.wait.for.files"
+  val KeyCheckForInitialFileInterval = s"${rootFactoryConfKey}.check.for.initial.file.interval"
 
   override def getName: String = "Parquet Stream Reader"
 
@@ -32,8 +32,8 @@ trait ParquetStreamReaderAttributes extends HasComponentAttributes {
     KeyWaitForFiles -> PropertyMetadata("Wait for files", Some("If set to true, waits indefinitely until a file appears in the source directory." +
       "If set to false, the query will fail when the source directory is empty. Default: false"), required = false),
     KeyCheckForInitialFileInterval -> PropertyMetadata("Check for initial file interval", Some(s"Interval in ms, how often the source directory " +
-      s"should be checked for the first file to appear. This option is only effective, if $KeyWaitForFiles is set to true. Default: 10000ms"), required = false)
+      s"should be checked for the first file to appear. This option is only effective, if ${KeyWaitForFiles} is set to true. Default: 10000ms"), required = false)
   )
 
-  override def getExtraConfigurationPrefix: Option[String] = Some(s"$rootFactoryConfKey.options")
+  override def getExtraConfigurationPrefix: Option[String] = Some(s"${rootFactoryConfKey}.options")
 }

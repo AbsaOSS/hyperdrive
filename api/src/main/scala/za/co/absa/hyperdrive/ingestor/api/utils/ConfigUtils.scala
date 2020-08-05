@@ -53,6 +53,16 @@ object ConfigUtils {
     }
   }
 
+  def getBooleanOrNone(key: String, configuration: Configuration): Try[Option[Boolean]] = {
+    if(configuration.containsKey(key) && configuration.getString(key).isEmpty) {
+      Success(Some(true))
+    } else if (!configuration.containsKey(key)) {
+      Success(None)
+    } else {
+      Try(Option(configuration.getBoolean(key)))
+    }
+  }
+
   def getPropertySubset(configuration: Configuration, prefix: String): Map[String, String] = {
     val subset = Option(configuration.subset(prefix))
     subset match {
