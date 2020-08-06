@@ -15,17 +15,12 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.reader.parquet
 
-import java.util.concurrent.CountDownLatch
-
 import org.apache.commons.configuration2.Configuration
-import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ComponentFactoryUtil, ConfigUtils}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
-
-import scala.util.{Failure, Success, Try}
 
 /**
  * Creates a parquet reader for a file source.
