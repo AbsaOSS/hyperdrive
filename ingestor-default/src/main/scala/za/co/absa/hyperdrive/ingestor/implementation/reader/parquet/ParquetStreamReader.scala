@@ -73,21 +73,15 @@ private[reader] class ParquetStreamReader(
 
 object ParquetStreamReader extends StreamReaderFactory with ParquetStreamReaderAttributes {
   private val logger = LogManager.getLogger
-  private val DefaultCheckForInitialFileInterval = "10000"
+  private val DefaultCheckForInitialFileInterval = 10000L
   private val DefaultWaitForFiles = false
 
   override def apply(conf: Configuration): StreamReader = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)
 
     val path = conf.getString(KeySourceDirectory)
-    val waitForFiles = ConfigUtils.getBooleanOrNone(KeyWaitForFiles, conf) match {
-      case Success(value) => value.getOrElse(DefaultWaitForFiles)
-      case Failure(exception) => throw exception
-    }
-    val checkForInitialFileInterval = Try(ConfigUtils.getOrNone(KeyCheckForInitialFileInterval, conf)) match {
-      case Success(value) => value.getOrElse(DefaultCheckForInitialFileInterval).toLong
-      case Failure(exception) => throw exception
-    }
+    val waitForFiles = ConfigUtils.getBooleanOrNone(KeyWaitForFiles, conf).getOrElse(DefaultWaitForFiles)
+    val checkForInitialFileInterval = conf.getLong(KeyCheckForInitialFileInterval, DefaultCheckForInitialFileInterval)
     if (waitForFiles && checkForInitialFileInterval < 0) {
       throw new IllegalArgumentException(s"${KeyCheckForInitialFileInterval} cannot be negative")
     }

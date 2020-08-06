@@ -53,13 +53,13 @@ object ConfigUtils {
     }
   }
 
-  def getBooleanOrNone(key: String, configuration: Configuration): Try[Option[Boolean]] = {
+  def getBooleanOrNone(key: String, configuration: Configuration): Option[Boolean] = {
     if(configuration.containsKey(key) && configuration.getString(key).isEmpty) {
-      Success(Some(true))
+      Some(true)
     } else if (!configuration.containsKey(key)) {
-      Success(None)
+      None
     } else {
-      Try(Option(configuration.getBoolean(key)))
+      Option(configuration.getBoolean(key))
     }
   }
 

@@ -288,8 +288,7 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     val result = ConfigUtils.getBooleanOrNone("key1", config)
 
     // then
-    result.isSuccess shouldBe true
-    result.get.get shouldBe true
+    result.get shouldBe true
   }
 
   it should "return true if property is true or True" in {
@@ -303,10 +302,8 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     val result2 = ConfigUtils.getBooleanOrNone("key2", config)
 
     // then
-    result1.isSuccess shouldBe true
-    result1.get.get shouldBe true
-    result2.isSuccess shouldBe true
-    result2.get.get shouldBe true
+    result1.get shouldBe true
+    result2.get shouldBe true
   }
 
   it should "return false if property is set to false" in {
@@ -320,10 +317,8 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     val result2 = ConfigUtils.getBooleanOrNone("key2", config)
 
     // then
-    result1.isSuccess shouldBe true
-    result1.get.get shouldBe false
-    result2.isSuccess shouldBe true
-    result2.get.get shouldBe false
+    result1.get shouldBe false
+    result2.get shouldBe false
   }
 
   it should "return a failure if property is not boolean" in {
@@ -334,17 +329,14 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     config.addProperty("key3", "0")
 
     // when
-    val result1 = ConfigUtils.getBooleanOrNone("key1", config)
-    val result2 = ConfigUtils.getBooleanOrNone("key2", config)
-    val result3 = ConfigUtils.getBooleanOrNone("key3", config)
+    val result1 = intercept[Exception](ConfigUtils.getBooleanOrNone("key1", config))
+    val result2 = intercept[Exception](ConfigUtils.getBooleanOrNone("key2", config))
+    val result3 = intercept[Exception](ConfigUtils.getBooleanOrNone("key3", config))
 
     // then
-    result1.isFailure shouldBe true
-    result1.failed.get.getMessage should include("key1")
-    result2.isFailure shouldBe true
-    result2.failed.get.getMessage should include("key2")
-    result3.isFailure shouldBe true
-    result3.failed.get.getMessage should include("key3")
+    result1.getMessage should include("key1")
+    result2.getMessage should include("key2")
+    result3.getMessage should include("key3")
   }
 
   it should "return None if property is absent" in {
@@ -355,7 +347,6 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     val result = ConfigUtils.getBooleanOrNone("key1", config)
 
     // then
-    result.isSuccess shouldBe true
-    result.get shouldBe None
+    result shouldBe None
   }
 }
