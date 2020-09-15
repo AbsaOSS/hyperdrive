@@ -50,7 +50,7 @@ class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers w
       .parquet(parquetSourcePath)
 
     // when
-    val reader = new ParquetStreamReader(parquetSourcePath, false, -1, Map())
+    val reader = new ParquetStreamReader(parquetSourcePath, Map())
     val streamingDf = reader.read(spark)
     val query = streamingDf
       .writeStream
@@ -75,44 +75,5 @@ class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers w
     outputDf.columns should contain theSameElementsAs List(columnName)
     outputDf.select(columnName)
       .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs expectedData
-  }
-
-  it should "if configured, wait to read from the source directory until the parquet file is present" in {
-    // given
-    import spark.implicits._
-    val data = 1 to 100
-    val columnName = "dummy"
-    val queryName = "dummyQuery"
-
-    val reader = new ParquetStreamReaderSpy(parquetSourcePath, true, 100L, Map())
-    val createDataRunnable = new Runnable {
-      override def run(): Unit = {
-        reader.awaitWaitingForFiles()
-        val sourceDf = spark.sparkContext.parallelize(data).toDF(columnName)
-        sourceDf
-          .write
-          .mode(SaveMode.Overwrite)
-          .parquet(parquetSourcePath)
-      }
-    }
-    new Thread(createDataRunnable).start()
-
-    // when
-    val streamingDf = reader.read(spark)
-    val query = streamingDf
-      .writeStream
-      .queryName(queryName)
-      .format("memory")
-      .start()
-    query.processAllAvailable()
-    query.stop()
-
-    // then
-    import spark.implicits._
-    val outputDf = spark.sql(s"select * from $queryName")
-    outputDf.count() shouldBe data.length
-    outputDf.columns should contain theSameElementsAs List(columnName)
-    outputDf.select(columnName)
-      .map(_ (0).asInstanceOf[Int]).collect() should contain theSameElementsAs data
   }
 }

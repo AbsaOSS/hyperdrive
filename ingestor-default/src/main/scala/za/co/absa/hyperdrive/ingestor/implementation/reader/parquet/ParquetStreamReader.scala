@@ -20,7 +20,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ComponentFactoryUtil, ConfigUtils}
-import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 /**
  * Creates a parquet reader for a file source.
@@ -30,15 +29,9 @@ import za.co.absa.hyperdrive.shared.utils.FileUtils
  */
 private[reader] class ParquetStreamReader(
   val path: String,
-  val waitForFiles: Boolean,
-  val checkForFilesInterval: Long,
   val extraConfs: Map[String, String]) extends StreamReader {
 
   private val logger = LogManager.getLogger()
-
-  private[reader] def waitingForFilesHookForTesting(): Unit = {
-    // do nothing
-  }
 
   override def read(spark: SparkSession): DataFrame = {
 
@@ -47,14 +40,6 @@ private[reader] class ParquetStreamReader(
     }
 
     logger.info(s"Will read from path $path")
-
-    if(waitForFiles) {
-      val fs = spark.sparkContext.hadoopConfiguration
-      while (FileUtils.dirContainsNoParquetFilesOrDoesNotExist(path, fs)) {
-        waitingForFilesHookForTesting()
-        Thread.sleep(checkForFilesInterval)
-      }
-    }
 
     val schema = spark.read.load(path).schema
 
@@ -68,24 +53,16 @@ private[reader] class ParquetStreamReader(
 
 object ParquetStreamReader extends StreamReaderFactory with ParquetStreamReaderAttributes {
   private val logger = LogManager.getLogger
-  private val DefaultCheckForInitialFileInterval = 10000L
-  private val DefaultWaitForFiles = false
 
   override def apply(conf: Configuration): StreamReader = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)
 
     val path = conf.getString(KeySourceDirectory)
-    val waitForFiles = ConfigUtils.getBooleanOrNone(KeyWaitForFiles, conf).getOrElse(DefaultWaitForFiles)
-    val checkForInitialFileInterval = conf.getLong(KeyCheckForInitialFileInterval, DefaultCheckForInitialFileInterval)
-    if (waitForFiles && checkForInitialFileInterval < 0) {
-      throw new IllegalArgumentException(s"${KeyCheckForInitialFileInterval} cannot be negative")
-    }
 
     val extraOptions = ConfigUtils.getPropertySubset(conf, getExtraConfigurationPrefix.get)
 
-    logger.info(s"Going to create ParquetStreamReader with: path=$path, waitForFiles=$waitForFiles, " +
-      s"checkForInitialFileInterval=$checkForInitialFileInterval, extraOptions=$extraOptions")
+    logger.info(s"Going to create ParquetStreamReader with: path=$path, extraOptions=$extraOptions")
 
-    new ParquetStreamReader(path, waitForFiles, checkForInitialFileInterval, extraOptions)
+    new ParquetStreamReader(path, extraOptions)
   }
 }

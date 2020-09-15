@@ -113,15 +113,12 @@ Any additional properties for kafka can be added with the prefix `reader.option.
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
 
 ##### ParquetStreamReader
-The parquet stream reader infers the schema from parquet files that already exist in the source directory.
-Alternatively, the option `reader.parquet.wait.for.files` can be activated to make the ingestor wait for the first
-parquet file to appear and infer the schema from that file.
+The parquet stream reader infers the schema from parquet files that already exist in the source directory. 
+If no file exists, the reader will fail.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `reader.parquet.source.directory` | Yes | Source path for the parquet files. Equivalent to Spark property `path` for the `DataStreamReader` |
-| `reader.parquet.wait.for.files` | No | If set to true, waits indefinitely until a file appears in the source directory. If set to false, the query will fail when the source directory is empty. Default: false" |
-| `reader.parquet.check.for.initial.file.interval` | No | Interval in ms, how often the source directory should be checked for the first file to appear. This option is only effective, if `reader.parquet.wait.for.files` is set to true. Default: 10000ms |
 
 Any additional properties can be added with the prefix `reader.parquet.options.`. See [Spark Structured Streaming Documentation](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#input-sources)
 

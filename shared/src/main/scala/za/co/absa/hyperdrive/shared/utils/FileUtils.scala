@@ -16,9 +16,7 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path, RemoteIterator}
-
-import scala.collection.AbstractIterator
+import org.apache.hadoop.fs.{FileSystem, Path}
 
 private[hyperdrive] object FileUtils {
 
@@ -42,40 +40,7 @@ private[hyperdrive] object FileUtils {
     fs.exists(path) && !fs.listLocatedStatus(path).hasNext
   }
 
-  def dirContainsNoParquetFilesOrDoesNotExist(directory: String, configuration: Configuration): Boolean = {
-    val fs = getFileSystem(configuration)
-    val dirPath = new Path(directory)
-    if (!fs.exists(dirPath)) {
-      true
-    } else {
-      !containsParquetFile(fs, dirPath)
-    }
-  }
-
-  private def containsParquetFile(fs: FileSystem, directory: Path): Boolean = {
-    val currentDirContainsParquetFile = fs.listFiles(directory, false)
-      .exists(f => f.isFile && f.getPath.getName.endsWith(".parquet"))
-    if(currentDirContainsParquetFile) {
-      true
-    } else {
-      fs.listLocatedStatus(directory)
-        .filter(s => s.isDirectory)
-        .filter(s => {
-          val name = s.getPath.getName
-          !name.startsWith("_") && !name.startsWith(".")
-        })
-        .exists(s => containsParquetFile(fs, s.getPath))
-    }
-  }
-
   private def getFileSystem(configuration: Configuration): FileSystem = {
     FileSystem.get(configuration)
-  }
-
-  implicit def remoteIterator2AbstractIterator[T](remoteIterator: RemoteIterator[T]): AbstractIterator[T] = {
-    new AbstractIterator[T] {
-      override def hasNext: Boolean = remoteIterator.hasNext
-      override def next: T = remoteIterator.next
-    }
   }
 }

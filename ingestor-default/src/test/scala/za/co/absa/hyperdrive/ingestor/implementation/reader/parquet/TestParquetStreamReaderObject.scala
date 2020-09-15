@@ -40,34 +40,9 @@ class TestParquetStreamReaderObject extends FlatSpec with Matchers with BeforeAn
     val reader = ParquetStreamReader(config).asInstanceOf[ParquetStreamReader]
 
     reader.path shouldBe "/tmp/source/parquet"
-    reader.waitForFiles shouldBe false
-    reader.checkForFilesInterval shouldBe 10000
     reader.extraConfs should contain theSameElementsAs Map(
       "key1" -> "value1",
       "key2" -> "value2"
     )
-  }
-
-  it should "set waitForFiles to false when explicitly set to false" in {
-    val config = new BaseConfiguration()
-    config.addProperty(KeySourceDirectory, "/tmp/source/parquet")
-    config.addProperty(KeyWaitForFiles, "false")
-
-    val reader = ParquetStreamReader(config).asInstanceOf[ParquetStreamReader]
-
-    reader.path shouldBe "/tmp/source/parquet"
-    reader.waitForFiles shouldBe false
-    reader.extraConfs shouldBe Map()
-  }
-
-  it should "throw an error if waitForFiles is set to true and checkForFilesInterval is negative" in {
-    val config = new BaseConfiguration()
-    config.addProperty(KeySourceDirectory, "/tmp/source/parquet")
-    config.addProperty(KeyWaitForFiles, "True")
-    config.addProperty(KeyCheckForInitialFileInterval, "-1")
-
-    val throwable = intercept[IllegalArgumentException](ParquetStreamReader(config).asInstanceOf[ParquetStreamReader])
-
-    throwable.getMessage should include(KeyCheckForInitialFileInterval)
   }
 }
