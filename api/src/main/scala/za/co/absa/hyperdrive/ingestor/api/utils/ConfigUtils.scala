@@ -53,6 +53,14 @@ object ConfigUtils {
     }
   }
 
+  def getOptionalBoolean(key: String, configuration: Configuration): Option[Boolean] = {
+    if (configuration.containsKey(key)) {
+      Option(configuration.getBoolean(key))
+    } else {
+      None
+    }
+  }
+
   def getPropertySubset(configuration: Configuration, prefix: String): Map[String, String] = {
     val subset = Option(configuration.subset(prefix))
     subset match {

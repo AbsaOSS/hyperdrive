@@ -255,7 +255,7 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
     // then
     result.isFailure shouldBe true
-    result.failed.get.getMessage should include ("key1, key3")
+    result.failed.get.getMessage should include("key1, key3")
   }
 
   it should "return a failure if target keys already exist" in {
@@ -276,6 +276,50 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
     // then
     result.isFailure shouldBe true
-    result.failed.get.getMessage should include ("key2, key3")
+    result.failed.get.getMessage should include("key2, key3")
+  }
+
+  "getBoolean" should "return a boolean if the value is convertible to a boolean" in {
+    val config = new BaseConfiguration
+    config.addProperty("key1", "true")
+    config.addProperty("key2", "True")
+    config.addProperty("key3", "yes")
+    config.addProperty("key4", true)
+    config.addProperty("key5", "false")
+    config.addProperty("key6", "FALSE")
+    config.addProperty("key7", "no")
+    config.addProperty("key8", false)
+
+    ConfigUtils.getOptionalBoolean("key1", config).get shouldBe true
+    ConfigUtils.getOptionalBoolean("key2", config).get shouldBe true
+    ConfigUtils.getOptionalBoolean("key3", config).get shouldBe true
+    ConfigUtils.getOptionalBoolean("key4", config).get shouldBe true
+    ConfigUtils.getOptionalBoolean("key5", config).get shouldBe false
+    ConfigUtils.getOptionalBoolean("key6", config).get shouldBe false
+    ConfigUtils.getOptionalBoolean("key7", config).get shouldBe false
+    ConfigUtils.getOptionalBoolean("key8", config).get shouldBe false
+  }
+
+  it should "return None if the key doesn't exist" in {
+    val config = new BaseConfiguration
+
+    ConfigUtils.getOptionalBoolean("any-key", config) shouldBe None
+  }
+
+  it should "throw an exception if the value is empty or not a boolean" in {
+    val config = new BaseConfiguration
+    config.addProperty("key1", "")
+    config.addProperty("key2", "nay")
+    config.addProperty("key3", "1")
+    config.addProperty("key4", 0)
+
+    val ex1 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key1", config)
+    ex1.getMessage should include("key1")
+    val ex2 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key2", config)
+    ex2.getMessage should include("key2")
+    val ex3 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key3", config)
+    ex3.getMessage should include("key3")
+    val ex4 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key4", config)
+    ex4.getMessage should include("key4")
   }
 }
