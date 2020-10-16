@@ -16,14 +16,11 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 private[hyperdrive] trait SchemaRegistryConfigKeys {
+  val topic: String
   val schemaRegistryUrl: String
   val namingStrategy: String
   val recordName: String
   val recordNamespace: String
-  val paramSchemaId: String
-  val paramSchemaNamingStrategy: String
-  val paramSchemaNameForRecordStrategy: String
-  val paramSchemaNamespaceForRecordStrategy: String
 }
 
 private[hyperdrive] trait SchemaRegistryConsumerConfigKeys extends SchemaRegistryConfigKeys {

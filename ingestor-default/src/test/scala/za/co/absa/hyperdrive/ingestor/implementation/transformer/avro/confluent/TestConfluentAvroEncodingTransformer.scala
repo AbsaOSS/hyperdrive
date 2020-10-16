@@ -17,9 +17,8 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_REGISTRY_URL
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer._
+import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 
 class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers {
@@ -29,29 +28,15 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers {
 
   behavior of ConfluentAvroEncodingTransformer.getClass.getSimpleName
 
-  it should "create avro stream encoder instance with schema registry settings for value schema" in {
+  it should "create avro stream encoder" in {
     val config = new BaseConfiguration
     config.addProperty(KafkaStreamWriter.KEY_TOPIC, topic)
     config.addProperty(KEY_SCHEMA_REGISTRY_URL, schemaRegistryURL)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
 
     val encoder = ConfluentAvroEncodingTransformer(config).asInstanceOf[ConfluentAvroEncodingTransformer]
 
-    encoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
-    encoder.keySchemaRegistrySettings shouldBe None
-  }
-
-  it should "create avro stream encoder instance with schema registry settings for value schema and key schema" in {
-    val config = new BaseConfiguration
-    config.addProperty(KafkaStreamWriter.KEY_TOPIC, topic)
-    config.addProperty(KEY_PRODUCE_KEYS, "TRUE")
-    config.addProperty(KEY_SCHEMA_REGISTRY_URL, schemaRegistryURL)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-    config.addProperty(KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-
-    val encoder = ConfluentAvroEncodingTransformer(config).asInstanceOf[ConfluentAvroEncodingTransformer]
-
-    encoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
-    encoder.keySchemaRegistrySettings.get(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
+    encoder.config shouldBe config
+    encoder.withKey shouldBe false
   }
 }

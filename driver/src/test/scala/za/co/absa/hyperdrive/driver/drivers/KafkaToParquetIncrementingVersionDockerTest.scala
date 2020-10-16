@@ -124,7 +124,7 @@ class KafkaToParquetIncrementingVersionDockerTest extends FlatSpec with Matchers
   }
 
   after {
-    SchemaManagerFactory.resetClientInstance()
+    SchemaManagerFactory.resetSRClientInstance()
   }
 
   private def produceMessage(numberOfRecords: Int, producer: KafkaProducer[Int, GenericRecord], schema: Schema, topic: String) = {

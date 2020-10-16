@@ -123,7 +123,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
   }
 
   after {
-    SchemaManagerFactory.resetClientInstance()
+    SchemaManagerFactory.resetSRClientInstance()
   }
 
   private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[Int, GenericRecord] = {

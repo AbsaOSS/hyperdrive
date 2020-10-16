@@ -16,47 +16,40 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.commons.lang3.{RandomStringUtils, StringUtils}
+import org.apache.commons.lang3.RandomStringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, DataFrame}
-import za.co.absa.abris.avro.functions.from_confluent_avro
-import za.co.absa.abris.avro.read.confluent.SchemaManager._
+import za.co.absa.abris.avro.functions.from_avro
+import za.co.absa.abris.config.FromAvroConfig
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, SchemaRegistrySettingsUtil}
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, AbrisConfigUtil}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
-  val valueSchemaRegistrySettings: Map[String, String],
-  val keySchemaRegistrySettings: Option[Map[String, String]])
+  val valueAvroConfig: FromAvroConfig,
+  val keyAvroConfigOpt: Option[FromAvroConfig])
   extends StreamTransformer {
-
-  if (valueSchemaRegistrySettings.isEmpty) {
-    throw new IllegalArgumentException(
-      "Empty Schema Registry settings received.")
-  }
 
   private val logger = LogManager.getLogger
 
   override def transform(dataFrame: DataFrame): DataFrame = {
-    logger.info(s"SchemaRegistry settings: $valueSchemaRegistrySettings")
+    logger.info(s"SchemaRegistry settings: $valueAvroConfig")
 
-    keySchemaRegistrySettings match {
-      case Some(keySettings) => getKeyValueDataFrame(dataFrame, keySettings)
+    keyAvroConfigOpt match {
+      case Some(keyAvroConfig) => getKeyValueDataFrame(dataFrame, keyAvroConfig)
       case None => getValueDataFrame(dataFrame)
     }
   }
 
-  private def getKeyValueDataFrame(dataFrame: DataFrame,
-                                   keySchemaRegistrySettings: Map[String, String]) = {
+  private def getKeyValueDataFrame(dataFrame: DataFrame, keyAvroConfig: FromAvroConfig) = {
     val decodedDf = dataFrame.select(
-      from_confluent_avro(col("key"), keySchemaRegistrySettings) as 'key,
-      from_confluent_avro(col("value"), valueSchemaRegistrySettings) as 'value)
+      from_avro(col("key"), keyAvroConfig) as 'key,
+      from_avro(col("value"), valueAvroConfig) as 'value)
     val keyValueDf = setColumnNonNullable(decodedDf, "value")
 
     val keyColumnNames = keyValueDf.select("key.*").columns.toSeq
@@ -73,7 +66,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 
   private def getValueDataFrame(dataFrame: DataFrame) = {
     val decodedDf = dataFrame
-      .select(from_confluent_avro(col("value"), valueSchemaRegistrySettings) as 'data)
+      .select(from_avro(col("value"), valueAvroConfig) as 'data)
     setColumnNonNullable(decodedDf, "data")
       .select("data.*")
   }
@@ -89,49 +82,30 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
 
-  object ValueSchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
+  object SchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
+    override val topic: String = KEY_TOPIC
     override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
     override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
-    override val paramSchemaId: String = PARAM_VALUE_SCHEMA_ID
-    override val paramSchemaNamingStrategy: String = PARAM_VALUE_SCHEMA_NAMING_STRATEGY
-    override val paramSchemaNameForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY
-    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
-  }
-
-  object KeySchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
-    override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
-    override val schemaId: String = KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID
-    override val namingStrategy: String = KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY
-    override val recordName: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME
-    override val recordNamespace: String = KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE
-    override val paramSchemaId: String = PARAM_KEY_SCHEMA_ID
-    override val paramSchemaNamingStrategy: String = PARAM_KEY_SCHEMA_NAMING_STRATEGY
-    override val paramSchemaNameForRecordStrategy: String = PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY
-    override val paramSchemaNamespaceForRecordStrategy: String = PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
   }
 
   override def apply(config: Configuration): StreamTransformer = {
-    val topic = getTopic(config)
-    val valueSchemaRegistrySettings = SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, ValueSchemaConfigKeys)
+    val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys)
 
-    val keySchemaRegistrySettingsOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
-      .flatMap(_ => Some(SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, KeySchemaConfigKeys)))
+    val keyAvroConfigOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
+      .flatMap(_ => Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys)))
     LogManager.getLogger.info(
-      s"Going to create ConfluentAvroDecodingTransformer instance using: topic='$topic', " +
-        s"value schema registry settings='$valueSchemaRegistrySettings', key schema registry settings='$keySchemaRegistrySettingsOpt'.")
+      s"Going to create ConfluentAvroDecodingTransformer instance using " +
+        s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt'.")
 
-    new ConfluentAvroDecodingTransformer(valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
+    new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
     KEY_TOPIC -> KEY_TOPIC
   )
-
-  private def getTopic(configuration: Configuration): String =
-    getOrThrow(KEY_TOPIC, configuration, errorMessage = s"Topic not found. Is '$KEY_TOPIC' properly set?")
 
   def determineKeyColumnPrefix(valueColumnNames: Seq[String]): String = {
     var candidatePrefix = "key__"
