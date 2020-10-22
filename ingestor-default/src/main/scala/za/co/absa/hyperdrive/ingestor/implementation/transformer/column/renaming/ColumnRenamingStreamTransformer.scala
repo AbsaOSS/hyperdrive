@@ -43,7 +43,8 @@ object ColumnRenamingStreamTransformer extends StreamTransformerFactory with Col
   override def apply(config: Configuration): StreamTransformer = {
     val columnsFrom = config.getStringArray(KEY_COLUMNS_FROM)
     val columnsTo = config.getStringArray(KEY_COLUMNS_TO)
-    LogManager.getLogger.info(s"Going to create ColumnRenamingStreamTransformer using: columnsFrom='$columnsFrom', columnsTo='$columnsTo'")
+    LogManager.getLogger.info(s"Going to create ColumnRenamingStreamTransformer using: " +
+      s"columnsFrom='${columnsFrom.mkString(",")}', columnsTo='${columnsTo.mkString(",")}'")
     new ColumnRenamingStreamTransformer(columnsFrom, columnsTo)
   }
 }

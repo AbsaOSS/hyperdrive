@@ -15,8 +15,10 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.renaming
 
-import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.commons.configuration2.{BaseConfiguration, DynamicCombinedConfiguration}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{OutputMode, Trigger}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
@@ -48,7 +50,7 @@ class TestColumnRenamingStreamTransformer extends FlatSpec with SparkTestBase wi
     baseDir.delete()
   }
 
-  it should "rename input column" in {
+  it should "rename an input column" in {
     val config = new BaseConfiguration()
     config.addProperty(ParquetStreamWriter.KEY_DESTINATION_DIRECTORY, destinationDir)
     config.addProperty(ColumnRenamingStreamTransformer.KEY_COLUMNS_FROM, "value")
@@ -66,6 +68,45 @@ class TestColumnRenamingStreamTransformer extends FlatSpec with SparkTestBase wi
     assert(!actualDf.schema.exists(f => f.name == "value"))
   }
 
+  it should "rename multiple columns while leaving existing columns intact" in {
+    val config = new DynamicCombinedConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+
+    config.addProperty(ParquetStreamWriter.KEY_DESTINATION_DIRECTORY, destinationDir)
+    config.addProperty(ColumnRenamingStreamTransformer.KEY_COLUMNS_FROM, "value, value2")
+    config.addProperty(ColumnRenamingStreamTransformer.KEY_COLUMNS_TO, "v1, v2")
+    val underTest = ColumnRenamingStreamTransformer(config)
+    val df = getDummyReadStream().toDF()
+      .withColumn("value2", col("value"))
+      .withColumn("value3", col("value"))
+
+    executeQuery(underTest.transform(df))
+
+    val actualDf = spark.read.parquet(destinationDir)
+
+    actualDf.printSchema()
+    assert(actualDf.schema.exists(f => f.name == "v1"))
+    assert(actualDf.schema.exists(f => f.name == "v2"))
+    assert(actualDf.schema.exists(f => f.name == "value3"))
+
+    assert(!actualDf.schema.exists(f => f.name == "value"))
+    assert(!actualDf.schema.exists(f => f.name == "value2"))
+  }
+
+  it should "throw an exception if columns from do not match columns to" in {
+    val config = new DynamicCombinedConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+
+    config.addProperty(ParquetStreamWriter.KEY_DESTINATION_DIRECTORY, destinationDir)
+    config.addProperty(ColumnRenamingStreamTransformer.KEY_COLUMNS_FROM, "value, value2")
+    config.addProperty(ColumnRenamingStreamTransformer.KEY_COLUMNS_TO, "v1")
+
+    val ex = intercept[IllegalArgumentException] {
+      ColumnRenamingStreamTransformer(config)
+    }
+
+    assert(ex.getMessage.contains("The size of source column names doesn't match"))
+  }
 
   private def executeQuery(df: DataFrame): Unit = {
     val query = df
