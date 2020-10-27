@@ -94,8 +94,12 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
   override def apply(config: Configuration): StreamTransformer = {
     val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys)
 
-    val keyAvroConfigOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
-      .flatMap(_ => Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys)))
+    val consumeKeys = ConfigUtils.getOptionalBoolean(KEY_CONSUME_KEYS, config).getOrElse(false)
+    val keyAvroConfigOpt = if (consumeKeys) {
+      Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys))
+    } else {
+      None
+    }
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
         s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt'.")

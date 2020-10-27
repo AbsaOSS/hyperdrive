@@ -83,8 +83,7 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
   }
 
   override def apply(config: Configuration): StreamTransformer = {
-    val withKey = config.getBoolean(KEY_PRODUCE_KEYS, false)
-
+    val withKey = ConfigUtils.getOptionalBoolean(KEY_PRODUCE_KEYS, config).getOrElse(false)
     new ConfluentAvroEncodingTransformer(config, withKey)
   }
 

@@ -89,6 +89,7 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
       "transformer.[avro.decoder].value.schema.id" -> "latest",
       "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.decoder].consume.keys" -> "false",
 
       // Transformations(Enceladus) settings
       // comma separated list of columns to select
