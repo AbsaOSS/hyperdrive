@@ -24,9 +24,10 @@ import za.co.absa.abris.avro.functions.to_avro
 import za.co.absa.abris.config.ToAvroConfig
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{getKeyAvroConfig, getValueAvroConfig}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryProducerConfigKeys, AbrisConfigUtil}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, SchemaRegistryProducerConfigKeys}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter.KEY_TOPIC
 
 private[transformer] class ConfluentAvroEncodingTransformer(
