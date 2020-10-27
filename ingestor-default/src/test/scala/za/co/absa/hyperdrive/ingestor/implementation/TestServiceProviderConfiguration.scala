@@ -26,6 +26,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamRea
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion.AddDateVersionTransformer
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.enceladus.columns.AddEnceladusColumnsTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
@@ -42,7 +43,8 @@ class TestServiceProviderConfiguration extends FlatSpec with Matchers {
 
   it should "load StreamTransformers" in {
     val factoryProviders = loadServices[StreamTransformerFactoryProvider, StreamTransformerFactory]()
-    factoryProviders should contain theSameElementsAs Seq(AddDateVersionTransformer, ColumnSelectorStreamTransformer, ConfluentAvroDecodingTransformer)
+    factoryProviders should contain theSameElementsAs Seq(AddDateVersionTransformer,
+      ColumnSelectorStreamTransformer, ConfluentAvroDecodingTransformer, AddEnceladusColumnsTransformer)
   }
 
   it should "load StreamWriters" in {

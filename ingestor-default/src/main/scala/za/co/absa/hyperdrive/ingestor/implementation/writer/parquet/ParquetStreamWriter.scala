@@ -84,7 +84,7 @@ object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterA
   }
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
 
-  def getMetadataCheck(configuration: Configuration): Boolean = ConfigUtils.getOrNone(KEY_METADATA_CHECK, configuration).isDefined
+  def getMetadataCheck(configuration: Configuration): Boolean = ConfigUtils.getOptionalBoolean(KEY_METADATA_CHECK, configuration).getOrElse(false)
 
   def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 

@@ -98,8 +98,12 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
     val topic = config.getString(KEY_TOPIC)
 
     val valueSchemaRegistrySettings = SchemaRegistrySettingsUtil.getProducerSettings(config, topic, ValueSchemaConfigKeys)
-    val keySchemaRegistrySettingsOpt = ConfigUtils.getOrNone(KEY_PRODUCE_KEYS, config)
-      .flatMap(_ => Some(SchemaRegistrySettingsUtil.getProducerSettings(config, topic, KeySchemaConfigKeys)))
+    val produceKeys = ConfigUtils.getOptionalBoolean(KEY_PRODUCE_KEYS, config).getOrElse(false)
+    val keySchemaRegistrySettingsOpt = if (produceKeys) {
+      Some(SchemaRegistrySettingsUtil.getProducerSettings(config, topic, KeySchemaConfigKeys))
+    } else {
+      None
+    }
 
     new ConfluentAvroEncodingTransformer(valueSchemaRegistrySettings, keySchemaRegistrySettingsOpt)
   }
