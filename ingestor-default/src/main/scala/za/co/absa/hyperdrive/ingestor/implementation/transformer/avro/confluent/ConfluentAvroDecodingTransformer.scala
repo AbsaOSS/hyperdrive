@@ -117,8 +117,12 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     val topic = getTopic(config)
     val valueSchemaRegistrySettings = SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, ValueSchemaConfigKeys)
 
-    val keySchemaRegistrySettingsOpt = ConfigUtils.getOrNone(KEY_CONSUME_KEYS, config)
-      .flatMap(_ => Some(SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, KeySchemaConfigKeys)))
+    val consumeKeys = ConfigUtils.getOptionalBoolean(KEY_CONSUME_KEYS, config).getOrElse(false)
+    val keySchemaRegistrySettingsOpt = if (consumeKeys) {
+      Some(SchemaRegistrySettingsUtil.getConsumerSettings(config, topic, KeySchemaConfigKeys))
+    } else {
+      None
+    }
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using: topic='$topic', " +
         s"value schema registry settings='$valueSchemaRegistrySettings', key schema registry settings='$keySchemaRegistrySettingsOpt'.")
