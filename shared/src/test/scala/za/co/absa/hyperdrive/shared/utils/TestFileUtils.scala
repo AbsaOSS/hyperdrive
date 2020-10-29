@@ -75,5 +75,4 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     // when, then
     FileUtils.isEmpty(file, config) shouldBe false
   }
-
 }

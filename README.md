@@ -37,6 +37,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 
 ### Built-in components
 - `KafkaStreamReader` - reads from a Kafka topic.
+- `ParquetStreamReader` - reads Parquet files from a source directory.
 - `ConfluentAvroDecodingTransformer` - decodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), retrieving the schema from the specified Schema Registry. This transformer is capable of seamlessly handling whatever schemas the payload messages are using.
 - `ConfluentAvroEncodingTransformer` - encodes the payload as Confluent Avro (through [ABRiS](https://github.com/AbsaOSS/ABRiS)), updating the schema to the specified Schema Registry. This transformer is capable of seamlessly handling whatever schema the dataframe is using.
 - `ColumnSelectorStreamTransformer` - selects all columns from the decoded DataFrame.
@@ -110,6 +111,16 @@ to identify which configuration options belong to a certain transformer instance
 Any additional properties for kafka can be added with the prefix `reader.option.`. E.g. the property `kafka.security.protocol` can be added as `reader.option.kafka.security.protocol`
 
 See e.g. the [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html) for optional kafka properties.
+
+##### ParquetStreamReader
+The parquet stream reader infers the schema from parquet files that already exist in the source directory. 
+If no file exists, the reader will fail.
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `reader.parquet.source.directory` | Yes | Source path for the parquet files. Equivalent to Spark property `path` for the `DataStreamReader` |
+
+Any additional properties can be added with the prefix `reader.parquet.options.`. See [Spark Structured Streaming Documentation](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#input-sources)
 
 ##### ConfluentAvroStreamDecodingTransformer
 The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
