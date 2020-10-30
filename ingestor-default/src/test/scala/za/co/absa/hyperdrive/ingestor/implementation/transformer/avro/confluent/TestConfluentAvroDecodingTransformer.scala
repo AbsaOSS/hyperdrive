@@ -15,55 +15,80 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
+import io.confluent.kafka.schemaregistry.ParsedSchema
+import io.confluent.kafka.schemaregistry.avro.AvroSchema
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_REGISTRY_URL
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
+import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
 
-class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers {
+class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with BeforeAndAfter {
 
-  private val topic = "topic"
-  private val schemaRegistryURL = "http://localhost:8081"
-  private val schemaRegistryValueSchemaId = "latest"
+  private val Topic = "topic"
+  private val SchemaRegistryURL = "dummyUrl"
+  private val SchemaRegistryValueSchemaId = "latest"
+
+  private var MockSchemaRegistryClient: MockSchemaRegistryClient = _
+  private val DummySchema = new AvroSchema(AvroSchemaUtils.parse("""{
+     "type": "record",
+     "name": "default_name",
+     "namespace": "default_namespace",
+     "fields":[
+         {"name": "int", "type":  ["int", "null"] }
+     ]
+    }""")).asInstanceOf[ParsedSchema]
 
   behavior of ConfluentAvroDecodingTransformer.getClass.getSimpleName
 
+  before {
+    MockSchemaRegistryClient = new MockSchemaRegistryClient()
+    SchemaManagerFactory.resetSRClientInstance()
+    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL), MockSchemaRegistryClient)
+  }
+
   "apply" should "throw if topic is not configured" in {
     val config = new BaseConfiguration
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, SchemaRegistryValueSchemaId)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroDecodingTransformer(config))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
   }
 
   it should "create avro stream decoder instance with schema registry settings for value schema" in {
+    MockSchemaRegistryClient.register(s"$Topic-value", DummySchema)
     val config = new BaseConfiguration
-    config.addProperty(KEY_TOPIC, topic)
-    config.addProperty(KEY_SCHEMA_REGISTRY_URL, schemaRegistryURL)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, schemaRegistryValueSchemaId)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+    config.addProperty(KEY_TOPIC, Topic)
+    config.addProperty(KEY_SCHEMA_REGISTRY_URL, SchemaRegistryURL)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, SchemaRegistryValueSchemaId)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
-    decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
-    decoder.keySchemaRegistrySettings shouldBe None
+    decoder.valueAvroConfig.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
+    decoder.keyAvroConfigOpt shouldBe None
   }
 
   it should "create avro stream decoder instance with schema registry settings for value schema and key schema" in {
+    MockSchemaRegistryClient.register(s"$Topic-key", DummySchema)
+    MockSchemaRegistryClient.register(s"$Topic-value", DummySchema)
     val config = new BaseConfiguration
-    config.addProperty(KEY_TOPIC, topic)
+    config.addProperty(KEY_TOPIC, Topic)
     config.addProperty(KEY_CONSUME_KEYS, "TRUE")
-    config.addProperty(KEY_SCHEMA_REGISTRY_URL, schemaRegistryURL)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, schemaRegistryValueSchemaId)
-    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-    config.addProperty(KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID, schemaRegistryValueSchemaId)
-    config.addProperty(KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY, SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+    config.addProperty(KEY_SCHEMA_REGISTRY_URL, SchemaRegistryURL)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, SchemaRegistryValueSchemaId)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
+    config.addProperty(KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID, SchemaRegistryValueSchemaId)
+    config.addProperty(KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
-    decoder.valueSchemaRegistrySettings(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
-    decoder.keySchemaRegistrySettings.get(PARAM_SCHEMA_REGISTRY_URL) shouldBe schemaRegistryURL
+    decoder.valueAvroConfig.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
+    decoder.keyAvroConfigOpt.get.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
   }
 
   "determineKeyColumnPrefix" should "return prefix key__ by default" in {
