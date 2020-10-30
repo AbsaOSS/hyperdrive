@@ -170,6 +170,19 @@ Caution: This transformer requires a writer which defines `writer.parquet.destin
 | :--- | :---: | :--- |
 | `transformer.{transformer-id}.report.date` | No | User-defined date for `hyperdrive_date` in format `yyyy-MM-dd`. Default date is the date of the ingestion |
 
+##### ColumnRenamingStreamTransformer
+`ColumnRenamingStreamTransformer` allows renaming of columns specified in the configuration.
+
+To add the transformer to the pipeline use this class name:
+```
+component.transformer.class.{transformer-id} = za.co.absa.hyperdrive.ingestor.implementation.transformer.column.renaming.ColumnRenamingStreamTransformer
+```
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.{transformer-id}.columns.rename.from` | Yes | A comma-separated list of columns to rename. For example, `column1, column2`. |
+| `transformer.{transformer-id}.columns.rename.to` | Yes | A comma-separated list of new column names. For example, `column1_new, column2_new`. |
+
 See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.
 ##### ParquetStreamWriter
 | Property Name | Required | Description |
