@@ -18,6 +18,8 @@ package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 import org.apache.commons.configuration2.DynamicCombinedConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import za.co.absa.commons.io.TempDirectory
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
 class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
@@ -32,6 +34,11 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
   private val keystoreLocation = "/tmp/keystore/wherever"
   private val keystorePassword = "we-are-very-secretive"
   private val keyPassword = "arent-we?"
+  private val checkpointDir = {
+    val dir = TempDirectory()
+    dir.deleteOnExit()
+    dir
+  }
 
   private val extraOptions = Map[String,String](
     KEY_SECURITY_PROTOCOL -> securityProtocol,
@@ -50,24 +57,35 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
   }
 
   it should "throw if topic is blank" in {
-    stubBrokers() // setup brokers
-    stubSecurity() // setup security
+    stubBrokers()
+    stubSecurity()
+    stubCheckpointLocation()
 
     val throwable = intercept[IllegalArgumentException](KafkaStreamReader(configStub))
-    assert(throwable.getMessage.toLowerCase.contains("topic")) // makes sure the error message mentions topic as the source
+    assert(throwable.getMessage.toLowerCase.contains("topic"))
   }
 
   it should "throw if brokers are blank" in {
-    stubTopic() // setup brokers
-    stubSecurity() // setup security
+    stubTopic()
+    stubSecurity()
+    stubCheckpointLocation()
 
     val throwable = intercept[IllegalArgumentException](KafkaStreamReader(configStub))
-    assert(throwable.getMessage.toLowerCase.contains("brokers")) // makes sure the error message mentions topic as the source
+    assert(throwable.getMessage.toLowerCase.contains("brokers"))
+  }
+
+  it should "throw on blank checkpoint location" in {
+    stubBrokers()
+    stubTopic()
+
+    val throwable = intercept[IllegalArgumentException](KafkaStreamReader(configStub))
+    assert(throwable.getMessage.toLowerCase.contains(StreamWriterCommonAttributes.keyCheckpointBaseLocation))
   }
 
   it should "not throw if extra configurations are absent" in {
     stubTopic()
     stubBrokers()
+    stubCheckpointLocation()
 
     val kafkaStreamReader: KafkaStreamReader = KafkaStreamReader(configStub).asInstanceOf[KafkaStreamReader]
     assert(topic == kafkaStreamReader.topic)
@@ -79,6 +97,7 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
     stubTopic()
     stubBrokers()
     stubSecurity()
+    stubCheckpointLocation()
 
     val kafkaStreamReader: KafkaStreamReader = KafkaStreamReader(configStub).asInstanceOf[KafkaStreamReader]
     assert(topic == kafkaStreamReader.topic)
@@ -93,6 +112,8 @@ class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
   private def stubTopic(): Unit = stubProperty(KEY_TOPIC, topic)
 
   private def stubBrokers(): Unit = stubProperty(KEY_BROKERS, brokers)
+
+  private def stubCheckpointLocation(): Unit = stubProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, checkpointDir.path.toAbsolutePath.toString)
 
   private def stubSecurity(keysToIgnore: Set[String] = Set[String]()): Unit = {
     extraOptions

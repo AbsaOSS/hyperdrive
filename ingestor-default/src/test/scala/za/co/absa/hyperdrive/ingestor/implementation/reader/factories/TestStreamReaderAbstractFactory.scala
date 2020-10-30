@@ -18,18 +18,22 @@ package za.co.absa.hyperdrive.ingestor.implementation.reader.factories
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.commons.io.TempDirectory
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.KafkaStreamReaderKeys._
 
 class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamReaderAbstractFactory.getClass.getSimpleName
+  private val baseDir = TempDirectory("TestStreamReaderAbstractFactory").deleteOnExit()
 
   it should "create KafkaStreamReader" in {
     val config = new BaseConfiguration()
     config.addProperty(StreamReaderAbstractFactory.componentConfigKey, KafkaStreamReader.getClass.getName)
     config.addProperty(KEY_TOPIC, "topic")
     config.addProperty(KEY_BROKERS, "http://localhost:9092")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, baseDir.path.toAbsolutePath.toString)
 
     assert(StreamReaderAbstractFactory.build(config).isInstanceOf[KafkaStreamReader])
   }

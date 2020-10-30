@@ -25,13 +25,6 @@ class TestColumnSelectorStreamTransformer extends FlatSpec with MockitoSugar {
 
   behavior of createTransformer(Seq("*")).getClass.getName
 
-  it should "throw on null DataFrame" in {
-    val transformer = createTransformer(Seq("*"))
-    assertThrows[IllegalArgumentException](
-      transformer.transform(streamData = null)
-    )
-  }
-
   it should "select all columns in DataFrame" in {
     val streamData = mock[DataFrame]
     when(streamData.select("*")).thenReturn(streamData)

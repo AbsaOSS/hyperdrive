@@ -18,6 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.factories
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
@@ -30,6 +31,7 @@ class TestStreamWriterAbstractFactory extends FlatSpec with BeforeAndAfterEach w
     config.addProperty(StreamWriterAbstractFactory.componentConfigKey, ParquetStreamWriter.getClass.getName)
     config.addProperty(KEY_DESTINATION_DIRECTORY, "/tmp/parquet")
     config.addProperty(KEY_EXTRA_CONFS_ROOT, "")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 
     assert(StreamWriterAbstractFactory.build(config).isInstanceOf[ParquetStreamWriter])
   }

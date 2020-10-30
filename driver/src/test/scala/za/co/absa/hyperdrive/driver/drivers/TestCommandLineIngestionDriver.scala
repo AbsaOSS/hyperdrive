@@ -15,43 +15,57 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys._
+import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
 
-class TestCommandLineIngestionDriver extends FlatSpec {
+class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
 
   behavior of CommandLineIngestionDriver.getClass.getSimpleName
 
   it should "load all configuration" in {
-    val conf = getSampleConfs
-    val confPairArray = conf.map(_.productIterator.mkString("=")).toArray
+    val settings = getSettings
 
-    val parsedConf = CommandLineIngestionDriver.parseConfiguration(confPairArray)
+    val config = CommandLineIngestionDriver.parseConfiguration(settings)
 
-    assert(conf.keys.size == parsedConf.size())
-    conf.foreach {case(key,value) => assert(value == parsedConf.getString(key))}
+    config.getString("ingestor.spark.app.name") shouldBe "any_name"
+    config.getStringArray("reader.kafka.brokers") shouldBe Array("localhost:9092", "otherhost:9093")
+    config.getString("ssl.keystore.password") shouldBe "any-keystore!!@#$% password"
+    config.getString("ssl.truststore.password") shouldBe "kd9910))383(((*-+"
+    config.getString("ssl.truststore.location") shouldBe "another/place/truststore.jks"
+    config.getString("key.equals.sign.in.value") shouldBe "value1=value2"
+    config.getLong("some.long") shouldBe 3000000000L
+    config.getLong("some.interpolated.value") shouldBe 3000000000999L
+    config.getString("key.with.whitespace") shouldBe "the-value"
+    config.containsKey("key.without.value") shouldBe true
+
+    val properties = config.getProperties("some.properties")
+    properties.getProperty("key1") shouldBe "value1"
+    properties.getProperty("key2") shouldBe "value2"
+    properties.getProperty("key3") shouldBe "value3"
   }
 
   it should "throw if any configuration is malformed" in {
-    val invalidSetting = "key2="
+    val invalidSetting = "key2"
     val invalidConfString = Array("key1=value1,value2", invalidSetting, "key3=value3")
     val throwable = intercept[IllegalArgumentException](CommandLineIngestionDriver.parseConfiguration(invalidConfString))
     assert(throwable.getMessage.toLowerCase.contains(invalidSetting))
   }
 
-  private def getSampleConfs: Map[String,String] = {
-    import IngestorKeys._
+  private def getSettings: Array[String] = {
     import KafkaStreamReaderKeys._
-    Map(
-      KEY_APP_NAME -> "any_name",
-      KEY_TOPIC -> "any_topic",
-      KEY_BROKERS -> "localhost:9092,otherhost:9093",
-      KEY_KEY_PASSWORD -> "any.key.password",
-      KEY_KEYSTORE_PASSWORD -> "any-keystore!!@#$% password",
-      KEY_KEYSTORE_LOCATION -> "/tmp/wherever/keystore.jks",
-      KEY_TRUSTSTORE_PASSWORD -> "kd9910))383(((*-+",
-      KEY_TRUSTSTORE_LOCATION -> "another/place/truststore.jks",
-      "key.equals.sign.in.value" -> "value1=value2"
+    Array(
+      s"$KEY_APP_NAME=any_name",
+      s"$KEY_BROKERS=localhost:9092,otherhost:9093",
+      "ssl.keystore.password=any-keystore!!@#$% password",
+      "ssl.truststore.password=kd9910))383(((*-+",
+      "ssl.truststore.location=another/place/truststore.jks",
+      "key.equals.sign.in.value=value1=value2",
+      "some.long=3000000000",
+      "some.interpolated.value=${some.long}999",
+      "some.properties=key1 = value1, key2=value2, key3=value3",
+      " key.with.whitespace = the-value",
+      "key.without.value="
     )
   }
 }

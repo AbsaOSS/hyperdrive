@@ -17,49 +17,33 @@ package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.SparkSession
-import za.co.absa.hyperdrive.ingestor.api.decoder.StreamDecoder
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
-import za.co.absa.hyperdrive.ingestor.implementation.DefaultConfiguration
-import za.co.absa.hyperdrive.ingestor.implementation.decoder.factories.StreamDecoderAbstractFactory
-import za.co.absa.hyperdrive.ingestor.implementation.manager.factories.OffsetManagerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamReaderAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
-import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.IngestorKeys
 
 private[driver] class IngestionDriver {
-
   private val logger = LogManager.getLogger
+  val ListDelimiter = ','
 
   def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
-    applyDefaults(configuration)
     printConfiguration(configuration)
 
-    val spark = getSparkSession(configuration)
+    val sparkIngestor = SparkIngestor(configuration)
     val streamReader = getStreamReader(configuration)
-    val offsetManager = getOffsetManager(configuration)
-    val streamDecoder = getStreamDecoder(configuration)
-    val streamTransformer = getStreamTransformer(configuration)
+    val streamTransformers = getStreamTransformers(configuration)
     val streamWriter = getStreamWriter(configuration)
 
     logger.info("Ingestion components instantiated. Going to invoke SparkIngestor.")
-    SparkIngestor.ingest(spark, streamReader, offsetManager, streamDecoder, streamTransformer, streamWriter)
+    sparkIngestor.ingest(streamReader, streamTransformers, streamWriter)
   }
-
-  private def getSparkSession(conf: Configuration): SparkSession = SparkSession.builder().appName(conf.getString(IngestorKeys.KEY_APP_NAME)).getOrCreate()
 
   private def getStreamReader(conf: Configuration): StreamReader = StreamReaderAbstractFactory.build(conf)
 
-  private def getOffsetManager(conf: Configuration): OffsetManager = OffsetManagerAbstractFactory.build(conf)
-
-  private def getStreamDecoder(conf: Configuration): StreamDecoder = StreamDecoderAbstractFactory.build(conf)
-
-  private def getStreamTransformer(conf: Configuration): StreamTransformer = StreamTransformerAbstractFactory.build(conf)
+  private def getStreamTransformers(conf: Configuration): Seq[StreamTransformer] = StreamTransformerAbstractFactory.build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
@@ -69,12 +53,5 @@ private[driver] class IngestionDriver {
       .getKeys
       .asScala
       .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
-  }
-
-  private def applyDefaults(configuration: Configuration): Unit = {
-    DefaultConfiguration.values
-      .filter{case (key, _) => !configuration.containsKey(key)}
-      .foreach{case (key, value) => configuration.addProperty(key, value)}
-
   }
 }

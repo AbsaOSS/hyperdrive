@@ -15,24 +15,15 @@
 
 package za.co.absa.hyperdrive.shared.configurations
 
-object ConfigurationsKeys {
+private[hyperdrive] object ConfigurationsKeys {
 
   object HyperdriveComponentsKeys {
     val rootComponentConfKey = "component"
 
     val KEY_INGESTOR = s"$rootComponentConfKey.ingestor"
     val KEY_READER = s"$rootComponentConfKey.reader"
-    val KEY_DECODER = s"$rootComponentConfKey.decoder"
-    val KEY_MANAGER = s"$rootComponentConfKey.manager"
     val KEY_TRANSFORMER = s"$rootComponentConfKey.transformer"
     val KEY_WRITER = s"$rootComponentConfKey.writer"
-  }
-
-  object IngestorKeys {
-    val rootComponentConfKey = "ingestor"
-    val rootFactoryConfKey = s"$rootComponentConfKey.spark"
-
-    val KEY_APP_NAME = s"$rootFactoryConfKey.app.name"
   }
 
   object KafkaStreamReaderKeys {
@@ -49,33 +40,25 @@ object ConfigurationsKeys {
     val KEY_KEYSTORE_LOCATION = s"$rootFactoryOptionalKafkaKey.ssl.keystore.location"
     val KEY_KEYSTORE_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.keystore.password"
     val KEY_KEY_PASSWORD = s"$rootFactoryOptionalKafkaKey.ssl.key.password"
-    val WORD_STARTING_OFFSETS = "startingOffsets"
-    val KEY_STARTING_OFFSETS = s"$rootFactoryOptionalKafkaKey.$WORD_STARTING_OFFSETS"
   }
-
   object ColumnSelectorStreamTransformerKeys {
-    val KEY_COLUMNS_TO_SELECT = "transformer.columns.to.select"
+    val KEY_COLUMNS_TO_SELECT = "columns.to.select"
   }
 
   object AvroKafkaStreamDecoderKeys {
-    val rootComponentRootKey = "decoder"
-    val rootFactoryConfKey = s"$rootComponentRootKey.avro"
-
     val KEY_TOPIC: String = KafkaStreamReaderKeys.KEY_TOPIC
-    val KEY_SCHEMA_REGISTRY_URL = s"$rootFactoryConfKey.schema.registry.url"
-    val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = s"$rootFactoryConfKey.value.schema.naming.strategy"
-    val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = s"$rootFactoryConfKey.value.schema.id"
+    val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
 
-    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = s"$rootFactoryConfKey.value.schema.record.name"
-    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = s"$rootFactoryConfKey.value.schema.record.namespace"
-  }
+    val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
+    val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = "value.schema.id"
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = "value.schema.record.name"
+    val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = "value.schema.record.namespace"
 
-  object CheckpointOffsetManagerKeys {
-    val rootComponentRootKey = "manager"
-    val rootFactoryConfKey = s"$rootComponentRootKey.checkpoint"
-
-    val KEY_TOPIC: String = KafkaStreamReaderKeys.KEY_TOPIC
-    val KEY_CHECKPOINT_BASE_LOCATION = s"$rootFactoryConfKey.base.location"
+    val KEY_CONSUME_KEYS = "consume.keys"
+    val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = "key.schema.naming.strategy"
+    val KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID = "key.schema.id"
+    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = "key.schema.record.name"
+    val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = "key.schema.record.namespace"
   }
 
   object ParquetStreamWriterKeys {
@@ -83,11 +66,8 @@ object ConfigurationsKeys {
     val rootFactoryConfKey = s"$rootComponentRootKey.parquet"
 
     val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
+    val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
+    val KEY_METADATA_CHECK = s"$rootFactoryConfKey.metadata.check"
     val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
-  }
-
-  object ParquetPartitioningStreamWriterKeys {
-    val rootFactoryConfKey = s"${ParquetStreamWriterKeys.rootFactoryConfKey}.partitioning"
-    val KEY_REPORT_DATE = s"$rootFactoryConfKey.report.date"
   }
 }

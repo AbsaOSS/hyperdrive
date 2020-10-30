@@ -15,8 +15,10 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import org.apache.commons.configuration2.Configuration
-import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.commons.configuration2.builder.BasicConfigurationBuilder
+import org.apache.commons.configuration2.builder.fluent.Parameters
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.apache.logging.log4j.LogManager
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
@@ -24,6 +26,7 @@ import za.co.absa.hyperdrive.driver.utils.DriverUtil
 object CommandLineIngestionDriver extends IngestionDriver {
 
   private val logger = LogManager.getLogger
+  private val PropertyDelimiter = "="
 
   def main(args: Array[String]): Unit = {
     if (args.isEmpty) {
@@ -39,16 +42,22 @@ object CommandLineIngestionDriver extends IngestionDriver {
   }
 
   def parseConfiguration(settings: Array[String]): Configuration = {
-    val configuration = new BaseConfiguration
+    val configuration = new BasicConfigurationBuilder[BaseConfiguration](classOf[BaseConfiguration])
+        .configure(new Parameters()
+          .basic()
+          .setListDelimiterHandler(new DefaultListDelimiterHandler(ListDelimiter)))
+      .getConfiguration
+
     settings.foreach(setOrThrow(_, configuration))
     configuration
   }
 
   private def setOrThrow(setting: String, configuration: Configuration): Unit = {
-    val settingKeyValue = setting.trim.split("=", 2)
-    if (settingKeyValue.length != 2 || settingKeyValue.exists(_.isEmpty)) {
+    if(!setting.contains(PropertyDelimiter)) {
       throw new IllegalArgumentException(s"Invalid setting format: $setting")
+    } else {
+      val settingKeyValue = setting.split(PropertyDelimiter, 2)
+      configuration.setProperty(settingKeyValue(0).trim, settingKeyValue(1).trim)
     }
-    configuration.setProperty(settingKeyValue(0), settingKeyValue(1))
   }
 }

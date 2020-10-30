@@ -17,12 +17,16 @@ package za.co.absa.hyperdrive.scanner.dummyjar
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.DataFrame
-import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
 
 class DummyStreamTransformer extends StreamTransformer {
   override def transform(streamData: DataFrame): DataFrame = ???
 }
 
-object DummyStreamTransformer extends StreamTransformerFactory {
+object DummyStreamTransformer extends StreamTransformerFactory with DummyAttributes {
   override def apply(config: Configuration): StreamTransformer = ???
+}
+
+class DummyStreamTransformerLoader extends StreamTransformerFactoryProvider {
+  override def getComponentFactory: StreamTransformerFactory = DummyStreamTransformer
 }

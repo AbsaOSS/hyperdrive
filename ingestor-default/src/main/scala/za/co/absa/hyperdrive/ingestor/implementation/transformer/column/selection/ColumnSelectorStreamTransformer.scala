@@ -17,25 +17,22 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selecti
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
-import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ColumnSelectorStreamTransformerKeys.KEY_COLUMNS_TO_SELECT
 
 private[transformer] class ColumnSelectorStreamTransformer(val columns: Seq[String]) extends StreamTransformer {
 
-  if (columns == null || columns.isEmpty) {
+  if (columns.isEmpty) {
     throw new IllegalArgumentException("Empty list of columns to select.")
   }
 
-  def transform(streamData: DataFrame): DataFrame = {
-    if (streamData == null) {
-      throw new IllegalArgumentException("Null DataFrame received.")
-    }
-
-    streamData.select(columns.head, columns.tail:_*)
+  override def transform(streamData: DataFrame): DataFrame = {
+    streamData.select(columns.head, columns.tail: _*)
   }
 }
 
-object ColumnSelectorStreamTransformer extends StreamTransformerFactory {
+object ColumnSelectorStreamTransformer extends StreamTransformerFactory with ColumnSelectorStreamTransformerAttributes {
   override def apply(config: Configuration): StreamTransformer = {
     val columns = getColumnsAsSequence(config)
     LogManager.getLogger.info(s"Going to create ColumnSelectorStreamTransformer using: columns='$columns'")

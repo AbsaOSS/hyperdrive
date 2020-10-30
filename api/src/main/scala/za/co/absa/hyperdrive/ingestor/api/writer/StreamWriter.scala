@@ -17,15 +17,8 @@ package za.co.absa.hyperdrive.ingestor.api.writer
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
 
-/**
-  * Base class for all StreamDecoders.
-  *
-  */
-abstract class StreamWriter(destination: String) {
+abstract class StreamWriter {
 
-  def write(dataFrame: DataFrame, offsetManager: OffsetManager): StreamingQuery
-
-  def getDestination: String = destination
+  def write(dataFrame: DataFrame): StreamingQuery
 }

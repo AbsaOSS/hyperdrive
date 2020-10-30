@@ -15,118 +15,116 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
-import java.io.File
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.mockito.ArgumentMatchers._
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.mockito.Mockito._
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
-import za.co.absa.hyperdrive.ingestor.api.manager.OffsetManager
-import za.co.absa.hyperdrive.testutils.TempDir
+import za.co.absa.commons.io.TempDirectory
+import za.co.absa.commons.spark.SparkTestBase
 
-class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
+class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 
-  private val tempDir = TempDir.getNew
-  private val parquetDestination = new File(tempDir, "test-parquet")
+  private val tempDir = TempDirectory().deleteOnExit()
+  private val parquetDestination = tempDir.path.resolve("test-parquet")
   private val configuration = new Configuration()
 
   behavior of "ParquetStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = null, Map()))
-    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Map()))
-  }
-
-  it should "throw on null DataFrame" in {
-    val dataStreamWriter = mock[DataStreamWriter[Row]]
-
-    val offsetManager = mock[OffsetManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, null)).thenReturn(dataStreamWriter)
-
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
-    assertThrows[IllegalArgumentException](writer.write(dataFrame = null, offsetManager))
-  }
-
-  it should "throw on null OffsetManager" in {
-    val dataStreamWriter = mock[DataStreamWriter[Row]]
-
-    val dataFrame = mock[DataFrame]
-    when(dataFrame.writeStream).thenReturn(dataStreamWriter)
-
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, Map())
-    assertThrows[IllegalArgumentException](writer.write(dataFrame, offsetManager = null))
+    assertThrows[IllegalArgumentException](new ParquetStreamWriter(destination = "  ", Trigger.Once(), "/tmp/checkpoint", None, false, Map()))
   }
 
   it should "set format as 'parquet'" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).format("parquet")
   }
 
   it should "set Trigger.Once" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).trigger(Trigger.Once)
+  }
+
+  it should "set Trigger.ProcessingTime" in {
+    val dataStreamWriter = getDataStreamWriter
+
+    invokeWriter(dataStreamWriter, Map(), Trigger.ProcessingTime(1L))
+    verify(dataStreamWriter).trigger(Trigger.ProcessingTime(1L))
   }
 
   it should "set output mode as 'append'" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
+    invokeWriter(dataStreamWriter, Map())
     verify(dataStreamWriter).outputMode(OutputMode.Append())
-  }
-
-  it should "invoke OffsetManager passing DataStreamWriter" in {
-    val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
-
-    invokeWriter(dataStreamWriter, offsetManager, Map())
-    verify(offsetManager).configureOffsets(dataStreamWriter, configuration)
   }
 
   it should "start DataStreamWriter" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
 
-    invokeWriter(dataStreamWriter, offsetManager, Map())
-    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+    invokeWriter(dataStreamWriter, Map())
+    verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
   }
 
   it should " include extra options in case they exist" in {
     val dataStreamWriter = getDataStreamWriter
-    val offsetManager = getOffsetManager(dataStreamWriter)
 
     val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
 
-    invokeWriter(dataStreamWriter, offsetManager, extraConfs)
-    verify(dataStreamWriter).start(parquetDestination.getAbsolutePath)
+    invokeWriter(dataStreamWriter, extraConfs)
+    verify(dataStreamWriter).start(parquetDestination.toAbsolutePath.toString)
 
     verify(dataStreamWriter).options(extraConfs)
   }
 
-  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row], offsetManager: OffsetManager, extraOptions: Map[String,String]): Unit = {
-    val dataFrame = getDataFrame(dataStreamWriter)
-    val writer = new ParquetStreamWriter(parquetDestination.getAbsolutePath, extraOptions)
-    writer.write(dataFrame, offsetManager)
+  it should "partition by given column names" in {
+    val dataStreamWriter = getDataStreamWriter
+
+    invokeWriter(dataStreamWriter, Map(), partitionColumns = Some(Seq("column1", "column2")))
+    verify(dataStreamWriter).partitionBy("column1", "column2")
   }
 
-  private def getDataStreamWriter: DataStreamWriter[Row] = {
-    val dataStreamWriter = mock[DataStreamWriter[Row]]
-    when(dataStreamWriter.trigger(any(Trigger.Once().getClass))).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.format(anyString())).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.outputMode(any(OutputMode.Append().getClass))).thenReturn(dataStreamWriter)
-    when(dataStreamWriter.options(any(classOf[scala.collection.Map[String, String]]))).thenReturn(dataStreamWriter)
-    dataStreamWriter
+  it should "throw an exception if the metadata log is inconsistent" in {
+    import spark.implicits._
+    val baseDir = TempDirectory("TestParquetStreamWriter").deleteOnExit()
+    val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
+    val input = MemoryStream[Int](1, spark.sqlContext)
+    input.addData(List.range(0, 100))
+    val df = input.toDF()
+
+    // simulate partial write
+    (1000 to 1500).toDF()
+      .write
+      .mode(SaveMode.Append)
+      .parquet(s"$destinationPath/partition1=value1")
+
+    val writer = new ParquetStreamWriter(destinationPath, Trigger.Once(), "/tmp/checkpoint", None, true, Map())
+    val throwable = intercept[IllegalStateException](writer.write(df))
+
+    throwable.getMessage should include("Inconsistent Metadata Log.")
   }
+
+  private def invokeWriter(dataStreamWriter: DataStreamWriter[Row],
+                           extraOptions: Map[String,String], trigger: Trigger = Trigger.Once(),
+                           checkpointLocation: String = "/tmp/checkpoint-location",
+                           partitionColumns: Option[Seq[String]] = None,
+                           doMetadataCheck: Boolean = false): Unit = {
+    val dataFrame = getDataFrame(dataStreamWriter)
+    val writer = new ParquetStreamWriter(parquetDestination.toAbsolutePath.toString, trigger, checkpointLocation,
+      partitionColumns, doMetadataCheck, extraOptions)
+    writer.write(dataFrame)
+  }
+
+  private def getDataStreamWriter: DataStreamWriter[Row] =
+    mock[DataStreamWriter[Row]](withSettings().defaultAnswer(RETURNS_SELF))
+
 
   private def getDataFrame(dataStreamWriter: DataStreamWriter[Row]): DataFrame = {
     val sparkContext = mock[SparkContext]
@@ -138,11 +136,5 @@ class TestParquetStreamWriter extends FlatSpec with MockitoSugar {
     when(dataFrame.writeStream).thenReturn(dataStreamWriter)
     when(dataFrame.sparkSession).thenReturn(sparkSession)
     dataFrame
-  }
-
-  private def getOffsetManager(dataStreamWriter: DataStreamWriter[Row]): OffsetManager = {
-    val offsetManager = mock[OffsetManager]
-    when(offsetManager.configureOffsets(dataStreamWriter, configuration)).thenReturn(dataStreamWriter)
-    offsetManager
   }
 }

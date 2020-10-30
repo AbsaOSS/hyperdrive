@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.shared.configurations.ConfigurationsKeys.ParquetStreamWriterKeys._
 
 class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAndAfterEach {
@@ -36,6 +37,7 @@ class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAn
     config.addProperty(KEY_DESTINATION_DIRECTORY, "/tmp/destination/parquet")
     config.addProperty("writer.parquet.options.key1", "value1")
     config.addProperty("writer.parquet.options.key2", "value2")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 
     val writer = ParquetStreamWriter(config).asInstanceOf[ParquetStreamWriter]
 
@@ -49,6 +51,7 @@ class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAn
   it should "not throw on absent extra configurations" in {
     val config = new BaseConfiguration()
     config.addProperty(KEY_DESTINATION_DIRECTORY, "/tmp/destination/parquet")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 
     val writer = ParquetStreamWriter(config).asInstanceOf[ParquetStreamWriter]
 

@@ -18,7 +18,7 @@
     <parent>
         <artifactId>hyperdrive</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>4.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -50,15 +50,13 @@
         <abris.version>3.1.1</abris.version>
 
         <!--Scala-->
-        <scala.version>2.11.8</scala.version>
         <scalatest.version>3.0.5</scalatest.version>
         <scalatest.maven.version>1.0</scalatest.maven.version>
-        <scala.compat.version>2.11</scala.compat.version>
         <specs.version>2.4.16</specs.version>
         <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
 
         <!--Log4J2-->
-        <log4j.version>2.11.1</log4j.version>
+        <log4j.version>2.13.3</log4j.version>
         <slf4j.log4j2.version>1.7.26</slf4j.log4j2.version>
 
         <!--Kafka-->
@@ -66,8 +64,8 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
-        <testcontainers.kafka.version>1.12.3</testcontainers.kafka.version>
-        <kafka.avro.serializer.version>5.2.2</kafka.avro.serializer.version>
+        <testcontainers.kafka.version>1.12.4</testcontainers.kafka.version>
+        <kafka.avro.serializer.version>5.3.1</kafka.avro.serializer.version>
 
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
@@ -75,6 +73,7 @@
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
 
+        <absa.commons.version>0.0.12</absa.commons.version>
         <!--Shade Maven plug-in-->
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
@@ -82,8 +81,8 @@
         <maven.surefire.plugin.version>3.0.0-M3</maven.surefire.plugin.version>
 
         <!--Configurations-->
-        <commons.configuration2.version>2.4</commons.configuration2.version>
-        <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.configuration2.version>2.7</commons.configuration2.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
 
@@ -114,13 +113,6 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
         </dependency>
-
-        <!--ABRiS-->
-        <dependency>
-            <groupId>za.co.absa</groupId>
-            <artifactId>abris_${scala.compat.version}</artifactId>
-        </dependency>
-
         <!--Logging-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -145,36 +137,20 @@
             <artifactId>commons-configuration2</artifactId>
         </dependency>
 
-        <!--Spark/Kafka-->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-        </dependency>
-
         <!--Tests-->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>za.co.absa.commons</groupId>
+            <artifactId>commons_${scala.compat.version}</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.compat.version}</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>kafka</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-avro-serializer</artifactId>
         </dependency>
     </dependencies>
 
@@ -282,17 +258,17 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.specs2</groupId>
-                <artifactId>specs2-core_${scala.compat.version}</artifactId>
-                <version>${specs.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>za.co.absa.commons</groupId>
+                <artifactId>commons_${scala.compat.version}</artifactId>
+                <version>${absa.commons.version}</version>
+            </dependency>
+
             <dependency>
                 <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
@@ -311,8 +287,6 @@
                 <version>${testcontainers.kafka.version}</version>
                 <scope>test</scope>
             </dependency>
-
-
         </dependencies>
     </dependencyManagement>
 

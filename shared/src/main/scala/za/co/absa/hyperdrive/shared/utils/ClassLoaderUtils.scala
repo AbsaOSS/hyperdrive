@@ -19,7 +19,7 @@ import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 import scala.util.{Failure, Success, Try}
 
-object ClassLoaderUtils {
+private[hyperdrive] object ClassLoaderUtils {
 
   def loadSingletonClassOfType[T:ClassTag:ru.TypeTag](fullyQualifiedName: String): T = {
     val mirror = ru.runtimeMirror(getClass.getClassLoader)

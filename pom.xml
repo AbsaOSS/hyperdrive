@@ -20,7 +20,7 @@
     <groupId>za.co.absa.hyperdrive</groupId>
     <artifactId>hyperdrive</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.1-SNAPSHOT</version>
+    <version>4.0.0</version>
     <name>hyperdrive</name>
     <description>Hyperdrive is a configurable and scalable ingestion platform that allows data movement and
         transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
@@ -28,6 +28,7 @@
     <url>https://github.com/AbsaOSS/hyperdrive</url>
 
     <modules>
+        <module>hyperdrive-release</module>
         <module>driver</module>
         <module>parent-conf</module>
         <module>component-archetype</module>
@@ -36,7 +37,6 @@
         <module>api</module>
         <module>ingestor-default</module>
         <module>shared</module>
-        <module>testutils</module>
     </modules>
 
     <distributionManagement>
@@ -54,7 +54,7 @@
         <connection>scm:git:git://github.com/AbsaOSS/hyperdrive.git</connection>
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/hyperdrive.git</developerConnection>
         <url>https://github.com/AbsaOSS/hyperdrive/tree/master</url>
-      <tag>HEAD</tag>
+      <tag>v4.0.0</tag>
   </scm>
 
     <licenses>
@@ -77,16 +77,29 @@
             <timezone>Europe/Prague</timezone>
             <url>https://github.com/felipemmelo</url>
         </developer>
+        <developer>
+            <id>kevinwallimann</id>
+            <name>Kevin Wallimann</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/kevinwallimann</url>
+        </developer>
+        <developer>
+            <id>jozefbakus</id>
+            <name>Jozef Bakus</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/jozefbakus</url>
+        </developer>
     </developers>
 
     <properties>
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
-        <!--Deployment-->
-        <skip.internal.modules.deployment>true</skip.internal.modules.deployment>
         <directory.maven.plugin.version>0.1</directory.maven.plugin.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
+        <scala.version>2.11.8</scala.version>
+        <scala.compat.version>2.11</scala.compat.version>
+
     </properties>
 
     <build>
@@ -180,7 +193,7 @@
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
                         </configuration>
                     </plugin>
                 </plugins>
