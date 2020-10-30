@@ -150,7 +150,7 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
   }
 
   after {
-    SchemaManagerFactory.resetClientInstance()
+    SchemaManagerFactory.resetSRClientInstance()
   }
 
   def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
