@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.testutils
 
 import java.io.IOException
 
-import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata}
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
+import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata}
 
-private class AbrisMockSchemaRegistryClient extends MockSchemaRegistryClient {
+class HyperdriveMockSchemaRegistryClient extends MockSchemaRegistryClient {
 
   /**
    * MockSchemaRegistryClient is throwing different Exception than the mocked client, this is a workaround
