@@ -73,29 +73,14 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   private def deduplicateDataFrame(dataFrame: DataFrame, offsetLog: OffsetSeqLog, commitLog: CommitLog) = {
     logger.info("Deduplicate rows after retry")
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
-    seekToOffsets(sourceConsumer, offsetLog, commitLog)
-
-    val sourceRecordsCount = try {
-      getAllAvailableMessagesCount(sourceConsumer)
-    } catch {
-      case throwable: Throwable => logger.error(s"An unexpected error occurred while consuming from topic $readerTopic", throwable)
-        throw throwable
-    } finally {
-      sourceConsumer.close()
-    }
-
+    seekToLatestCommittedOffsets(sourceConsumer, offsetLog, commitLog)
+    val sourceRecordsCount = consumeAndClose(sourceConsumer, getAllAvailableMessagesCount)
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
     val sinkTopicPartitions = getTopicPartitions(sinkConsumer, writerTopic)
-    val latestSinkRecords = try {
-      sinkTopicPartitions.map(topicPartition => {
-        getAtLeastNLatestRecords(sinkConsumer, topicPartition, sourceRecordsCount)
+    val latestSinkRecords = consumeAndClose(sinkConsumer,
+      (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => sinkTopicPartitions.map {
+        topicPartition => getAtLeastNLatestRecords(consumer, topicPartition, sourceRecordsCount)
       })
-    } catch {
-      case throwable: Throwable => logger.error(s"An unexpected error occurred while consuming from topic $writerTopic", throwable)
-        throw throwable
-    } finally {
-      sinkConsumer.close()
-    }
 
     val publishedIds = latestSinkRecords.flatten.map(record => {
       try {
@@ -109,8 +94,23 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     dataFrame.filter(not(col(idColumn).isInCollection(publishedIds)))
   }
 
-  private def seekToOffsets(consumer: KafkaConsumer[GenericRecord, GenericRecord], offsetLog: OffsetSeqLog, commitLog: CommitLog) = {
-    val sourceTopicPartitionOffsetsOpt = getTopicPartitionsFromOffsets(offsetLog, commitLog)
+  private def consumeAndClose[T](consumer: KafkaConsumer[GenericRecord, GenericRecord], consume: KafkaConsumer[GenericRecord, GenericRecord] => T) = {
+    try {
+      consume(consumer)
+    } catch {
+      case throwable: Throwable => logger.error(s"An unexpected error occurred while consuming", throwable)
+        throw throwable
+    } finally {
+      consumer.close()
+    }
+  }
+
+  /**
+   * Determines the latest committed offsets by inspecting structured streaming's offset log and commit log.
+   * If no committed offsets are available, seeks to beginning.
+   */
+  private def seekToLatestCommittedOffsets(consumer: KafkaConsumer[GenericRecord, GenericRecord], offsetLog: OffsetSeqLog, commitLog: CommitLog): Unit = {
+    val sourceTopicPartitionOffsetsOpt = getTopicPartitionsFromLatestCommittedOffsets(offsetLog, commitLog)
     consumer.subscribe(Collections.singletonList(readerTopic), new ConsumerRebalanceListener {
       override def onPartitionsRevoked(partitions: util.Collection[TopicPartition]): Unit = {}
 
@@ -151,6 +151,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     records
   }
 
+  //  TODO: Move to KafkaUtils. Test with MockConsumer
   private def getAllAvailableMessagesCount(consumer: KafkaConsumer[GenericRecord, GenericRecord]): Int = {
     import scala.util.control.Breaks._
     var recordsCount = 0
@@ -166,6 +167,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     recordsCount
   }
 
+//  TODO: Move to KafkaUtils. Test with MockConsumer
   private def getAllAvailableMessages(consumer: KafkaConsumer[GenericRecord, GenericRecord]) = {
     import scala.util.control.Breaks._
     var records: Seq[ConsumerRecord[GenericRecord, GenericRecord]] = mutable.Seq()
@@ -195,7 +197,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     new KafkaConsumer[GenericRecord, GenericRecord](props)
   }
 
-  def getTopicPartitionsFromOffsets(offsetLog: OffsetSeqLog, commitLog: CommitLog): Option[Map[TopicPartition, Long]] = {
+//  TODO: Move this to util class and test there
+  private def getTopicPartitionsFromLatestCommittedOffsets(offsetLog: OffsetSeqLog, commitLog: CommitLog): Option[Map[TopicPartition, Long]] = {
     val offsetSeqOpt = commitLog.getLatest().map(_._1)
       .flatMap(batchId => offsetLog.get(batchId))
       .map(offsetLog => offsetLog.offsets)

@@ -36,6 +36,8 @@ import za.co.absa.commons.spark.SparkTestBase
 /**
  * This e2e test requires a Docker installation on the executing machine.
  */
+// TODO: Add testcase with multiple partitions
+// TODO: Add testcase with at least one committed microbatch
 class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
