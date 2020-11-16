@@ -131,6 +131,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     consumer.partitionsFor(topic).asScala.map(p => new TopicPartition(p.topic(), p.partition()))
   }
 
+//  TODO: How to test while loop? Not possible with MockConsumer because it resets messages after each poll. E2E-Test?
   private def getAtLeastNLatestRecords(consumer: KafkaConsumer[GenericRecord, GenericRecord], topicPartition: TopicPartition, numberOfRecords: Int) = {
     consumer.assign(Seq(topicPartition).asJava)
     val endOffsets = consumer.endOffsets(Seq(topicPartition).asJava).asScala
