@@ -30,11 +30,10 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getPropertySubset}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getSeqOrThrow, getPropertySubset}
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{ConfluentAvroDecodingTransformer, ConfluentAvroEncodingTransformer}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.kafka010.KafkaSourceOffset
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 
@@ -52,9 +51,9 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   val writerBrokers: String,
   val writerExtraOptions: Map[String, String],
   val checkpointLocation: String,
-  val idColumn: String) extends StreamTransformer {
+  val idColumnNames: Seq[String]) extends StreamTransformer {
   private val logger = LogManager.getLogger
-  private val timeout = Duration.ofSeconds(5L)
+  private val timeout = Duration.ofSeconds(5L) // TODO: Make it configurable
 
   override def transform(dataFrame: DataFrame): DataFrame = {
     val spark = dataFrame.sparkSession
@@ -74,24 +73,53 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info("Deduplicate rows after retry")
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
     seekToLatestCommittedOffsets(sourceConsumer, offsetLog, commitLog)
-    val sourceRecordsCount = consumeAndClose(sourceConsumer, getAllAvailableMessagesCount)
+    val sourceRecords = consumeAndClose(sourceConsumer, getAllAvailableMessages)
+    val sourceIds = sourceRecords.map(record => {
+      try {
+        getIdColumnsFromSourceRecord(record)
+      } catch {
+        case throwable: Throwable => logger.error(s"Could not get $idColumnNames from record, schema is ${record.value().getSchema}", throwable)
+          throw throwable
+      }
+    })
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
     val sinkTopicPartitions = getTopicPartitions(sinkConsumer, writerTopic)
     val latestSinkRecords = consumeAndClose(sinkConsumer,
       (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => sinkTopicPartitions.map {
-        topicPartition => getAtLeastNLatestRecords(consumer, topicPartition, sourceRecordsCount)
+        topicPartition => getAtLeastNLatestRecords(consumer, topicPartition, sourceRecords.size)
       })
 
     val publishedIds = latestSinkRecords.flatten.map(record => {
       try {
-        record.value().get(idColumn).asInstanceOf[Utf8].toString
+        getIdColumnsFromSinkRecord(record)
       } catch {
-        case throwable: Throwable => logger.error(s"Could not get $idColumn from record, schema is ${record.value().getSchema}", throwable)
+        case throwable: Throwable => logger.error(s"Could not get $idColumnNames from record, schema is ${record.value().getSchema}", throwable)
           throw throwable
       }
     })
+
+    val duplicatedIds = sourceIds.intersect(publishedIds)
+
     import org.apache.spark.sql.functions._
-    dataFrame.filter(not(col(idColumn).isInCollection(publishedIds)))
+    val idColumns = idColumnNames.map(col)
+    val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit):_*))
+    dataFrame.filter(not(struct(idColumns:_*).isInCollection(duplicatedIdsLit)))
+  }
+
+  private def getIdColumnsFromSourceRecord(record: ConsumerRecord[GenericRecord, GenericRecord]): Seq[Any] = {
+    idColumnNames.map(idColumn => record.value().get(idColumn))
+      .map {
+        case utf8: Utf8 => utf8.toString
+        case v => v
+      }
+  }
+
+  private def getIdColumnsFromSinkRecord(record: ConsumerRecord[GenericRecord, GenericRecord]): Seq[Any] = {
+    idColumnNames.map(idColumn => record.value().get(idColumn))
+      .map {
+        case utf8: Utf8 => utf8.toString
+        case v => v
+      }
   }
 
   private def consumeAndClose[T](consumer: KafkaConsumer[GenericRecord, GenericRecord], consume: KafkaConsumer[GenericRecord, GenericRecord] => T) = {
@@ -235,10 +263,10 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
 
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
 
-    val idColumn = getOrThrow(IdColumn, config, errorMessage = s"Destination directory not found. Is '${IdColumn}' defined?")
+    val idColumns = getSeqOrThrow(IdColumn, config, errorMessage = s"Destination directory not found. Is '${IdColumn}' defined?")
     new DeduplicateKafkaSinkTransformer(readerSchemaRegistryUrl, readerTopic, readerBrokers, readerExtraOptions,
       writerSchemaRegistryUrl, writerTopic, writerBrokers, writerExtraOptions,
-      checkpointLocation, idColumn)
+      checkpointLocation, idColumns)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = {
