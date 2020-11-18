@@ -46,17 +46,33 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
   private val checkpointDir = s"$baseDirPath/checkpoint"
 
   behavior of "CommandLineIngestionDriver"
-  private def schemaString(topic: String) = raw"""{"type": "record", "name": "$topic", "fields": [
+
+  private val hyperdriveIdSchemaString =
+    raw"""{"type": "record", "name": "hyperdrive_id_record", "fields": [
+         |{"type": "long", "name": "source_offset", "nullable": true},
+         |{"type": "long", "name": "source_partition", "nullable": true}
+         |]}
+         |""".stripMargin
+
+  private def schemaString(topic: String) = raw"""
+      {"type": "record", "name": "$topic", "fields": [
       {"type": "string", "name": "record_id"},
-      {"type": ["string", "null"], "name": "value_field"}
+      {"type": ["string", "null"], "name": "value_field"},
+      {"type": "hyperdrive_id_record", "name": "hyperdrive_id"}
       ]}"""
 
   private def sendData(producer: KafkaProducer[GenericRecord, GenericRecord], from: Int, to: Int, topic: String) = {
-    val schema = new Parser().parse(schemaString(topic))
+    val parser = new Parser()
+    val hyperdriveIdSchema = parser.parse(hyperdriveIdSchemaString)
+    val schema = parser.parse(schemaString(topic))
     for (i <- from until to) {
       val valueRecord = new GenericData.Record(schema)
       valueRecord.put("record_id", i.toString)
       valueRecord.put("value_field", s"valueHello_$i")
+      val hyperdriveIdRecord = new GenericData.Record(hyperdriveIdSchema)
+      hyperdriveIdRecord.put("source_offset", i.toLong)
+      hyperdriveIdRecord.put("source_partition", 1L)
+      valueRecord.put("hyperdrive_id", hyperdriveIdRecord)
 
       val producerRecord = new ProducerRecord[GenericRecord, GenericRecord](topic, valueRecord)
       producer.send(producerRecord)
