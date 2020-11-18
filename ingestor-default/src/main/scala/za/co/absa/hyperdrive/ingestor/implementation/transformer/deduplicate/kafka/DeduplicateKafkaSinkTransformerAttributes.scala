@@ -19,7 +19,8 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 trait DeduplicateKafkaSinkTransformerAttributes extends HasComponentAttributes {
 
-  val IdColumn = "id.column"
+  val SourceIdColumns = "source.id.columns"
+  val DestinationIdColumns = "destination.id.columns"
   val schemaRegistryUrl = "schema.registry.url"
 
   override def getName: String = "Deduplicate Kafka Sink Transformer"
@@ -27,6 +28,7 @@ trait DeduplicateKafkaSinkTransformerAttributes extends HasComponentAttributes {
   override def getDescription: String = ""
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    IdColumn -> PropertyMetadata("Id column", Some(""), required = true)
+    SourceIdColumns -> PropertyMetadata("Id column", Some(""), required = true),
+    DestinationIdColumns -> PropertyMetadata("Id column", Some(""), required = true)
   )
 }

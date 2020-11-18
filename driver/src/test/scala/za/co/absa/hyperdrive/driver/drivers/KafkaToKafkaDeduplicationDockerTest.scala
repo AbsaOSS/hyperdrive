@@ -49,7 +49,7 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
 
   private val hyperdriveIdSchemaString =
     raw"""{"type": "record", "name": "hyperdrive_id_record", "fields": [
-         |{"type": "long", "name": "source_offset", "nullable": true},
+         |{"type": "string", "name": "source_offset", "nullable": true},
          |{"type": "long", "name": "source_partition", "nullable": true}
          |]}
          |""".stripMargin
@@ -57,7 +57,6 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
   private def schemaString(topic: String) = raw"""
       {"type": "record", "name": "$topic", "fields": [
       {"type": "int", "name": "record_id"},
-      {"type": "string", "name": "record_id2"},
       {"type": ["string", "null"], "name": "value_field"},
       {"type": "hyperdrive_id_record", "name": "hyperdrive_id"}
       ]}"""
@@ -67,13 +66,12 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     val hyperdriveIdSchema = parser.parse(hyperdriveIdSchemaString)
     val schema = parser.parse(schemaString(topic))
     for (i <- from until to) {
-      val valueRecord = new GenericData.Record(schema)
-      valueRecord.put("record_id", i/5)
-      valueRecord.put("record_id2", (i % 5).toString)
-      valueRecord.put("value_field", s"valueHello_$i")
       val hyperdriveIdRecord = new GenericData.Record(hyperdriveIdSchema)
-      hyperdriveIdRecord.put("source_offset", i.toLong)
-      hyperdriveIdRecord.put("source_partition", 1L)
+      hyperdriveIdRecord.put("source_offset", (i / 5).toString)
+      hyperdriveIdRecord.put("source_partition", (i % 5).toLong)
+      val valueRecord = new GenericData.Record(schema)
+      valueRecord.put("record_id", i)
+      valueRecord.put("value_field", s"valueHello_$i")
       valueRecord.put("hyperdrive_id", hyperdriveIdRecord)
 
       val producerRecord = new ProducerRecord[GenericRecord, GenericRecord](topic, valueRecord)
@@ -142,7 +140,8 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
       "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
 
       // comma separated list of columns to select
-      "transformer.[kafka.deduplicator].id.column" -> "record_id,record_id2",
+      "transformer.[kafka.deduplicator].source.id.columns" -> "hyperdrive_id.source_offset,hyperdrive_id.source_partition",
+      "transformer.[kafka.deduplicator].destination.id.columns" -> "${transformer.[kafka.deduplicator].source.id.columns}",
       "transformer.[kafka.deduplicator].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
 
       // Avro Encoder (ABRiS) settings
@@ -170,7 +169,7 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     records.size shouldBe allRecords
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-    valueFieldNames should contain theSameElementsAs List("record_id", "record_id2", "value_field", "hyperdrive_id")
+    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
     val actual = records.map(_.value().get("value_field"))
     val expected = List.range(0, allRecords).map(i => new Utf8(s"valueHello_$i"))
     actual should contain theSameElementsAs expected
