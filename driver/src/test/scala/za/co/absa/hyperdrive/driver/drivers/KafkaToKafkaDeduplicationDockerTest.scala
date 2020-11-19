@@ -15,16 +15,16 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import java.io.{BufferedWriter, File, FileWriter, OutputStreamWriter}
-import java.nio.file.{Files, Paths}
 import java.time.Duration
+import java.util
 import java.util.UUID.randomUUID
 import java.util.{Collections, Properties}
 
-import org.apache.avro.Schema.{Parser, Type}
+import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
@@ -36,7 +36,6 @@ import za.co.absa.commons.spark.SparkTestBase
 /**
  * This e2e test requires a Docker installation on the executing machine.
  */
-// TODO: Add testcase with multiple partitions
 // TODO: Add testcase with at least one committed microbatch
 class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
@@ -61,7 +60,7 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
       {"type": "hyperdrive_id_record", "name": "hyperdrive_id"}
       ]}"""
 
-  private def sendData(producer: KafkaProducer[GenericRecord, GenericRecord], from: Int, to: Int, topic: String) = {
+  private def sendData(producer: KafkaProducer[GenericRecord, GenericRecord], from: Int, to: Int, topic: String, partitions: Int) = {
     val parser = new Parser()
     val hyperdriveIdSchema = parser.parse(hyperdriveIdSchemaString)
     val schema = parser.parse(schemaString(topic))
@@ -74,7 +73,8 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
       valueRecord.put("value_field", s"valueHello_$i")
       valueRecord.put("hyperdrive_id", hyperdriveIdRecord)
 
-      val producerRecord = new ProducerRecord[GenericRecord, GenericRecord](topic, valueRecord)
+      val partition = i % partitions
+      val producerRecord = new ProducerRecord[GenericRecord, GenericRecord](topic, partition, null, valueRecord)
       producer.send(producerRecord)
     }
   }
@@ -87,25 +87,39 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     out.close()
   }
 
+  private def createTopic(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper, topicName: String, partitions: Int): Unit = {
+    val config = new Properties()
+    config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSchemaRegistryWrapper.kafka.getBootstrapServers)
+    val localKafkaAdmin = AdminClient.create(config)
+    val replication = 1.toShort
+    val topic = new NewTopic(topicName, partitions, replication)
+    val topicCreationFut = localKafkaAdmin.createTopics(util.Arrays.asList(topic)).all()
+    while(!topicCreationFut.isDone) {}
+  }
+
   it should "execute the whole kafka-to-kafka pipeline" in {
     // given
     val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
-
+    kafkaSchemaRegistryWrapper.kafka.start()
     val sourceTopic = "deduplication_src"
     val destinationTopic = "deduplication_dest"
+    val sourceTopicPartitions = 5
+    val destinationTopicPartitions = 3
     val allRecords = 250
     val duplicatedRange1 = (0, 75)
     val duplicatedRange2 = (100, 175)
     val producer = createProducer(kafkaSchemaRegistryWrapper)
-    sendData(producer, 0, allRecords, sourceTopic)
-    sendData(producer, duplicatedRange1._1, duplicatedRange1._2, destinationTopic)
-    sendData(producer, duplicatedRange2._1, duplicatedRange2._2, destinationTopic)
+    createTopic(kafkaSchemaRegistryWrapper, sourceTopic, sourceTopicPartitions)
+    sendData(producer, 0, allRecords, sourceTopic, sourceTopicPartitions)
+    createTopic(kafkaSchemaRegistryWrapper, destinationTopic, destinationTopicPartitions)
+    sendData(producer, duplicatedRange1._1, duplicatedRange1._2, destinationTopic, destinationTopicPartitions)
+    sendData(producer, duplicatedRange2._1, duplicatedRange2._2, destinationTopic, destinationTopicPartitions)
 
     val offset = raw"""v1
          |{"batchWatermarkMs":0,"batchTimestampMs":1605193344093,"conf":{"spark.sql.streaming.stateStore.providerClass":"org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider","spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion":"2","spark.sql.streaming.multipleWatermarkPolicy":"min","spark.sql.streaming.aggregation.stateFormatVersion":"2","spark.sql.shuffle.partitions":"200"}}
-         |{"$sourceTopic":{"0":250}}""".stripMargin
+         |{"$sourceTopic":{"0":50, "1":50, "2":50, "3":50, "4":50}}""".stripMargin
     val sources = raw"""0v1
-         |{"$sourceTopic":{"0":0}}""".stripMargin
+         |{"$sourceTopic":{"0":0, "1":0, "2":0, "3":0, "4":0}}""".stripMargin
     val metadata = raw"""{"id":"7a9e78ae-3473-469c-a906-c78ffaf0f3c9"}"""
 
     fs.mkdirs(new Path(s"$checkpointDir/$sourceTopic/commits"))
