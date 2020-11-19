@@ -25,6 +25,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.config.AbrisConfig
+import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
 
 class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
@@ -78,7 +79,7 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   behavior of AbrisConfigUtil.getClass.getName
 
   before {
-    mockSchemaRegistryClient = new AbrisMockSchemaRegistryClient()
+    mockSchemaRegistryClient = new HyperdriveMockSchemaRegistryClient()
     SchemaManagerFactory.resetSRClientInstance()
     SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummySchemaRegistryUrl), mockSchemaRegistryClient)
   }

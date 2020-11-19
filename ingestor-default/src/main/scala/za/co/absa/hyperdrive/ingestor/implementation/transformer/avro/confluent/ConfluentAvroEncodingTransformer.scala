@@ -66,7 +66,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
   }
 
   private def getValueDataFrame(dataFrame: DataFrame): DataFrame = {
-    val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+    val allColumns = struct(dataFrame.columns.map(c => dataFrame(c)): _*)
     val toAvroConfig = getValueAvroConfig(config, allColumns.expr)
     logger.info(s"ToAvro settings: $toAvroConfig")
     dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
