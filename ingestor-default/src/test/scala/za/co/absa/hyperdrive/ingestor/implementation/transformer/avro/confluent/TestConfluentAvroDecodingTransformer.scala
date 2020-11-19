@@ -15,16 +15,14 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-import io.confluent.kafka.schemaregistry.ParsedSchema
-import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.config.AbrisConfig
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
 
 class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with BeforeAndAfter {
@@ -34,14 +32,14 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
   private val SchemaRegistryValueSchemaId = "latest"
 
   private var MockSchemaRegistryClient: MockSchemaRegistryClient = _
-  private val DummySchema = new AvroSchema(AvroSchemaUtils.parse("""{
+  private val DummySchema = AvroSchemaUtils.parse("""{
      "type": "record",
      "name": "default_name",
      "namespace": "default_namespace",
      "fields":[
          {"name": "int", "type":  ["int", "null"] }
      ]
-    }""")).asInstanceOf[ParsedSchema]
+    }""")
 
   behavior of ConfluentAvroDecodingTransformer.getClass.getSimpleName
 

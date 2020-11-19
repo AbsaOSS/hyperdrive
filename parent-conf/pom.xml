@@ -40,14 +40,14 @@
     <properties>
         <!--Enforced versions-->
         <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
-        <avro.version>1.9.2</avro.version> <!--Same as Abris uses-->
+        <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--ABRiS-->
-        <abris.version>4.0.0</abris.version>
+        <abris.version>4.0.1</abris.version>
 
         <!--Scala-->
         <scalatest.version>3.0.5</scalatest.version>
@@ -65,7 +65,7 @@
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
         <testcontainers.kafka.version>1.12.4</testcontainers.kafka.version>
-        <kafka.avro.serializer.version>5.5.1</kafka.avro.serializer.version>
+        <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
