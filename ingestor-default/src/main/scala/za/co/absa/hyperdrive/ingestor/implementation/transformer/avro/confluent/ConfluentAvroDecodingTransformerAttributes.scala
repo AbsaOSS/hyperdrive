@@ -31,6 +31,8 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
   val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = "key.schema.record.name"
   val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = "key.schema.record.namespace"
 
+  val KEY_KEEP_COLUMNS = "keep.columns"
+
   override def getName: String = "Confluent Avro Stream Decoder"
 
   override def getDescription: String = "Decoder for records in Avro format. The decoder connects to a Schema Registry instance to retrieve the schema information."
@@ -49,6 +51,7 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
     KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY -> PropertyMetadata("Key-Schema naming strategy",
       Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = false),
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
-    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false)
+    KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false),
+    KEY_KEEP_COLUMNS -> PropertyMetadata("Columns to keep", Some("Comma-separated list of columns to keep (e.g. offset, partition)"), required = false)
   )
 }

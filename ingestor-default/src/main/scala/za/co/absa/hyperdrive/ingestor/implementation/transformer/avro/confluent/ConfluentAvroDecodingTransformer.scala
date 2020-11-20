@@ -15,6 +15,8 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
+import java.util.UUID
+
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.logging.log4j.LogManager
@@ -28,11 +30,13 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{SchemaRegistryConsumerConfigKeys, AbrisConfigUtil}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, SchemaRegistryConsumerConfigKeys}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,
-  val keyAvroConfigOpt: Option[FromAvroConfig])
+  val keyAvroConfigOpt: Option[FromAvroConfig],
+  val keepColumns: Seq[String]
+)
   extends StreamTransformer {
 
   private val logger = LogManager.getLogger
@@ -47,28 +51,47 @@ private[transformer] class ConfluentAvroDecodingTransformer(
   }
 
   private def getKeyValueDataFrame(dataFrame: DataFrame, keyAvroConfig: FromAvroConfig) = {
-    val decodedDf = dataFrame.select(
-      from_avro(col("key"), keyAvroConfig) as 'key,
-      from_avro(col("value"), valueAvroConfig) as 'value)
-    val keyValueDf = setColumnNonNullable(decodedDf, "value")
+    val keyStructCol = UUID.randomUUID().toString
+    val valueStructCol = UUID.randomUUID().toString
+    val columnsToSelect = Seq(
+      from_avro(col("key"), keyAvroConfig) as Symbol(keyStructCol),
+      from_avro(col("value"), valueAvroConfig) as Symbol(valueStructCol)
+    ) ++ keepColumns.map(col)
+    val decodedDf = dataFrame.select(columnsToSelect:_*)
+    val keyValueDf = setColumnNonNullable(decodedDf, valueStructCol)
 
-    val keyColumnNames = keyValueDf.select("key.*").columns.toSeq
-    val valueColumnNames = keyValueDf.select("value.*").columns.toSeq
+    val keyColumnNames = keyValueDf.select(s"$keyStructCol.*").columns.toSeq
+    val valueColumnNames = keyValueDf.select(s"$valueStructCol.*").columns.toSeq
     val prefix = ConfluentAvroDecodingTransformer.determineKeyColumnPrefix(valueColumnNames)
+    val prefixedKeyColumnNames = keyColumnNames.map(c => s"$prefix$c")
+
+    checkIfColumnNameConflictsExist(prefixedKeyColumnNames ++ valueColumnNames)
 
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnNames, keyColumnNames)
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnPrefix, prefix)
 
-    val prefixedKeyColumns = keyColumnNames.map(c => keyValueDf(s"key.$c").as(s"$prefix$c"))
-    val valueColumns = valueColumnNames.map(c => keyValueDf(s"value.$c"))
-    keyValueDf.select(prefixedKeyColumns ++ valueColumns: _*)
+    val prefixedKeyColumns = keyColumnNames.zip(prefixedKeyColumnNames).map(c => keyValueDf(s"$keyStructCol.${c._1}").as(s"${c._2}"))
+    val valueColumns = valueColumnNames.map(c => keyValueDf(s"$valueStructCol.$c"))
+    keyValueDf.select(prefixedKeyColumns ++ valueColumns ++ keepColumns.map(col): _*)
   }
 
   private def getValueDataFrame(dataFrame: DataFrame) = {
-    val decodedDf = dataFrame
-      .select(from_avro(col("value"), valueAvroConfig) as 'data)
-    setColumnNonNullable(decodedDf, "data")
-      .select("data.*")
+    val dataStructCol = UUID.randomUUID().toString
+    val columnsToSelect = Seq(
+      from_avro(col("value"), valueAvroConfig) as Symbol(dataStructCol)
+    ) ++ keepColumns.map(col)
+    val decodedDf = dataFrame.select(columnsToSelect:_*)
+    val nonNullableDf = setColumnNonNullable(decodedDf, dataStructCol)
+    val dataColumns = nonNullableDf.select(s"$dataStructCol.*").columns
+    checkIfColumnNameConflictsExist(dataColumns)
+    nonNullableDf.select((dataColumns ++ keepColumns).map(col):_*)
+  }
+
+  private def checkIfColumnNameConflictsExist(avroColumns: Seq[String]) = {
+    val nameCollisions = avroColumns.intersect(keepColumns)
+    if (nameCollisions.nonEmpty) {
+      throw new IllegalArgumentException(s"Names of columns to keep collided with key and value columns. Consider renaming them before. Conflicts: $nameCollisions")
+    }
   }
 
   private def setColumnNonNullable(dataFrame: DataFrame, columnName: String) = {
@@ -100,11 +123,12 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     } else {
       None
     }
+    val keepColumns = ConfigUtils.getSeqOrNone(KEY_KEEP_COLUMNS, config).getOrElse(Seq())
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
-        s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt'.")
+        s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt', keepColumns='$keepColumns'")
 
-    new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt)
+    new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt, keepColumns)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
