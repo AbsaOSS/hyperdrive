@@ -65,7 +65,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
     val prefix = ConfluentAvroDecodingTransformer.determineKeyColumnPrefix(valueColumnNames)
     val prefixedKeyColumnNames = keyColumnNames.map(c => s"$prefix$c")
 
-    checkIfColumnNameConflictsExist(prefixedKeyColumnNames ++ valueColumnNames)
+    checkIfColumnNameConflictsExistWithKeepColumns(prefixedKeyColumnNames ++ valueColumnNames)
 
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnNames, keyColumnNames)
     HyperdriveContext.put(HyperdriveContextKeys.keyColumnPrefix, prefix)
@@ -82,12 +82,13 @@ private[transformer] class ConfluentAvroDecodingTransformer(
     ) ++ keepColumns.map(col)
     val decodedDf = dataFrame.select(columnsToSelect:_*)
     val nonNullableDf = setColumnNonNullable(decodedDf, dataStructCol)
-    val dataColumns = nonNullableDf.select(s"$dataStructCol.*").columns
-    checkIfColumnNameConflictsExist(dataColumns)
-    nonNullableDf.select((dataColumns ++ keepColumns).map(col):_*)
+    val dataColumnNames = nonNullableDf.select(s"$dataStructCol.*").columns
+    checkIfColumnNameConflictsExistWithKeepColumns(dataColumnNames)
+    val dataColumns = dataColumnNames.map(c => nonNullableDf(s"$dataStructCol.$c"))
+    nonNullableDf.select(dataColumns ++ keepColumns.map(col):_*)
   }
 
-  private def checkIfColumnNameConflictsExist(avroColumns: Seq[String]) = {
+  private def checkIfColumnNameConflictsExistWithKeepColumns(avroColumns: Seq[String]) = {
     val nameCollisions = avroColumns.intersect(keepColumns)
     if (nameCollisions.nonEmpty) {
       throw new IllegalArgumentException(s"Names of columns to keep collided with key and value columns. Consider renaming them before. Conflicts: $nameCollisions")
