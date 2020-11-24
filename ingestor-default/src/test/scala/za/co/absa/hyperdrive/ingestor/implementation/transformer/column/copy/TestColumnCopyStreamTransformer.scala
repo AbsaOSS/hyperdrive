@@ -36,8 +36,7 @@ class TestColumnCopyStreamTransformer extends FlatSpec with SparkTestBase with M
         .add("Field2", StringType)
         .add("Field3", new ArrayType(IntegerType, containsNull = true)))
       .add("col3Top", StringType)
-    val input = spark.createDataFrame(spark.sparkContext.parallelize(Seq[Row]()), inputSchema)
-    val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(input.schema))
+    val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(inputSchema))
     val df = memoryStream.toDF()
 
     val config = new DynamicCombinedConfiguration()
