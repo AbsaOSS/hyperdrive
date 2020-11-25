@@ -86,7 +86,9 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
       "component.transformer.id.1" -> "column.selector",
       "component.transformer.class.column.selector" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
-      "component.transformer.id.2" -> "[avro.encoder]",
+      "component.transformer.id.2" -> "[column.copy]",
+      "component.transformer.class.[column.copy]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy.ColumnCopyStreamTransformer",
+      "component.transformer.id.3" -> "[avro.encoder]",
       "component.transformer.class.[avro.encoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
 
@@ -107,6 +109,10 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
 
       // comma separated list of columns to select
       "transformer.column.selector.columns.to.select" -> "*",
+
+      // copy transformer settings
+      "transformer.[column.copy].columns.copy.from" -> "some_id, value_field",
+      "transformer.[column.copy].columns.copy.to" -> "grouped.some_id, grouped.value_field",
 
       // Avro Encoder (ABRiS) settings
       "transformer.[avro.encoder].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
@@ -144,9 +150,15 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       .asScala.map(_.getType) should contain theSameElementsAs Seq(Type.STRING, Type.NULL)
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-    valueFieldNames should contain theSameElementsAs List("some_id", "value_field")
-    records.map(_.value().get("some_id")) should contain theSameElementsInOrderAs List.range(0, numberOfRecords)
-    records.map(_.value().get("value_field")).distinct should contain theSameElementsAs List(new Utf8("valueHello"))
+    valueFieldNames should contain theSameElementsAs List("some_id", "value_field", "grouped")
+    val allIds = records.map(_.value().get("some_id"))
+    val allValues = records.map(_.value().get("value_field"))
+    allIds should contain theSameElementsInOrderAs List.range(0, numberOfRecords)
+    allValues.distinct should contain theSameElementsAs List(new Utf8("valueHello"))
+    val idsInGrouped = records.map(_.value().get("grouped").asInstanceOf[GenericRecord].get("some_id"))
+    val valuesInGrouped = records.map(_.value().get("grouped").asInstanceOf[GenericRecord].get("value_field"))
+    idsInGrouped shouldBe allIds
+    valuesInGrouped shouldBe allValues
   }
 
   after {
