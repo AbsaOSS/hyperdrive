@@ -183,6 +183,52 @@ component.transformer.class.{transformer-id} = za.co.absa.hyperdrive.ingestor.im
 | `transformer.{transformer-id}.columns.rename.from` | Yes | A comma-separated list of columns to rename. For example, `column1, column2`. |
 | `transformer.{transformer-id}.columns.rename.to` | Yes | A comma-separated list of new column names. For example, `column1_new, column2_new`. |
 
+##### ColumnCopyStreamTransformer
+`ColumnCopyStreamTransformer` allows copying of columns specified in the configuration. Dots in column names are interpreted as nested structs, 
+unless they are surrounded by backticks (same as Spark convention)
+
+Note that usage of the star-operator `*` within column names is not supported and may lead to unexpected behaviour.
+
+To add the transformer to the pipeline use this class name:
+```
+component.transformer.class.{transformer-id} = za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy.ColumnCopyStreamTransformer
+```
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.{transformer-id}.columns.copy.from` | Yes | A comma-separated list of columns to copy from. For example, `column1.fieldA, column2.fieldA`. |
+| `transformer.{transformer-id}.columns.copy.to` | Yes | A comma-separated list of new column names. For example, `newColumn.col1_fieldA, newColumn.col2_fieldA`. |
+
+**Example**
+
+Given a dataframe with the following schema
+```
+ |-- column1
+ |    |-- fieldA
+ |    |-- fieldB
+ |-- column2
+ |    |-- fieldA
+ |-- column3
+```
+
+Then, the following column parameters
+- `transformer.{transformer-id}.columns.copy.from=column1.fieldA, column2.fieldA`
+- `transformer.{transformer-id}.columns.copy.to=newColumn.col1_fieldA, newColumn.col2_fieldA`
+
+will produce the following schema
+```
+ |-- column1
+ |    |-- fieldA
+ |    |-- fieldB
+ |-- column2
+ |    |-- fieldA
+ |-- column3
+ |-- newColumn
+ |    |-- col1_fieldA
+ |    |-- col2_fieldA
+
+```
+
 See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.
 ##### ParquetStreamWriter
 | Property Name | Required | Description |
