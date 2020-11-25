@@ -41,7 +41,8 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
   private val baseDirPath = baseDir.path.toUri
-  private val checkpointDir = s"$baseDirPath/checkpoint"
+//  private val checkpointDir = s"$baseDirPath/checkpoint"
+  private val checkpointDir = s"/tmp/bla1/checkpoint"
 
   behavior of "CommandLineIngestionDriver"
 
@@ -88,8 +89,10 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
     val sourceTopic = "deduplication_src"
     val destinationTopic = "deduplication_dest"
-    val sourceTopicPartitions = 5
-    val destinationTopicPartitions = 3
+//    val sourceTopicPartitions = 5
+    val sourceTopicPartitions = 1
+//    val destinationTopicPartitions = 3
+    val destinationTopicPartitions = 1
     val schemaManager = SchemaManagerFactory.create(Map("schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl))
     val subject = SchemaSubject.usingTopicNameStrategy(sourceTopic)
     val parserV1 = new Parser()
@@ -183,6 +186,7 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
         )
         val retryConfigArray = retryConfig.map { case (key, value) => s"$key=$value"}.toArray
         CommandLineIngestionDriver.main(retryConfigArray)
+        CommandLineIngestionDriver.main(retryConfigArray)
     }
 
     exceptionWasThrown shouldBe true
@@ -199,8 +203,8 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
     valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
-    val actual = records.map(_.value().get("value_field"))
-    val expected = (0 until allRecords).map(i => new Utf8(s"valueHello_$i"))
+    val actual = records.map(_.value().get("record_id"))
+    val expected = 0 until allRecords
     actual should contain theSameElementsAs expected
   }
 
