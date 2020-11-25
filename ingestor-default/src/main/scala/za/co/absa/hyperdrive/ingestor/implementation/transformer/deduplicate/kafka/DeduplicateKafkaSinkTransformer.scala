@@ -19,7 +19,7 @@ import java.time.Duration
 import java.util
 import java.util.{Collections, Properties, UUID}
 
-import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
+//import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.util.Utf8
 import org.apache.commons.configuration2.Configuration
@@ -106,16 +106,25 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
     import org.apache.spark.sql.functions._
     val idColumns = sourceIdColumnNames.map(col) // TODO: Make idColumns for dataframe configurable. Take into account rename trsf
-    val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit):_*))
-    dataFrame.filter(not(struct(idColumns:_*).isInCollection(duplicatedIdsLit)))
+    val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
+    dataFrame.filter(not(struct(idColumns: _*).isInCollection(duplicatedIdsLit)))
   }
 
   private def getIdColumnsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
-    idColumnNames.map(idColumn => AvroUtil.getRecursively(record.value(), UnresolvedAttribute.parseAttributeName(idColumn).toList))
-      .map {
-        case utf8: Utf8 => utf8.toString
-        case v => v
-      }
+    idColumnNames.map {
+      case "topic" => record.topic()
+      case "offset" => record.offset()
+      case "partition" => record.partition()
+      case "timestamp" => record.timestamp()
+      case "timestampType" => record.timestampType()
+      case "serializedKeySize" => record.serializedKeySize()
+      case "serializedValueSize" => record.serializedValueSize()
+      case "headers" => record.headers()
+      case idColumn => AvroUtil.getRecursively(record.value(), UnresolvedAttribute.parseAttributeName(idColumn).toList)
+    }.map {
+      case utf8: Utf8 => utf8.toString
+      case v => v
+    }
   }
 
   private def consumeAndClose[T](consumer: KafkaConsumer[GenericRecord, GenericRecord], consume: KafkaConsumer[GenericRecord, GenericRecord] => T) = {
@@ -155,7 +164,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     consumer.partitionsFor(topic).asScala.map(p => new TopicPartition(p.topic(), p.partition()))
   }
 
-//  TODO: How to test while loop? Not possible with MockConsumer because it resets messages after each poll. E2E-Test?
+  //  TODO: How to test while loop? Not possible with MockConsumer because it resets messages after each poll. E2E-Test?
   private def getAtLeastNLatestRecords(consumer: KafkaConsumer[GenericRecord, GenericRecord], topicPartition: TopicPartition, numberOfRecords: Int) = {
     consumer.assign(Seq(topicPartition).asJava)
     val endOffsets = consumer.endOffsets(Seq(topicPartition).asJava).asScala
@@ -167,7 +176,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
     var records: Seq[ConsumerRecord[GenericRecord, GenericRecord]] = Seq()
     var offsetLowerBound = offset
-    while(records.size < numberOfRecords && offsetLowerBound != 0) {
+    while (records.size < numberOfRecords && offsetLowerBound != 0) {
       offsetLowerBound = Math.max(0, offsetLowerBound - numberOfRecords)
       consumer.seek(partition, offsetLowerBound)
       records = getAllAvailableMessages(consumer)
@@ -192,7 +201,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     recordsCount
   }
 
-//  TODO: Move to KafkaUtils. Test with MockConsumer
+  //  TODO: Move to KafkaUtils. Test with MockConsumer
   private def getAllAvailableMessages(consumer: KafkaConsumer[GenericRecord, GenericRecord]) = {
     import scala.util.control.Breaks._
     var records: Seq[ConsumerRecord[GenericRecord, GenericRecord]] = mutable.Seq()
@@ -216,13 +225,13 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     extraOptions.foreach {
       case (key, value) => props.put(key, value)
     }
-    props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
+    props.put("schema.registry.url", schemaRegistryUrl)
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     new KafkaConsumer[GenericRecord, GenericRecord](props)
   }
 
-//  TODO: Move this to util class and test there
+  //  TODO: Move this to util class and test there
   private def getTopicPartitionsFromLatestCommittedOffsets(offsetLog: OffsetSeqLog, commitLog: CommitLog): Option[Map[TopicPartition, Long]] = {
     val offsetSeqOpt = commitLog.getLatest().map(_._1)
       .flatMap(batchId => offsetLog.get(batchId))
@@ -235,7 +244,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
           throw new IllegalStateException("Offset must be defined, got None")
         }
       } else {
-         throw new IllegalStateException(s"Cannot support more than 1 source, got ${offsetSeqOpt.toString}")
+        throw new IllegalStateException(s"Cannot support more than 1 source, got ${offsetSeqOpt.toString}")
       }
     } else {
       None
@@ -261,14 +270,14 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
 
     val sourceIdColumns = getSeqOrThrow(SourceIdColumns, config)
     val destinationIdColumns = getSeqOrThrow(DestinationIdColumns, config)
-//    TODO: Check same length sourceId, destinationId
+    //    TODO: Check same length sourceId, destinationId
     new DeduplicateKafkaSinkTransformer(readerSchemaRegistryUrl, readerTopic, readerBrokers, readerExtraOptions,
       writerSchemaRegistryUrl, writerTopic, writerBrokers, writerExtraOptions,
       checkpointLocation, sourceIdColumns, destinationIdColumns)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = {
-//    TODO: What about subsets?
+    //    TODO: What about subsets?
     Set(
       KafkaStreamReader.KEY_TOPIC,
       KafkaStreamReader.KEY_BROKERS,
