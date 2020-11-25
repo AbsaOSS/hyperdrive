@@ -138,6 +138,7 @@ The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.
 | `transformer.{transformer-id}.key.schema.naming.strategy` | Yes if `consume.keys` is true | Subject name strategy for key |
 | `transformer.{transformer-id}.key.schema.record.name` | Yes for key naming strategies `record.name` and `topic.record.name` | Name of the record. |
 | `transformer.{transformer-id}.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
+| `transformer.{transformer-id}.keep.columns` | No | Comma-separated list of columns to keep (e.g. offset, partition) |
 
 For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
 
