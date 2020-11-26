@@ -22,7 +22,6 @@ import java.util.{Collections, Properties}
 
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericData, GenericRecord}
-import org.apache.avro.util.Utf8
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -32,26 +31,38 @@ import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.abris.avro.registry.SchemaSubject
+import za.co.absa.hyperdrive.shared.exceptions.IngestionException
 
 /**
  * This e2e test requires a Docker installation on the executing machine.
+ * In this test, 50 messages with schema v1 are written to the source topic, followed by 50 messages with schema v2.
+ * Schema v2 contains a forward-incompatible change, i.e. messages written with v2 cannot be read with v1.
+ *
+ * The first run is configured as a long-running job (writer.common.trigger.type=ProcessingTime) and with a maximum
+ * number of messages per micro-batch set to 20 (reader.option.maxOffsetsPerTrigger=20). Furthermore, the schema id is
+ * explicitly set for v1 (see transformer.[avro.decoder].value.schema.id). Due to the forward-incompatible change,
+ * it will fail at the 51st message, which was written with schema v2. At this point, 2 micro-batches (i.e. 40 messages)
+ * have been successfully committed, while the 3rd has failed half-way through. 50 messages have been written
+ * to the destination topic.
+ *
+ * To successfully rerun, the schema id needs to be set to use schema v2. In order to avoid an infinite runtime, the
+ * trigger is set to Once. The Deduplication transformer ensures that the 41st-50th messages are not written to the
+ * destination topic again. In this test, offset and partition from the source topic are used as a composite id
+ * to identify messages across the topics (See transformer.[kafka.deduplicator].source.id.columns
+ * and transformer.[kafka.deduplicator].destination.id.columns)
+ *
+ * Finally, the destination topic is expected to contain all messages from the source topic
+ * exactly once. Without the deduplication transformer, the 41st-50th messages would be duplicated.
  */
-class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+  import scala.collection.JavaConverters._
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
   private val baseDirPath = baseDir.path.toUri
-//  private val checkpointDir = s"$baseDirPath/checkpoint"
-  private val checkpointDir = s"/tmp/bla1/checkpoint"
+  private val checkpointDir = s"$baseDirPath/checkpoint"
 
   behavior of "CommandLineIngestionDriver"
-
-  private val hyperdriveIdSchemaString =
-    raw"""{"type": "record", "name": "hyperdrive_id_record", "fields": [
-         |{"type": "string", "name": "source_offset", "nullable": true},
-         |{"type": "long", "name": "source_partition", "nullable": true}
-         |]}
-         |""".stripMargin
 
   private def schemaV1String(name: String) =
     raw"""{"type": "record", "name": "$name", "fields": [
@@ -89,10 +100,8 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
     val sourceTopic = "deduplication_src"
     val destinationTopic = "deduplication_dest"
-//    val sourceTopicPartitions = 5
-    val sourceTopicPartitions = 1
-//    val destinationTopicPartitions = 3
-    val destinationTopicPartitions = 1
+    val sourceTopicPartitions = 5
+    val destinationTopicPartitions = 3
     val schemaManager = SchemaManagerFactory.create(Map("schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl))
     val subject = SchemaSubject.usingTopicNameStrategy(sourceTopic)
     val parserV1 = new Parser()
@@ -157,7 +166,7 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
 
       // comma separated list of columns to select
       "transformer.[kafka.deduplicator].source.id.columns" -> "offset,partition",
-      "transformer.[kafka.deduplicator].destination.id.columns" -> "${transformer.[kafka.deduplicator].source.id.columns}",
+      "transformer.[kafka.deduplicator].destination.id.columns" -> "hyperdrive_id.source_offset, hyperdrive_id.source_partition",
       "transformer.[kafka.deduplicator].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
 
       // Avro Encoder (ABRiS) settings
@@ -172,40 +181,39 @@ class KafkaToKafkaDeduplicationDockerTest extends FlatSpec with Matchers with Sp
     )
     val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
 
-    // when
+    // when, then
     var exceptionWasThrown = false
     try {
       CommandLineIngestionDriver.main(driverConfigArray)
     } catch {
-      case e: Exception =>
+      case _: IngestionException =>
         exceptionWasThrown = true
+        val consumer = createConsumer(kafkaSchemaRegistryWrapper)
+        consumer.subscribe(Collections.singletonList(destinationTopic))
+        val records = consumer.poll(Duration.ofMillis(1000L)).asScala.toList
+        records.size shouldBe recordsV1.size
         val retryConfig = driverConfig ++ Map(
           "transformer.[avro.decoder].value.schema.id" -> s"$schemaV2Id",
           "writer.common.trigger.type" -> "Once",
           "reader.option.maxOffsetsPerTrigger" -> "9999"
         )
         val retryConfigArray = retryConfig.map { case (key, value) => s"$key=$value"}.toArray
-        CommandLineIngestionDriver.main(retryConfigArray)
-        CommandLineIngestionDriver.main(retryConfigArray)
+        CommandLineIngestionDriver.main(retryConfigArray) // first rerun only retries the failed micro-batch
+        CommandLineIngestionDriver.main(retryConfigArray) // second rerun consumes the rest of the messages
     }
 
     exceptionWasThrown shouldBe true
-
-    // then
     fs.exists(new Path(s"$checkpointDir/$sourceTopic")) shouldBe true
 
-    val allRecords = recordsV1.size + recordsV2.size
     val consumer = createConsumer(kafkaSchemaRegistryWrapper)
     consumer.subscribe(Collections.singletonList(destinationTopic))
-    import scala.collection.JavaConverters._
     val records = consumer.poll(Duration.ofMillis(1000L)).asScala.toList
-//    records.size shouldBe allRecords
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
     valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
-    val actual = records.map(_.value().get("record_id"))
-    val expected = 0 until allRecords
-    actual should contain theSameElementsAs expected
+    val actualRecordIds = records.map(_.value().get("record_id"))
+    val expectedRecordIds = 0 until recordsV1.size + recordsV2.size
+    actualRecordIds should contain theSameElementsAs expectedRecordIds
   }
 
   after {
