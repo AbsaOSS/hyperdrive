@@ -120,7 +120,10 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
       case "serializedKeySize" => record.serializedKeySize()
       case "serializedValueSize" => record.serializedValueSize()
       case "headers" => record.headers()
-      case idColumn => AvroUtil.getRecursively(record.value(), UnresolvedAttribute.parseAttributeName(idColumn).toList)
+      case keyColumn if keyColumn.startsWith("key.") => AvroUtil.getRecursively(record.value(),
+        UnresolvedAttribute.parseAttributeName(keyColumn.stripPrefix("key.")).toList)
+      case valueColumn if valueColumn.startsWith("value.") => AvroUtil.getRecursively(record.value(),
+        UnresolvedAttribute.parseAttributeName(valueColumn.stripPrefix("value.")).toList)
     }.map {
       case utf8: Utf8 => utf8.toString
       case v => v

@@ -166,7 +166,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
 
       // comma separated list of columns to select
       "transformer.[kafka.deduplicator].source.id.columns" -> "offset,partition",
-      "transformer.[kafka.deduplicator].destination.id.columns" -> "hyperdrive_id.source_offset, hyperdrive_id.source_partition",
+      "transformer.[kafka.deduplicator].destination.id.columns" -> "value.hyperdrive_id.source_offset, value.hyperdrive_id.source_partition",
       "transformer.[kafka.deduplicator].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
 
       // Avro Encoder (ABRiS) settings
