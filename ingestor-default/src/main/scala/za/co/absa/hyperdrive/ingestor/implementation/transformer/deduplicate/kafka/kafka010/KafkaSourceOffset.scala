@@ -13,12 +13,12 @@ case class KafkaSourceOffset(partitionToOffsets: Map[TopicPartition, Long]) exte
   override val json = JsonUtils.partitionOffsets(partitionToOffsets)
 }
 
-private[kafka]
+private[hyperdrive]
 case class KafkaSourcePartitionOffset(topicPartition: TopicPartition, partitionOffset: Long)
   extends PartitionOffset
 
 /** Companion object of the [[KafkaSourceOffset]] */
-private[kafka] object KafkaSourceOffset {
+private[hyperdrive] object KafkaSourceOffset {
 
   def getPartitionOffsets(offset: Offset): Map[TopicPartition, Long] = {
     offset match {

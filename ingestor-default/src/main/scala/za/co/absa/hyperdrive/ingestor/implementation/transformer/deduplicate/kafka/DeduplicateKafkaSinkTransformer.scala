@@ -16,31 +16,26 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka
 
 import java.time.Duration
-import java.util
-import java.util.{Collections, Properties, UUID}
+import java.util.{Properties, UUID}
+
+import za.co.absa.hyperdrive.ingestor.implementation.utils.KafkaUtil
 
 //import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.util.Utf8
 import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRebalanceListener, ConsumerRecord, KafkaConsumer}
-import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, KafkaConsumer}
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
+import org.apache.spark.sql.functions.{col, lit, struct, not}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getPropertySubset, getSeqOrThrow}
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.kafka010.KafkaSourceOffset
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AvroUtil
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 
 private[transformer] class DeduplicateKafkaSinkTransformer(
@@ -57,7 +52,6 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   val destinationIdColumnNames: Seq[String]
 ) extends StreamTransformer {
   private val logger = LogManager.getLogger
-  private val timeout = Duration.ofSeconds(5L) // TODO: Make it configurable
 
   override def transform(dataFrame: DataFrame): DataFrame = {
     val spark = dataFrame.sparkSession
@@ -75,58 +69,32 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
   private def deduplicateDataFrame(dataFrame: DataFrame, offsetLog: OffsetSeqLog, commitLog: CommitLog) = {
     logger.info("Deduplicate rows after retry")
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(5L) // TODO: Make it configurable
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
-    seekToLatestCommittedOffsets(sourceConsumer, offsetLog, commitLog)
-    val sourceRecords = consumeAndClose(sourceConsumer, getAllAvailableMessages)
-    val sourceIds = sourceRecords.map(record => {
-      try {
-        getIdColumnsFromRecord(record, sourceIdColumnNames)
-      } catch {
-        case throwable: Throwable => logger.error(s"Could not get $sourceIdColumnNames from record, schema is ${record.value().getSchema}", throwable)
-          throw throwable
-      }
-    })
+    KafkaUtil.seekToLatestCommittedOffsets(sourceConsumer, readerTopic, offsetLog, commitLog)
+    val sourceRecords = consumeAndClose(sourceConsumer, KafkaUtil.getAllAvailableMessages)
+    val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
+
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
-    val sinkTopicPartitions = getTopicPartitions(sinkConsumer, writerTopic)
+    val sinkTopicPartitions = KafkaUtil.getTopicPartitions(sinkConsumer, writerTopic)
     val latestSinkRecords = consumeAndClose(sinkConsumer,
       (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => sinkTopicPartitions.map {
-        topicPartition => getAtLeastNLatestRecords(consumer, topicPartition, sourceRecords.size)
+        topicPartition => KafkaUtil.getAtLeastNLatestRecords(consumer, topicPartition, sourceRecords.size)
       })
-
-    val publishedIds = latestSinkRecords.flatten.map(record => {
-      try {
-        getIdColumnsFromRecord(record, destinationIdColumnNames)
-      } catch {
-        case throwable: Throwable => logger.error(s"Could not get $destinationIdColumnNames from record, schema is ${record.value().getSchema}", throwable)
-          throw throwable
-      }
-    })
+    val publishedIds = latestSinkRecords.flatten.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
 
     val duplicatedIds = sourceIds.intersect(publishedIds)
-
-    import org.apache.spark.sql.functions._
-    val idColumns = sourceIdColumnNames.map(col) // TODO: Make idColumns for dataframe configurable. Take into account rename trsf
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
+    val idColumns = sourceIdColumnNames.map(col)
     dataFrame.filter(not(struct(idColumns: _*).isInCollection(duplicatedIdsLit)))
   }
 
-  private def getIdColumnsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
-    idColumnNames.map {
-      case "topic" => record.topic()
-      case "offset" => record.offset()
-      case "partition" => record.partition()
-      case "timestamp" => record.timestamp()
-      case "timestampType" => record.timestampType()
-      case "serializedKeySize" => record.serializedKeySize()
-      case "serializedValueSize" => record.serializedValueSize()
-      case "headers" => record.headers()
-      case keyColumn if keyColumn.startsWith("key.") => AvroUtil.getRecursively(record.value(),
-        UnresolvedAttribute.parseAttributeName(keyColumn.stripPrefix("key.")).toList)
-      case valueColumn if valueColumn.startsWith("value.") => AvroUtil.getRecursively(record.value(),
-        UnresolvedAttribute.parseAttributeName(valueColumn.stripPrefix("value.")).toList)
-    }.map {
-      case utf8: Utf8 => utf8.toString
-      case v => v
+  private def extractIdFieldsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
+    try {
+      AvroUtil.getIdColumnsFromRecord(record, idColumnNames)
+    } catch {
+      case throwable: Throwable => logger.error(s"Could not get $idColumnNames from record, schema is ${record.value().getSchema}", throwable)
+        throw throwable
     }
   }
 
@@ -139,85 +107,6 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     } finally {
       consumer.close()
     }
-  }
-
-  /**
-   * Determines the latest committed offsets by inspecting structured streaming's offset log and commit log.
-   * If no committed offsets are available, seeks to beginning.
-   */
-  private def seekToLatestCommittedOffsets(consumer: KafkaConsumer[GenericRecord, GenericRecord], offsetLog: OffsetSeqLog, commitLog: CommitLog): Unit = {
-    val sourceTopicPartitionOffsetsOpt = getTopicPartitionsFromLatestCommittedOffsets(offsetLog, commitLog)
-    consumer.subscribe(Collections.singletonList(readerTopic), new ConsumerRebalanceListener {
-      override def onPartitionsRevoked(partitions: util.Collection[TopicPartition]): Unit = {}
-
-      override def onPartitionsAssigned(partitions: util.Collection[TopicPartition]): Unit = {
-        sourceTopicPartitionOffsetsOpt match {
-          case Some(topicPartitionOffsets) => topicPartitionOffsets.foreach {
-            case (topicPartition, offset) => consumer.seek(topicPartition, offset)
-          }
-          case None =>
-            val partitions = getTopicPartitions(consumer, readerTopic)
-            consumer.seekToBeginning(partitions.asJava)
-        }
-      }
-    })
-  }
-
-  private def getTopicPartitions(consumer: KafkaConsumer[GenericRecord, GenericRecord], topic: String) = {
-    consumer.partitionsFor(topic).asScala.map(p => new TopicPartition(p.topic(), p.partition()))
-  }
-
-  //  TODO: How to test while loop? Not possible with MockConsumer because it resets messages after each poll. E2E-Test?
-  private def getAtLeastNLatestRecords(consumer: KafkaConsumer[GenericRecord, GenericRecord], topicPartition: TopicPartition, numberOfRecords: Int) = {
-    consumer.assign(Seq(topicPartition).asJava)
-    val endOffsets = consumer.endOffsets(Seq(topicPartition).asJava).asScala
-    if (endOffsets.size != 1) {
-      throw new IllegalStateException(s"Expected exactly 1 end offset, got ${endOffsets}")
-    }
-    val partition = endOffsets.keys.head
-    val offset = endOffsets.values.head
-
-    var records: Seq[ConsumerRecord[GenericRecord, GenericRecord]] = Seq()
-    var offsetLowerBound = offset
-    while (records.size < numberOfRecords && offsetLowerBound != 0) {
-      offsetLowerBound = Math.max(0, offsetLowerBound - numberOfRecords)
-      consumer.seek(partition, offsetLowerBound)
-      records = getAllAvailableMessages(consumer)
-    }
-
-    records
-  }
-
-  //  TODO: Move to KafkaUtils. Test with MockConsumer
-  private def getAllAvailableMessagesCount(consumer: KafkaConsumer[GenericRecord, GenericRecord]): Int = {
-    import scala.util.control.Breaks._
-    var recordsCount = 0
-    breakable {
-      while (true) {
-        val currentRecordsCount = consumer.poll(timeout).count()
-        if (currentRecordsCount == 0) {
-          break()
-        }
-        recordsCount += currentRecordsCount
-      }
-    }
-    recordsCount
-  }
-
-  //  TODO: Move to KafkaUtils. Test with MockConsumer
-  private def getAllAvailableMessages(consumer: KafkaConsumer[GenericRecord, GenericRecord]) = {
-    import scala.util.control.Breaks._
-    var records: Seq[ConsumerRecord[GenericRecord, GenericRecord]] = mutable.Seq()
-    breakable {
-      while (true) {
-        val newRecords = consumer.poll(timeout).asScala.toSeq
-        if (newRecords.isEmpty) {
-          break()
-        }
-        records ++= newRecords
-      }
-    }
-    records
   }
 
   private def createConsumer(brokers: String, extraOptions: Map[String, String], schemaRegistryUrl: String) = {
@@ -233,61 +122,51 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     new KafkaConsumer[GenericRecord, GenericRecord](props)
   }
-
-  //  TODO: Move this to util class and test there
-  private def getTopicPartitionsFromLatestCommittedOffsets(offsetLog: OffsetSeqLog, commitLog: CommitLog): Option[Map[TopicPartition, Long]] = {
-    val offsetSeqOpt = commitLog.getLatest().map(_._1)
-      .flatMap(batchId => offsetLog.get(batchId))
-      .map(offsetLog => offsetLog.offsets)
-    val result = if (offsetSeqOpt.isDefined) {
-      if (offsetSeqOpt.get.size == 1) {
-        if (offsetSeqOpt.get.head.isDefined) {
-          Some(KafkaSourceOffset.getPartitionOffsets(offsetSeqOpt.get.head.get))
-        } else {
-          throw new IllegalStateException("Offset must be defined, got None")
-        }
-      } else {
-        throw new IllegalStateException(s"Cannot support more than 1 source, got ${offsetSeqOpt.toString}")
-      }
-    } else {
-      None
-    }
-    result
-  }
 }
 
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
 
   override def apply(config: Configuration): StreamTransformer = {
-    val readerSchemaRegistryUrl = config.getString(schemaRegistryUrl)
-    val readerTopic = config.getString(KafkaStreamReader.KEY_TOPIC)
-    val readerBrokers = config.getString(KafkaStreamReader.KEY_BROKERS)
-    val readerExtraOptions = getPropertySubset(config, KafkaStreamReader.getExtraConfigurationPrefix.get)
+//    TODO: How to get schemaRegistryUrl from transformer config?
+    val readerSchemaRegistryUrl = getOrThrow(schemaRegistryUrl, config)
+    val readerTopic = getOrThrow(KafkaStreamReader.KEY_TOPIC, config)
+    val readerBrokers = getOrThrow(KafkaStreamReader.KEY_BROKERS, config)
+    val readerExtraOptions = KafkaStreamReader.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
 
-    val writerSchemaRegistryUrl = config.getString(schemaRegistryUrl)
-    val writerTopic = config.getString(KafkaStreamWriter.KEY_TOPIC)
-    val writerBrokers = config.getString(KafkaStreamWriter.KEY_BROKERS)
-    val writerExtraOptions = getPropertySubset(config, KafkaStreamWriter.optionalConfKey)
+    val writerSchemaRegistryUrl = getOrThrow(schemaRegistryUrl, config)
+    val writerTopic = getOrThrow(KafkaStreamWriter.KEY_TOPIC, config)
+    val writerBrokers = getOrThrow(KafkaStreamWriter.KEY_BROKERS, config)
+    val writerExtraOptions = KafkaStreamWriter.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
 
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
 
     val sourceIdColumns = getSeqOrThrow(SourceIdColumns, config)
     val destinationIdColumns = getSeqOrThrow(DestinationIdColumns, config)
-    //    TODO: Check same length sourceId, destinationId
+    if (sourceIdColumns.size != destinationIdColumns.size) {
+      throw new IllegalArgumentException("The size of source id column names doesn't match the list of destination id column names " +
+        s"${sourceIdColumns.size} != ${destinationIdColumns.size}.")
+    }
+
     new DeduplicateKafkaSinkTransformer(readerSchemaRegistryUrl, readerTopic, readerBrokers, readerExtraOptions,
       writerSchemaRegistryUrl, writerTopic, writerBrokers, writerExtraOptions,
       checkpointLocation, sourceIdColumns, destinationIdColumns)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = {
-    //    TODO: What about subsets?
-    Set(
-      KafkaStreamReader.KEY_TOPIC,
-      KafkaStreamReader.KEY_BROKERS,
-      KafkaStreamWriter.KEY_TOPIC,
-      KafkaStreamWriter.KEY_BROKERS,
-      StreamWriterCommonAttributes.keyCheckpointBaseLocation
-    ).map(e => e -> e).toMap
+    import scala.collection.JavaConverters._
+    val readerExtraOptionsKeys =
+      KafkaStreamReader.getExtraConfigurationPrefix.map(globalConfig.getKeys(_).asScala.toSeq).getOrElse(Seq())
+    val writerExtraOptionsKeys =
+      KafkaStreamWriter.getExtraConfigurationPrefix.map(globalConfig.getKeys(_).asScala.toSeq).getOrElse(Seq())
+    val keys = readerExtraOptionsKeys ++ writerExtraOptionsKeys ++
+      Seq(
+        KafkaStreamReader.KEY_TOPIC,
+        KafkaStreamReader.KEY_BROKERS,
+        KafkaStreamWriter.KEY_TOPIC,
+        KafkaStreamWriter.KEY_BROKERS,
+        StreamWriterCommonAttributes.keyCheckpointBaseLocation
+      )
+    keys.map(e => e -> e).toMap
   }
 }
 

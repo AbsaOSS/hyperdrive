@@ -45,4 +45,6 @@ trait KafkaStreamWriterAttributes extends HasComponentAttributes {
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(optionalConfKey)
 }
