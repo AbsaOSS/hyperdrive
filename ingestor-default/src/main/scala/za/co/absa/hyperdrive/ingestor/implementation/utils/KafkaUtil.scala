@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import java.time.Duration
-import java.util
+import java.{lang, util}
 import java.util.Collections
 
 import org.apache.avro.generic.GenericRecord
@@ -50,6 +50,7 @@ object KafkaUtil {
     records
   }
 
+//  TODO: Add from, to arguments. Caller should know what beginning and end offsets to expect
   def getAllAvailableMessages[K, V](consumer: KafkaConsumer[K, V])(implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
     import scala.util.control.Breaks._
     var records: Seq[ConsumerRecord[K, V]] = mutable.Seq()
