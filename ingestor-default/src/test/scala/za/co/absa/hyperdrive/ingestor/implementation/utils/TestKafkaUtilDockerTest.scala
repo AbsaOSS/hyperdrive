@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import java.time.Duration
-import java.util
+import java.{lang, util}
 import java.util.UUID.randomUUID
 import java.util.{Collections, Properties, UUID}
 
@@ -24,10 +24,13 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.{Deserializer, Serializer, StringDeserializer, StringSerializer}
 import org.scalatest.{Assertion, BeforeAndAfter, FlatSpec, Matchers}
 import org.testcontainers.containers.KafkaContainer
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter {
 
   private val confluentPlatformVersion = "5.3.4" // should be same as kafka.avro.serializer.version property in pom file
@@ -43,23 +46,27 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   "getAllAvailableMessages" should "get all available messages" in {
     // given
-    val topic = "get-all-available-messages-topic"
+    val topic = "get-all-available-messages-topic-2"
     val partitions = 3
-    createTopic(kafka, "get-all-available-messages-topic", partitions)
+    createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
-    val messagesCount = 10000
+    val messagesCount = 100
     val messages = (1 to messagesCount).map(i => s"message_${i}")
     produceData(producer, messages, topic, partitions)
 
     val consumer = createConsumer(kafka)
-    consumer.subscribe(Collections.singletonList(topic))
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    consumer.assign(topicPartitions.asJava)
+    consumer.seekToBeginning(topicPartitions.asJava)
+    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap
+    val offsets2 = offsets.mapValues(l => l + 0L)
 
     // when
-    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(500L)
-    val records = KafkaUtil.getAllAvailableMessages(consumer)
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(1500L)
+    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets2)
 
     // then
-    val actualMessages = records.map(_.value())
+    val actualMessages = records.map(_.value()).toList.sorted
     actualMessages should contain theSameElementsAs (1 to messagesCount).map(i => s"message_$i")
   }
 

@@ -28,11 +28,11 @@ case class SchemaRegistryContainer(dockerImageName: String) extends GenericConta
 class KafkaSchemaRegistryWrapper {
   private val logger = LogManager.getLogger
 
-  private val confluentPlatformVersion = "5.3.4" // should be same as kafka.avro.serializer.version property in pom file
+  private val confluentPlatformVersion = "5.3.1" // should be same as kafka.avro.serializer.version property in pom file
   private val schemaRegistryPort = 8081
   private val commonNetwork = Network.newNetwork()
-  lazy val kafka: KafkaContainer = startKafka(commonNetwork)
-  lazy private val schemaRegistry = startSchemaRegistry(commonNetwork)
+  val kafka: KafkaContainer = startKafka(commonNetwork)
+  private val schemaRegistry = startSchemaRegistry(commonNetwork)
 
   logger.info(s"Created network with id ${commonNetwork.getId}")
 

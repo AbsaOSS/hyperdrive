@@ -72,7 +72,10 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(5L) // TODO: Make it configurable
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
     KafkaUtil.seekToLatestCommittedOffsets(sourceConsumer, readerTopic, offsetLog, commitLog)
-    val sourceRecords = consumeAndClose(sourceConsumer, KafkaUtil.getAllAvailableMessages)
+    val sourceTopicPartitions = KafkaUtil.getTopicPartitionsFromLatestOffset(offsetLog)
+//    TODO: consumeAndClose into the util methods?
+    val sourceRecords = sourceTopicPartitions.map(stp => consumeAndClose(sourceConsumer,
+      (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => KafkaUtil.getMessagesAtLeastToOffset(consumer, stp))).getOrElse(Seq())
     val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
 
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
