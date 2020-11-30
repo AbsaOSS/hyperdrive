@@ -25,7 +25,6 @@ import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.kafka010.KafkaSourceOffset
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object KafkaUtil {
 
@@ -49,34 +48,27 @@ object KafkaUtil {
     records
   }
 
-//  TODO: Add from, to arguments. Caller should know what beginning and end offsets to expect
-//  TODO: Does it also work with subscribe, or only with assign?
   def getMessagesAtLeastToOffset[K, V](consumer: KafkaConsumer[K, V], toOffsets: Map[TopicPartition, Long])
     (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
     val endOffsets = consumer.endOffsets(toOffsets.keys.toSeq.asJava).asScala
     endOffsets.foreach { case (topicPartition, offset) =>
       val toOffset = toOffsets(topicPartition)
       if (toOffset > offset) {
-        throw new IllegalArgumentException(s"Requested consumption to $toOffset, but it cannot be higher than the " +
-          s"end offset, which is $offset on $topicPartition")
+        throw new IllegalArgumentException(s"Requested consumption to offsets $toOffsets, but they cannot be higher " +
+          s"than the end offsets, which are $endOffsets")
       }
     }
-    import scala.util.control.Breaks._
-    var records: Seq[ConsumerRecord[K, V]] = mutable.Seq()
-    breakable {
-      while (true) {
-        val newRecords = consumer.poll(kafkaConsumerTimeout).asScala.toSeq
-        records ++= newRecords
-        if (newRecords.isEmpty) {
-          break()
-        }
-      }
-    }
+
+    val records = consumer.poll(kafkaConsumerTimeout).asScala.toSeq
+
     toOffsets.foreach { case (tp, toOffset) =>
+      if (!consumer.assignment().contains(tp)) {
+        throw new IllegalStateException(s"Consumer is unexpectedly not assigned to $tp. Consider increasing the consumer timeout")
+      }
       val offsetAfterPoll = consumer.position(tp)
       if (offsetAfterPoll < toOffset) {
         throw new IllegalStateException(s"Expected to reach offset $toOffset on $tp, but only reached $offsetAfterPoll." +
-          s" Not all messages were consumed. You may want to increase the consumer timeout")
+          s" Not all expected messages were consumed. Consider increasing the consumer timeout")
       }
     }
 

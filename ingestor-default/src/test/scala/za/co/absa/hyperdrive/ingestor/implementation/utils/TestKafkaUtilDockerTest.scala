@@ -16,21 +16,18 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import java.time.Duration
-import java.{lang, util}
+import java.util
 import java.util.UUID.randomUUID
-import java.util.{Collections, Properties, UUID}
+import java.util.{Collections, Properties}
 
-import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
-import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.serialization.{Deserializer, Serializer, StringDeserializer, StringSerializer}
-import org.scalatest.{Assertion, BeforeAndAfter, FlatSpec, Matchers}
+import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import org.testcontainers.containers.KafkaContainer
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter {
 
   private val confluentPlatformVersion = "5.3.4" // should be same as kafka.avro.serializer.version property in pom file
@@ -46,28 +43,93 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   "getAllAvailableMessages" should "get all available messages" in {
     // given
-    val topic = "get-all-available-messages-topic-2"
+    val topic = "get-all-available-messages-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
-    val messagesCount = 100
-    val messages = (1 to messagesCount).map(i => s"message_${i}")
+    val messages = (1 to 100).map(i => s"message_${i}")
+    produceData(producer, messages, topic, partitions)
+
+    val consumer = createConsumer(kafka)
+    consumer.subscribe(Collections.singletonList(topic))
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap.mapValues(_.asInstanceOf[Long])
+
+    // when
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(1500L)
+    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+
+    // then
+    val actualMessages = records.map(_.value()).toList.sorted
+    actualMessages should contain theSameElementsAs messages
+  }
+
+  it should "throw an exception if partitions were not assigned" in {
+    // given
+    val topic = "get-all-available-messages-topic"
+    val partitions = 3
+    createTopic(kafka, topic, partitions)
+    val producer = createProducer(kafka)
+    val messages = (1 to 100).map(i => s"message_${i}")
+    produceData(producer, messages, topic, partitions)
+
+    val consumer = createConsumer(kafka)
+    consumer.subscribe(Collections.singletonList(topic))
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap.mapValues(_.asInstanceOf[Long])
+
+    // when
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(1L)
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+
+    // then
+    exception.getMessage should include ("Consumer is unexpectedly not assigned")
+  }
+
+  it should "throw an exception if not all messages could be consumed" in {
+    // given
+    val topic = "get-all-available-messages-topic"
+    val partitions = 3
+    createTopic(kafka, topic, partitions)
+    val producer = createProducer(kafka)
+    val messages = (1 to 100).map(i => s"message_${i}")
     produceData(producer, messages, topic, partitions)
 
     val consumer = createConsumer(kafka)
     val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
     consumer.assign(topicPartitions.asJava)
     consumer.seekToBeginning(topicPartitions.asJava)
-    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap
-    val offsets2 = offsets.mapValues(l => l + 0L)
+    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap.mapValues(_.asInstanceOf[Long])
 
     // when
-    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(1500L)
-    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets2)
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(1L)
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
 
     // then
-    val actualMessages = records.map(_.value()).toList.sorted
-    actualMessages should contain theSameElementsAs (1 to messagesCount).map(i => s"message_$i")
+    exception.getMessage should include ("Not all expected messages were consumed")
+  }
+
+
+  it should "throw an exception if requested offsets are not available" in {
+    // given
+    val topic = "get-all-available-messages-topic"
+    val partitions = 3
+    createTopic(kafka, topic, partitions)
+    val producer = createProducer(kafka)
+    val messages = (1 to 100).map(i => s"message_${i}")
+    produceData(producer, messages, topic, partitions)
+
+    val consumer = createConsumer(kafka)
+    consumer.subscribe(Collections.singletonList(topic))
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap.mapValues(_ * 2L)
+
+    // when
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofMillis(0L)
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+
+    // then
+    exception.getMessage should include ("Requested consumption")
   }
 
   private def createTopic(kafkaContainer: KafkaContainer, topicName: String, partitions: Int): Unit = {
@@ -108,6 +170,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
         val producerRecord = new ProducerRecord[String, String](topic, partition, null, record)
         producer.send(producerRecord)
     }
+    producer.flush()
   }
 
 }
