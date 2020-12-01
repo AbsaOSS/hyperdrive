@@ -28,7 +28,7 @@ import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, KafkaC
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
-import org.apache.spark.sql.functions.{col, lit, struct, not}
+import org.apache.spark.sql.functions.{col, lit, not, struct}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getPropertySubset, getSeqOrThrow}
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
@@ -71,18 +71,18 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info("Deduplicate rows after retry")
     implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(5L) // TODO: Make it configurable
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
-    KafkaUtil.seekToLatestCommittedOffsets(sourceConsumer, readerTopic, offsetLog, commitLog)
-    val sourceTopicPartitions = KafkaUtil.getTopicPartitionsFromLatestOffset(offsetLog)
-//    TODO: consumeAndClose into the util methods?
-    val sourceRecords = sourceTopicPartitions.map(stp => consumeAndClose(sourceConsumer,
-      (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => KafkaUtil.getMessagesAtLeastToOffset(consumer, stp))).getOrElse(Seq())
+    val latestCommittedOffsets = KafkaUtil.getLatestCommittedOffset(offsetLog, commitLog)
+    KafkaUtil.seekToOffsetsOrBeginning(sourceConsumer, readerTopic, latestCommittedOffsets)
+
+    val latestOffsetsOpt = KafkaUtil.getLatestOffset(offsetLog)
+    val sourceRecords = latestOffsetsOpt.map(latestOffset => consumeAndClose(sourceConsumer,
+      consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset))).getOrElse(Seq())
     val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
 
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
     val sinkTopicPartitions = KafkaUtil.getTopicPartitions(sinkConsumer, writerTopic)
-    val latestSinkRecords = consumeAndClose(sinkConsumer,
-      (consumer: KafkaConsumer[GenericRecord, GenericRecord]) => sinkTopicPartitions.map {
-        topicPartition => KafkaUtil.getAtLeastNLatestRecords(consumer, topicPartition, sourceRecords.size)
+    val latestSinkRecords = consumeAndClose(sinkConsumer, consumer => sinkTopicPartitions.map {
+        topicPartition => KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, topicPartition, sourceRecords.size)
       })
     val publishedIds = latestSinkRecords.flatten.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
 
