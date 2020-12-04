@@ -105,7 +105,7 @@ object ConfigUtils {
     import scala.collection.JavaConverters._
     val className = transformerClass.getCanonicalName
     val transformerPrefixConfig = config.subset(StreamTransformerFactory.ClassKeyPrefix)
-    val transformerPrefixMap: mutable.Map[AnyRef, AnyRef] = ConfigurationConverter.getMap(transformerPrefixConfig).asScala
+    val transformerPrefixMap = ConfigurationConverter.getMap(transformerPrefixConfig).asScala
     transformerPrefixMap.find {
       case (_: String, value: String) => value == className
     }.map {
