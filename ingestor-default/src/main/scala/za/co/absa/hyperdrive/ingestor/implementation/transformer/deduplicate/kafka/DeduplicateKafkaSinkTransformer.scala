@@ -49,7 +49,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   val writerExtraOptions: Map[String, String],
   val checkpointLocation: String,
   val sourceIdColumnNames: Seq[String],
-  val destinationIdColumnNames: Seq[String]
+  val destinationIdColumnNames: Seq[String],
+  val kafkaConsumerTimeout: Duration
 ) extends StreamTransformer {
   private val logger = LogManager.getLogger
 
@@ -69,7 +70,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
   private def deduplicateDataFrame(dataFrame: DataFrame, offsetLog: OffsetSeqLog, commitLog: CommitLog) = {
     logger.info("Deduplicate rows after retry")
-    implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(5L) // TODO: Make it configurable
+    implicit val kafkaConsumerTimeoutImpl: Duration = kafkaConsumerTimeout
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
     val latestCommittedOffsets = KafkaUtil.getLatestCommittedOffset(offsetLog, commitLog)
     KafkaUtil.seekToOffsetsOrBeginning(sourceConsumer, readerTopic, latestCommittedOffsets)
@@ -127,6 +128,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
 
+  private val DefaultKafkaConsumerTimeoutSeconds = 120L
   override def apply(config: Configuration): StreamTransformer = {
 //    TODO: How to get schemaRegistryUrl from transformer config?
     val readerSchemaRegistryUrl = getOrThrow(schemaRegistryUrl, config)
@@ -148,9 +150,11 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
         s"${sourceIdColumns.size} != ${destinationIdColumns.size}.")
     }
 
+    val kafkaConsumerTimeout = Duration.ofSeconds(config.getLong(KafkaConsumerTimeout, DefaultKafkaConsumerTimeoutSeconds))
+
     new DeduplicateKafkaSinkTransformer(readerSchemaRegistryUrl, readerTopic, readerBrokers, readerExtraOptions,
       writerSchemaRegistryUrl, writerTopic, writerBrokers, writerExtraOptions,
-      checkpointLocation, sourceIdColumns, destinationIdColumns)
+      checkpointLocation, sourceIdColumns, destinationIdColumns, kafkaConsumerTimeout)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = {

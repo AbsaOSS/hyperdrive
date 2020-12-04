@@ -22,13 +22,15 @@ trait DeduplicateKafkaSinkTransformerAttributes extends HasComponentAttributes {
   val SourceIdColumns = "source.id.columns"
   val DestinationIdColumns = "destination.id.columns"
   val schemaRegistryUrl = "schema.registry.url"
+  val KafkaConsumerTimeout = "kafka.consumer.timeout"
 
   override def getName: String = "Deduplicate Kafka Sink Transformer"
 
   override def getDescription: String = ""
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    SourceIdColumns -> PropertyMetadata("Id column", Some(""), required = true),
-    DestinationIdColumns -> PropertyMetadata("Id column", Some(""), required = true)
+    SourceIdColumns -> PropertyMetadata("Source Id columns", Some("Comma separated list of columns that represent the id"), required = true),
+    DestinationIdColumns -> PropertyMetadata("Destination Id columns", Some("Comma separated list of columns that represent the id"), required = true),
+    KafkaConsumerTimeout -> PropertyMetadata("Kafka consumer timeout in seconds", None, required = false)
   )
 }

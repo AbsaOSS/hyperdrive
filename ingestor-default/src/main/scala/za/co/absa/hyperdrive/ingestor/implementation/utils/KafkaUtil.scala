@@ -21,7 +21,7 @@ import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{CommitLog, Offset, OffsetSeqLog}
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.kafka010.KafkaSourceOffset
+import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -125,7 +125,7 @@ private[hyperdrive] object KafkaUtil {
   private def parseOffsetSeq(offsetSeq: Seq[Option[Offset]]) = {
     if (offsetSeq.size == 1) {
       if (offsetSeq.head.isDefined) {
-        Some(KafkaSourceOffset.getPartitionOffsets(offsetSeq.head.get))
+        Some(KafkaSourceOffsetProxy.getPartitionOffsets(offsetSeq.head.get))
       } else {
         None
       }
