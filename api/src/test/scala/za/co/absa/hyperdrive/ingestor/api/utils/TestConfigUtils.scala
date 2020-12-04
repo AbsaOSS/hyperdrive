@@ -19,6 +19,7 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
 
 class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
@@ -321,5 +322,22 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     ex3.getMessage should include("key3")
     val ex4 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key4", config)
     ex4.getMessage should include("key4")
+  }
+
+  "getTransformerPrefix" should "get the prefix of a transformer class" in {
+    val config = new BaseConfiguration
+    config.addProperty(s"${StreamTransformerFactory.ClassKeyPrefix}.[dummy-transformer]", classOf[DummyStreamTransformer].getCanonicalName)
+
+    val prefix = ConfigUtils.getTransformerPrefix(config, classOf[DummyStreamTransformer])
+
+    prefix shouldBe Some("[dummy-transformer]")
+  }
+
+  it should "return None if the transformer class is not registered in the config" in {
+    val config = new BaseConfiguration
+
+    val prefix = ConfigUtils.getTransformerPrefix(config, classOf[DummyStreamTransformer])
+
+    prefix shouldBe None
   }
 }

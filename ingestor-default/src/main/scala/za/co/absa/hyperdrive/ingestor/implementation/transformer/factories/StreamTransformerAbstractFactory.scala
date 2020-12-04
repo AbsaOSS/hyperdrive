@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory._
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
@@ -33,9 +34,6 @@ import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 object StreamTransformerAbstractFactory {
 
   private val logger = LogManager.getLogger
-  val idsKeyPrefix = "component.transformer.id"
-  val classKeyPrefix = "component.transformer.class"
-  val transformerKeyPrefix = "transformer"
 
   /**
    * For each transformer, the configuration is assumed to contain property keys according to the following example
@@ -52,16 +50,16 @@ object StreamTransformerAbstractFactory {
 
     validateConfiguration(config)
 
-    val orderedTransformerIds = config.getKeys(idsKeyPrefix).asScala.toList
-      .map(key => key.replace(s"$idsKeyPrefix.", "").toInt -> config.getString(key))
+    val orderedTransformerIds = config.getKeys(IdsKeyPrefix).asScala.toList
+      .map(key => key.replace(s"$IdsKeyPrefix.", "").toInt -> config.getString(key))
       .sortBy { case (order, _) => order }
       .map { case (_, id) => id }
 
-    val transformerClassNames = orderedTransformerIds.map(id => id -> config.getString(s"$classKeyPrefix.$id"))
+    val transformerClassNames = orderedTransformerIds.map(id => id -> config.getString(s"$ClassKeyPrefix.$id"))
 
     transformerClassNames
       .map { case (id, className) => id -> ClassLoaderUtils.loadSingletonClassOfType[StreamTransformerFactory](className) }
-      .map { case (id, factory) => factory -> ConfigUtils.copyAndMapConfig(config, config.subset(s"$transformerKeyPrefix.$id"), factory.getMappingFromRetainedGlobalConfigToLocalConfig(config)) }
+      .map { case (id, factory) => factory -> ConfigUtils.copyAndMapConfig(config, config.subset(s"$TransformerKeyPrefix.$id"), factory.getMappingFromRetainedGlobalConfigToLocalConfig(config)) }
       .map { case (factory, configTry) => configTry match {
         case Failure(exception) => throw exception
         case Success(value) => factory -> value
@@ -71,10 +69,10 @@ object StreamTransformerAbstractFactory {
   }
 
   private def validateConfiguration(config: Configuration): Unit = {
-    val keys = config.getKeys(idsKeyPrefix).asScala.toList
+    val keys = config.getKeys(IdsKeyPrefix).asScala.toList
 
     val invalidTransformerKeys = keys
-      .map(key => key -> key.replace(s"$idsKeyPrefix.", ""))
+      .map(key => key -> key.replace(s"$IdsKeyPrefix.", ""))
       .map { case (key, order) => key -> Try(order.toInt) }
       .filter { case (_, orderAsInt) => orderAsInt.isFailure }
       .map { case (key, _) => key }
@@ -88,7 +86,7 @@ object StreamTransformerAbstractFactory {
     }
 
     val missingClassKeys = transformerIds
-      .map(id => s"$classKeyPrefix.$id")
+      .map(id => s"$ClassKeyPrefix.$id")
       .filter(classKey => !config.containsKey(classKey))
 
     if (missingClassKeys.nonEmpty) {

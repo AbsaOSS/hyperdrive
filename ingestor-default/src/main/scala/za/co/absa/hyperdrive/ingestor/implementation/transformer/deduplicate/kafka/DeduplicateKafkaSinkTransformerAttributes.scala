@@ -21,7 +21,6 @@ trait DeduplicateKafkaSinkTransformerAttributes extends HasComponentAttributes {
 
   val SourceIdColumns = "source.id.columns"
   val DestinationIdColumns = "destination.id.columns"
-  val schemaRegistryUrl = "schema.registry.url"
   val KafkaConsumerTimeout = "kafka.consumer.timeout"
 
   override def getName: String = "Deduplicate Kafka Sink Transformer"

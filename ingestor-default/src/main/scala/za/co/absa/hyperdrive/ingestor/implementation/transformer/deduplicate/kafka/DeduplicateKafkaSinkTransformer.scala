@@ -18,6 +18,8 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.ka
 import java.time.Duration
 import java.util.{Properties, UUID}
 
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{ConfluentAvroDecodingTransformer, ConfluentAvroEncodingTransformer}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.KafkaUtil
 
 //import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
@@ -129,14 +131,17 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
 
   private val DefaultKafkaConsumerTimeoutSeconds = 120L
+
+  private val readerSchemaRegistryUrlKey = s"readerSchemaRegistryUrl${UUID.randomUUID().toString}"
+  private val writerSchemaRegistryUrlKey = s"writerSchemaRegistryUrl${UUID.randomUUID().toString}"
+
   override def apply(config: Configuration): StreamTransformer = {
-//    TODO: How to get schemaRegistryUrl from transformer config?
-    val readerSchemaRegistryUrl = getOrThrow(schemaRegistryUrl, config)
+    val readerSchemaRegistryUrl = getOrThrow(readerSchemaRegistryUrlKey, config)
     val readerTopic = getOrThrow(KafkaStreamReader.KEY_TOPIC, config)
     val readerBrokers = getOrThrow(KafkaStreamReader.KEY_BROKERS, config)
     val readerExtraOptions = KafkaStreamReader.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
 
-    val writerSchemaRegistryUrl = getOrThrow(schemaRegistryUrl, config)
+    val writerSchemaRegistryUrl = getOrThrow(writerSchemaRegistryUrlKey, config)
     val writerTopic = getOrThrow(KafkaStreamWriter.KEY_TOPIC, config)
     val writerBrokers = getOrThrow(KafkaStreamWriter.KEY_BROKERS, config)
     val writerExtraOptions = KafkaStreamWriter.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
@@ -171,8 +176,26 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
         KafkaStreamWriter.KEY_BROKERS,
         StreamWriterCommonAttributes.keyCheckpointBaseLocation
       )
-    keys.map(e => e -> e).toMap
+    val oneToOneMappings = keys.map(e => e -> e).toMap
+
+    val readerSchemaRegistryUrlGlobalKey = getSchemaRegistryUrlKey(globalConfig, classOf[ConfluentAvroDecodingTransformer],
+      ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL)
+    val writerSchemaRegistryUrlGlobalKey = getSchemaRegistryUrlKey(globalConfig, classOf[ConfluentAvroEncodingTransformer],
+      ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL)
+
+    oneToOneMappings ++ Map(
+      readerSchemaRegistryUrlGlobalKey -> readerSchemaRegistryUrlKey,
+      writerSchemaRegistryUrlGlobalKey -> writerSchemaRegistryUrlKey
+    )
   }
+
+  private def getSchemaRegistryUrlKey[T <: StreamTransformer](config: Configuration, transformerClass: Class[T], transformerKey: String) = {
+    val prefix = ConfigUtils.getTransformerPrefix(config, transformerClass).getOrElse(throw new IllegalArgumentException(
+      s"Could not find transformer configuration for ${transformerClass.getCanonicalName}, but it is required"))
+
+    s"${StreamTransformerFactory.TransformerKeyPrefix}.${prefix}.${transformerKey}"
+  }
+
 }
 
 
