@@ -93,12 +93,10 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   }
 
   private def extractIdFieldsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
-    try {
-      AvroUtil.getIdColumnsFromRecord(record, idColumnNames)
-    } catch {
-      case throwable: Throwable => logger.error(s"Could not get $idColumnNames from record, schema is ${record.value().getSchema}", throwable)
-        throw throwable
-    }
+    idColumnNames.map(idColumnName =>
+      AvroUtil.getFromConsumerRecord(record, idColumnName)
+        .getOrElse(throw new IllegalArgumentException(s"Could not find value for field $idColumnName"))
+    )
   }
 
   private def consumeAndClose[T](consumer: KafkaConsumer[GenericRecord, GenericRecord], consume: KafkaConsumer[GenericRecord, GenericRecord] => T) = {

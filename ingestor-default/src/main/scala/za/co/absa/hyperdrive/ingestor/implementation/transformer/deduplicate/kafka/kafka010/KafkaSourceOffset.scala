@@ -8,6 +8,8 @@ import org.apache.spark.sql.sources.v2.reader.streaming.PartitionOffset
  * An [[Offset]] for the [[KafkaSource]]. This one tracks all partitions of subscribed topics and
  * their offsets.
  */
+// TODO: Move this to a spark package so the namespace can be reused
+
 case class KafkaSourceOffset(partitionToOffsets: Map[TopicPartition, Long]) extends Offset {
 
   override val json = JsonUtils.partitionOffsets(partitionToOffsets)

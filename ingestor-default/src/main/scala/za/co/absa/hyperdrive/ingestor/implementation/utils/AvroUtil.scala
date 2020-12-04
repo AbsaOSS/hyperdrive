@@ -24,29 +24,40 @@ import scala.annotation.tailrec
 
 private[hyperdrive] object AvroUtil {
 
-  def getIdColumnsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
-    idColumnNames.map {
-      case "topic" => record.topic()
-      case "offset" => record.offset()
-      case "partition" => record.partition()
-      case "timestamp" => record.timestamp()
-      case "timestampType" => record.timestampType()
-      case "serializedKeySize" => record.serializedKeySize()
-      case "serializedValueSize" => record.serializedValueSize()
-      case "headers" => record.headers()
-      case keyColumn if keyColumn.startsWith("key.") => getRecursively(record.value(),
+  def getFromConsumerRecord(record: ConsumerRecord[GenericRecord, GenericRecord], fieldName: String): Option[Any] = {
+    val fieldValue = fieldName match {
+      case "topic" => Option(record.topic())
+      case "offset" => Option(record.offset())
+      case "partition" => Option(record.partition())
+      case "timestamp" => Option(record.timestamp())
+      case "timestampType" => Option(record.timestampType())
+      case "serializedKeySize" => Option(record.serializedKeySize())
+      case "serializedValueSize" => Option(record.serializedValueSize())
+      case "headers" => Option(record.headers())
+      case keyColumn if keyColumn.startsWith("key.") => getFromGenericRecordNullSafe(record.key(),
         UnresolvedAttribute.parseAttributeName(keyColumn.stripPrefix("key.")).toList)
-      case valueColumn if valueColumn.startsWith("value.") => getRecursively(record.value(),
+      case valueColumn if valueColumn.startsWith("value.") => getFromGenericRecordNullSafe(record.value(),
         UnresolvedAttribute.parseAttributeName(valueColumn.stripPrefix("value.")).toList)
-    }.map {
+      case _ => None
+    }
+
+    fieldValue.map {
       case utf8: Utf8 => utf8.toString
       case v => v
     }
   }
 
+  private def getFromGenericRecordNullSafe(record: GenericRecord, keys: Seq[String]) =
+    Option(record).flatMap(getFromGenericRecord(_, keys))
+
   @tailrec
-  def getRecursively(record: GenericRecord, keys: List[String]): Any = keys match {
-    case key :: Nil => record.get(key)
-    case head :: tail => getRecursively(record.get(head).asInstanceOf[GenericRecord], tail)
+  private def getFromGenericRecord(record: GenericRecord, keys: Seq[String]): Option[Any] = keys match {
+    case key :: Nil => Option(record.get(key))
+    case head :: tail =>
+      val value = record.get(head)
+      value match {
+        case genericRecord: GenericRecord => getFromGenericRecord(genericRecord, tail)
+        case _ => None
+      }
   }
 }

@@ -26,7 +26,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kaf
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-object KafkaUtil {
+private[hyperdrive] object KafkaUtil {
   private val logger = LogManager.getLogger
 
   def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], topicPartition: TopicPartition, numberOfRecords: Int)
