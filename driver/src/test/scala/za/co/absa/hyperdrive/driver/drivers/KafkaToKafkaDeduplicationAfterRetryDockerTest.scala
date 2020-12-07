@@ -189,8 +189,6 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
       case _: IngestionException =>
         exceptionWasThrown = true
         val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-        val records = getAllMessages(consumer, destinationTopic)
-        records.size shouldBe recordsV1.size
         val retryConfig = driverConfig ++ Map(
           "transformer.[avro.decoder].value.schema.id" -> s"$schemaV2Id",
           "writer.common.trigger.type" -> "Once",
