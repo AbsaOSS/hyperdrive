@@ -36,6 +36,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   private val kafka = new KafkaContainer(confluentPlatformVersion)
   private val kafkaSufficientTimeout = Duration.ofSeconds(5L)
   private val kafkaInsufficientTimeout = Duration.ofMillis(1L)
+  private val topic = "test-topic"
 
   before{
     kafka.start()
@@ -47,7 +48,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   "getAllAvailableMessages" should "get all available messages" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
@@ -69,7 +69,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "get all available messages, even if polling is required multiple times" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions, Map("segment.ms" -> "100"))
     val producer = createProducer(kafka)
@@ -91,7 +90,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "stop polling when the desired end offset has been reached and not run infinitely" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
@@ -132,7 +130,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "throw an exception if consumer is already subscribed" in {
     // given
-    val topic = "test-topic"
     createTopic(kafka, topic, 1)
 
     val consumer = createConsumer(kafka)
@@ -148,7 +145,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "throw an exception if not all messages could be consumed (because the timeout is too short)" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
@@ -171,7 +167,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "throw an exception if requested offsets are not available" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
@@ -191,8 +186,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   }
 
   "getAtLeastNLatestRecords" should "get at least the n latest records" in {
-    val topicName = "test-topic"
-    createTopic(kafka, topicName, 1, Map(
+    createTopic(kafka, topic, 1, Map(
       "cleanup.policy" -> "compact",
       "delete.retention.ms" -> "100",
       "segment.ms" -> "100",
@@ -204,13 +198,13 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
       val key = if (i % 2 == 0) 1000 + i else 1
       (key.toString, s"msg_${i}")
     })
-    produceData2(producer, messages, topicName)
+    produceData2(producer, messages, topic)
 
     val waitForCompactionMillis = 20000L
     Thread.sleep(waitForCompactionMillis)
 
     val testConsumer = createConsumer(kafka)
-    testConsumer.subscribe(Collections.singletonList(topicName))
+    testConsumer.subscribe(Collections.singletonList(topic))
     import scala.util.control.Breaks._
     var records: Seq[ConsumerRecord[String, String]] = mutable.Seq()
     breakable {
@@ -230,7 +224,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topicName, 0), 10)
+    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topic, 0), 10)
     val values = actualRecords.map(_.value())
 
     values.size should be >= 10
@@ -239,7 +233,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "be able to reuse a consumer" in {
     // given
-    val topic = "test-topic"
     val partitions = 3
     createTopic(kafka, topic, partitions)
     val producer = createProducer(kafka)
@@ -259,44 +252,41 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   }
 
   it should "throw an exception if the timeout is too short" in {
-    val topicName = "test-topic"
-    createTopic(kafka, topicName, 1)
+    createTopic(kafka, topic, 1)
 
     val producer = createProducer(kafka)
     val messages = (1 to 100).map(i => s"message_${i}")
 
-    produceData(producer, messages, topicName, 1)
+    produceData(producer, messages, topic, 1)
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topicName, 0), 10)
+    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topic, 0), 10)
     result.getMessage should include("increasing the consumer timeout")
   }
 
   "getTopicPartitions" should "return the partitions" in {
-    val topicName = "test-topic"
-    createTopic(kafka, topicName, 10)
+    createTopic(kafka, topic, 10)
     val consumer = createConsumer(kafka)
 
-    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topicName)
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
 
-    val expectedPartitions = (0 until 10).map(i => new TopicPartition(topicName, i))
+    val expectedPartitions = (0 until 10).map(i => new TopicPartition(topic, i))
     topicPartitions should contain theSameElementsAs expectedPartitions
   }
 
   "seekToOffsetsOrBeginning" should "seek to the provided offsets" in {
     // given
-    val topicName = "test-topic"
-    createTopic(kafka, topicName, 3)
+    createTopic(kafka, topic, 3)
     val consumer = createConsumer(kafka)
 
     val producer = createProducer(kafka)
     val messages = (1 to 100).map(i => s"message_${i}")
-    produceData(producer, messages, topicName, 3)
+    produceData(producer, messages, topic, 3)
 
-    val tp0 = new TopicPartition(topicName, 0)
-    val tp1 = new TopicPartition(topicName, 1)
-    val tp2 = new TopicPartition(topicName, 2)
+    val tp0 = new TopicPartition(topic, 0)
+    val tp1 = new TopicPartition(topic, 1)
+    val tp2 = new TopicPartition(topic, 2)
     val offsets = Map(
       tp0 -> 10L,
       tp1 -> 15L,
@@ -304,7 +294,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     )
 
     // when
-    KafkaUtil.seekToOffsetsOrBeginning(consumer, topicName, Some(offsets))
+    KafkaUtil.seekToOffsetsOrBeginning(consumer, topic, Some(offsets))
 
     // then
     consumer.position(tp0) shouldBe 10L
@@ -314,20 +304,19 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
   it should "seek to the beginning if no offsets are given" in {
     // given
-    val topicName = "test-topic"
-    createTopic(kafka, topicName, 3)
+    createTopic(kafka, topic, 3)
     val consumer = createConsumer(kafka)
 
     val producer = createProducer(kafka)
     val messages = (1 to 100).map(i => s"message_${i}")
-    produceData(producer, messages, topicName, 3)
+    produceData(producer, messages, topic, 3)
 
-    val tp0 = new TopicPartition(topicName, 0)
-    val tp1 = new TopicPartition(topicName, 1)
-    val tp2 = new TopicPartition(topicName, 2)
+    val tp0 = new TopicPartition(topic, 0)
+    val tp1 = new TopicPartition(topic, 1)
+    val tp2 = new TopicPartition(topic, 2)
 
     // when
-    KafkaUtil.seekToOffsetsOrBeginning(consumer, topicName, None)
+    KafkaUtil.seekToOffsetsOrBeginning(consumer, topic, None)
 
     // then
     consumer.position(tp0) shouldBe 0L

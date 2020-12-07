@@ -31,6 +31,9 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
   private val readerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
   private val writerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
 
+  private val dummySourceRegistry = "http://sourceRegistry:8081"
+  private val dummyDestinationRegistry = "http://destinationRegistry:8081"
+
   "apply" should "create a DeduplicateKafkaSinkTransformer" in {
     // given
     val config = getLocalConfig()
@@ -45,13 +48,13 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
       "kafka.security.protocol" -> "SASL_PLAINTEXT",
       "failOnDataLoss" -> "false"
     )
-    transformer.readerSchemaRegistryUrl shouldBe "http://sourceRegistry:8081"
+    transformer.readerSchemaRegistryUrl shouldBe dummySourceRegistry
     transformer.writerTopic shouldBe "writerTopic"
     transformer.writerBrokers shouldBe "http://writerBrokers:9092"
     transformer.writerExtraOptions shouldBe Map(
       "kafka.sasl.mechanism" -> "GSSAPI"
     )
-    transformer.writerSchemaRegistryUrl shouldBe "http://writerRegistry:8081"
+    transformer.writerSchemaRegistryUrl shouldBe dummyDestinationRegistry
 
     transformer.checkpointLocation shouldBe "/tmp/checkpoint"
     transformer.sourceIdColumnNames should contain theSameElementsInOrderAs Seq("offset", "partition")
@@ -124,11 +127,11 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     config.addProperty("reader.option.kafka.option2", "value2")
     config.addProperty("component.transformer.id.0", "decoder")
     config.addProperty("component.transformer.class.decoder", classOf[ConfluentAvroDecodingTransformer].getCanonicalName)
-    config.addProperty(s"transformer.decoder.${ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL}", "http://sourceRegistry:8081")
+    config.addProperty(s"transformer.decoder.${ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL}", dummySourceRegistry)
 
     config.addProperty("component.transformer.id.1", "encoder")
     config.addProperty("component.transformer.class.encoder", classOf[ConfluentAvroEncodingTransformer].getCanonicalName)
-    config.addProperty(s"transformer.encoder.${ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL}", "http://writerRegistry:8081")
+    config.addProperty(s"transformer.encoder.${ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL}", dummyDestinationRegistry)
 
     config.addProperty("writer.kafka.option.option3", "value3")
     // when
@@ -155,13 +158,13 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     config.addProperty(KafkaStreamReader.KEY_BROKERS, "http://readerBrokers:9092")
     config.addProperty("reader.option.kafka.security.protocol", "SASL_PLAINTEXT")
     config.addProperty("reader.option.failOnDataLoss", false)
-    config.addProperty(readerSchemaRegistryUrlKey, "http://sourceRegistry:8081")
+    config.addProperty(readerSchemaRegistryUrlKey, dummySourceRegistry)
 
     config.addProperty(KafkaStreamWriter.KEY_TOPIC, "writerTopic")
     config.addProperty(KafkaStreamWriter.KEY_BROKERS, "http://writerBrokers:9092")
     config.addProperty("writer.kafka.option.kafka.sasl.mechanism", "GSSAPI")
     config.addProperty("component.transformer.class.encoder", classOf[ConfluentAvroEncodingTransformer].getCanonicalName)
-    config.addProperty(writerSchemaRegistryUrlKey, "http://writerRegistry:8081")
+    config.addProperty(writerSchemaRegistryUrlKey, dummyDestinationRegistry)
 
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 

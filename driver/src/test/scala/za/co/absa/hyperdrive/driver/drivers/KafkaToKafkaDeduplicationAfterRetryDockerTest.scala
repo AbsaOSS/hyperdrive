@@ -31,6 +31,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.abris.avro.registry.SchemaSubject
+import za.co.absa.hyperdrive.ingestor.implementation.utils.KafkaUtil
 import za.co.absa.hyperdrive.shared.exceptions.IngestionException
 
 /**
@@ -188,8 +189,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
       case _: IngestionException =>
         exceptionWasThrown = true
         val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-        consumer.subscribe(Collections.singletonList(destinationTopic))
-        val records = consumer.poll(Duration.ofMillis(1000L)).asScala.toList
+        val records = getAllMessages(consumer, destinationTopic)
         records.size shouldBe recordsV1.size
         val retryConfig = driverConfig ++ Map(
           "transformer.[avro.decoder].value.schema.id" -> s"$schemaV2Id",
@@ -205,8 +205,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     fs.exists(new Path(s"$checkpointDir/$sourceTopic")) shouldBe true
 
     val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-    consumer.subscribe(Collections.singletonList(destinationTopic))
-    val records = consumer.poll(Duration.ofMillis(1000L)).asScala.toList
+    val records = getAllMessages(consumer, destinationTopic)
 
     val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
     valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
@@ -219,7 +218,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     SchemaManagerFactory.resetSRClientInstance()
   }
 
-  def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
+  private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
     val props = new Properties()
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSchemaRegistryWrapper.kafka.getBootstrapServers)
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
@@ -229,7 +228,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     kafkaSchemaRegistryWrapper.createProducer(props)
   }
 
-  def createConsumer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaConsumer[GenericRecord, GenericRecord] = {
+  private def createConsumer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaConsumer[GenericRecord, GenericRecord] = {
     import org.apache.kafka.clients.consumer.ConsumerConfig
     val props = new Properties()
     props.put(ConsumerConfig.GROUP_ID_CONFIG, randomUUID.toString)
@@ -240,4 +239,10 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     kafkaSchemaRegistryWrapper.createConsumer(props)
   }
 
+  private def getAllMessages[K, V](consumer: KafkaConsumer[K, V], topic: String) = {
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    val offsets = consumer.endOffsets(topicPartitions.asJava)
+    implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(10L)
+    KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets.asScala.mapValues(_ + 0L).toMap)
+  }
 }
