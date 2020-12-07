@@ -230,6 +230,48 @@ will produce the following schema
 
 ```
 
+
+##### DeduplicateKafkaSinkTransformer
+`DeduplicateKafkaSinkTransformer` deduplicates records in a query from a Kafka source to a Kafka destination in a rerun after a failure.
+Records are identified across source and destination topic by a user-defined id, which may be a composite id and may include consumer record
+properties such as offset, partition, but also fields from the key or value schema.
+Deduplication is needed because the Kafka-destination provides only a at-least-once guarantee. Deduplication works by getting the ids
+from the last partial run in the destination topic and excluding them in the query. 
+
+Note that there must be only one source and one destination topic, and there must be only one writer writing to the destination topic, and
+no records must have been written to the destination topic after the partial run. Otherwise, records may still be duplicated.
+
+To use this transformer, `KafkaStreamReader`, `ConfluentAvroDecodingTransformer`, `ConfluentAvroEncodingTransformer` and `KafkaStreamWriter`
+must be configured as well.
+
+Note that usage of the star-operator `*` within column names is not supported and may lead to unexpected behaviour.
+
+To add the transformer to the pipeline use this class name:
+```
+component.transformer.class.{transformer-id} = za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.DeduplicateKafkaSinkTransformer
+```
+
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `transformer.{transformer-id}.source.id.columns` | Yes | A comma-separated list of consumer record properties that define the composite id. For example, `offset, partition` or `key.some_user_id`. |
+| `transformer.{transformer-id}.destination.id.columns` | Yes | A comma-separated list of consumer record properties that define the composite id. For example, `value.src_offset, value.src_partition` or `key.some_user_id`. |
+| `transformer.{transformer-id}.kafka.consumer.timeout` | No | Kafka consumer timeout in seconds. The default value is 120s. |
+
+The following fields can be selected on the consumer record
+
+- `topic`
+- `offset`
+- `partition`
+- `timestamp`
+- `timestampType`
+- `serializedKeySize`
+- `serializedValueSize`
+- `key`
+- `value`
+
+In case of `key` and `value`, the fields of their schemas can be specified by adding a dot, e.g.
+`key.some_nested_record.some_id` or likewise `value.some_nested_record.some_id`
+
 See [Pipeline settings](#pipeline-settings) for details about `{transformer-id}`.
 ##### ParquetStreamWriter
 | Property Name | Required | Description |

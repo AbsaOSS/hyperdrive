@@ -25,7 +25,8 @@ trait DeduplicateKafkaSinkTransformerAttributes extends HasComponentAttributes {
 
   override def getName: String = "Deduplicate Kafka Sink Transformer"
 
-  override def getDescription: String = ""
+  override def getDescription: String = "This transformer deduplicates records in a Kafka-to-Kafka query in a rerun after a failure." +
+    "It is assumed that only one query writes to the sink and no records have been written to the sink since the failure."
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     SourceIdColumns -> PropertyMetadata("Source Id columns", Some("Comma separated list of columns that represent the id"), required = true),

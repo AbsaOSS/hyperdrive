@@ -33,7 +33,6 @@ private[hyperdrive] object AvroUtil {
       case "timestampType" => Option(record.timestampType())
       case "serializedKeySize" => Option(record.serializedKeySize())
       case "serializedValueSize" => Option(record.serializedValueSize())
-      case "headers" => Option(record.headers())
       case keyColumn if keyColumn.startsWith("key.") => getFromGenericRecordNullSafe(record.key(),
         UnresolvedAttribute.parseAttributeName(keyColumn.stripPrefix("key.")).toList)
       case valueColumn if valueColumn.startsWith("value.") => getFromGenericRecordNullSafe(record.value(),

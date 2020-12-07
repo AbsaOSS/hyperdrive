@@ -28,6 +28,9 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWri
 class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
   behavior of DeduplicateKafkaSinkTransformer.getClass.getSimpleName
 
+  private val readerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
+  private val writerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
+
   "apply" should "create a DeduplicateKafkaSinkTransformer" in {
     // given
     val config = getLocalConfig()
@@ -77,6 +80,43 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     transformer.kafkaConsumerTimeout shouldBe Duration.ofSeconds(120L)
   }
 
+  it should "throw an exception if the kafka reader config is missing" in {
+    val config = getLocalConfig()
+    config.clearProperty(KafkaStreamReader.KEY_TOPIC)
+
+    val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
+
+    exception.getMessage should include(KafkaStreamReader.KEY_TOPIC)
+  }
+
+  it should "throw an exception if the kafka writer config is missing" in {
+    val config = getLocalConfig()
+    config.clearProperty(KafkaStreamWriter.KEY_TOPIC)
+
+    val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
+
+    exception.getMessage should include(KafkaStreamWriter.KEY_TOPIC)
+  }
+
+  it should "throw an exception if the reader schema registry config is missing" in {
+    val config = getLocalConfig()
+    config.clearProperty(readerSchemaRegistryUrlKey)
+
+    val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
+
+    exception.getMessage should include(readerSchemaRegistryUrlKey)
+  }
+
+  it should "throw an exception if the writer schema registry config is missing" in {
+    val config = getLocalConfig()
+    config.clearProperty(writerSchemaRegistryUrlKey)
+
+    val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
+
+    exception.getMessage should include(writerSchemaRegistryUrlKey)
+  }
+
+
   "getMappingFromRetainedGlobalConfigToLocalConfig" should "return the local config mapping" in {
     // given
     val config = getEmptyConfiguration
@@ -115,13 +155,13 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     config.addProperty(KafkaStreamReader.KEY_BROKERS, "http://readerBrokers:9092")
     config.addProperty("reader.option.kafka.security.protocol", "SASL_PLAINTEXT")
     config.addProperty("reader.option.failOnDataLoss", false)
-    config.addProperty("deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl", "http://sourceRegistry:8081")
+    config.addProperty(readerSchemaRegistryUrlKey, "http://sourceRegistry:8081")
 
     config.addProperty(KafkaStreamWriter.KEY_TOPIC, "writerTopic")
     config.addProperty(KafkaStreamWriter.KEY_BROKERS, "http://writerBrokers:9092")
     config.addProperty("writer.kafka.option.kafka.sasl.mechanism", "GSSAPI")
     config.addProperty("component.transformer.class.encoder", classOf[ConfluentAvroEncodingTransformer].getCanonicalName)
-    config.addProperty("deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl", "http://writerRegistry:8081")
+    config.addProperty(writerSchemaRegistryUrlKey, "http://writerRegistry:8081")
 
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 
