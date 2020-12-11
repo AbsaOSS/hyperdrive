@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.driver
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution.datasources.DataSource
-import org.apache.spark.sql.execution.streaming.MemoryStream
+import org.apache.spark.sql.execution.streaming.{MemoryStream, StreamingQueryWrapper}
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQueryListener, Trigger}
@@ -84,8 +84,9 @@ class TestControlFramework extends FlatSpec with BeforeAndAfter with MockitoSuga
       .foreachBatch { (batchDf: DataFrame, batchId: Long) =>
         // Here, batchDf.isStreaming is false, so we could also invoke Atum directly in principle
         // Question: Why can't we just put the whole query inside the foreachBatch?
-        val c = batchDf.count() // This count has an influence of numInputRows in QueryProgressEvent. Duplicates the count
-        logger.info(s"Writer Measurement: batchId = $batchId. Count = $c")
+//        val c = batchDf.count() // This count has an influence of numInputRows in QueryProgressEvent. Duplicates the count
+//        batchDf.count()
+//        logger.info(s"Writer Measurement: batchId = $batchId. Count = $c")
         parquetSink.addBatch(batchId, batchDf)
       }
       .start()
@@ -93,6 +94,13 @@ class TestControlFramework extends FlatSpec with BeforeAndAfter with MockitoSuga
     memoryStream.addData(1 to 10)
     query.processAllAvailable()
 
+    // Inspiration: ProgressReporter.extractSourceToNumInputRows
+    // lastExecution is volatile. How to hook into query to get execution for every microbatch? Listener doesn't deliver lastExecution
+    val lastExecution = query.asInstanceOf[StreamingQueryWrapper].streamingQuery.lastExecution
+    lastExecution.executedPlan.collect {
+      case p if p.metrics.contains("numOutputRows") =>
+        println(s"${p.simpleString}. NumOutputRows: ${p.metrics("numOutputRows").value}")
+    }
     memoryStream.addData(101 to 250)
     query.processAllAvailable()
 
@@ -112,7 +120,7 @@ class ControlFrameworkListener(sparkConf: SparkConf) extends StreamingQueryListe
 
   override def onQueryProgress(event: QueryProgressEvent): Unit = {
     // Can I just divide by 2?
-    logger.info(s"Reader Measurement: batchId = ${event.progress.batchId}. Count = ${event.progress.numInputRows}")
+//    logger.info(s"Reader Measurement: batchId = ${event.progress.batchId}. Count = ${event.progress.numInputRows}")
   }
 
   override def onQueryTerminated(event: QueryTerminatedEvent): Unit = {}
