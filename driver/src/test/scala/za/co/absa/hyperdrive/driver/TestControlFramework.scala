@@ -131,3 +131,26 @@ class ControlFrameworkListener(sparkConf: SparkConf) extends StreamingQueryListe
 
   override def onQueryTerminated(event: QueryTerminatedEvent): Unit = {}
 }
+
+/**
+ * Using query listener / foreachBatch. Note: The reader measurements with count = 0 are an artifact of processAllAvailable
+Reader Measurement: batchId = 0. Count = 0
+Writer Measurement: batchId = 0. Count = 5
+Reader Measurement: batchId = 0. Count = 10
+Reader Measurement: batchId = 1. Count = 0
+Writer Measurement: batchId = 1. Count = 75
+Reader Measurement: batchId = 1. Count = 150
+Reader Measurement: batchId = 2. Count = 0
+Writer Measurement: batchId = 2. Count = 125
+Reader Measurement: batchId = 2. Count = 250
+Reader Measurement: batchId = 3. Count = 0
+
+Using execution plan
+Filter ((value#4 % 2) = 0). NumOutputRows: 5
+ScanV2 MemoryStreamDataSource$[value#4]. NumOutputRows: 10
+Filter ((value#41 % 2) = 0). NumOutputRows: 75
+ScanV2 MemoryStreamDataSource$[value#41]. NumOutputRows: 150
+Filter ((value#78 % 2) = 0). NumOutputRows: 125
+ScanV2 MemoryStreamDataSource$[value#78]. NumOutputRows: 250
+Total number of rows written: 205
+ */
