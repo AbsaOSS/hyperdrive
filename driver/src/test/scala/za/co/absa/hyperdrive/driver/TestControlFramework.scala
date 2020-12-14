@@ -21,7 +21,7 @@ import org.apache.spark.sql.execution.datasources.DataSource
 import org.apache.spark.sql.execution.streaming.{MemoryStream, StreamingQueryWrapper}
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
-import org.apache.spark.sql.streaming.{OutputMode, StreamingQueryListener, Trigger}
+import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, StreamingQueryListener, Trigger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
@@ -82,61 +82,52 @@ class TestControlFramework extends FlatSpec with BeforeAndAfter with MockitoSuga
       .options(options)
       .trigger(Trigger.ProcessingTime(processingTimeIntervalMs))
       .foreachBatch { (batchDf: DataFrame, batchId: Long) =>
+        // Option 2: Invoke Atum in foreachBatch
         // Here, batchDf.isStreaming is false, so we could also invoke Atum directly in principle
-        // Question: Why can't we just put the whole query inside the foreachBatch?
-//        val c = batchDf.count() // This count has an influence of numInputRows in QueryProgressEvent. Duplicates the count
-//        batchDf.count()
-//        logger.info(s"Writer Measurement: batchId = $batchId. Count = $c")
-        parquetSink.addBatch(batchId, batchDf)
+        // Question: Why can't we just put the whole query inside the foreachBatch? State, don't want to work against the framework
+        val df2 = batchDf.persist() // persist to avoid multiple executions of the query
+        val c = df2.count()
+        println(s"Writer Measurement: batchId = $batchId. Count = $c")
+        parquetSink.addBatch(batchId, df2)
       }
       .start()
 
     memoryStream.addData(1 to 10)
     query.processAllAvailable()
+    // TODO: How to hook into query to get execution for every microbatch? Listener doesn't deliver lastExecution
+    printOutputRows(query)
 
-    // Inspiration: ProgressReporter.extractSourceToNumInputRows
-    // lastExecution is volatile. How to hook into query to get execution for every microbatch? Listener doesn't deliver lastExecution
-    val lastExecution = query.asInstanceOf[StreamingQueryWrapper].streamingQuery.lastExecution
-    lastExecution.executedPlan.collect {
-      case p if p.metrics.contains("numOutputRows") =>
-        println(s"${p.simpleString}. NumOutputRows: ${p.metrics("numOutputRows").value}")
-    }
     memoryStream.addData(101 to 250)
     query.processAllAvailable()
+    printOutputRows(query)
 
     memoryStream.addData(251 to 500)
     query.processAllAvailable()
+    printOutputRows(query)
+
     query.stop()
 
     val c = spark.read.parquet(destinationDir).count()
-    logger.info(s"Total number of rows written: $c")
+    println(s"Total number of rows written: $c")
+  }
+
+  private def printOutputRows(query: StreamingQuery) = {
+    // Option 3: Leverage execution plan to get number of output rows for each operation (not only read)
+    // Inspiration: ProgressReporter.extractSourceToNumInputRows
+    query.asInstanceOf[StreamingQueryWrapper].streamingQuery.lastExecution.executedPlan.collect {
+      case p if p.metrics.contains("numOutputRows") =>
+        println(s"${p.simpleString}. NumOutputRows: ${p.metrics("numOutputRows").value}")
+    }
   }
 }
 
 class ControlFrameworkListener(sparkConf: SparkConf) extends StreamingQueryListener {
-  private val logger = LogManager.getLogger
-
   override def onQueryStarted(event: QueryStartedEvent): Unit = {}
 
   override def onQueryProgress(event: QueryProgressEvent): Unit = {
-    // Can I just divide by 2?
-//    logger.info(s"Reader Measurement: batchId = ${event.progress.batchId}. Count = ${event.progress.numInputRows}")
+    // Option 1: Use QueryProgressEvent. Only gets number of input rows. Uses numOutputRows of execution plan internally
+    println(s"Reader Measurement: batchId = ${event.progress.batchId}. Count = ${event.progress.numInputRows}")
   }
 
   override def onQueryTerminated(event: QueryTerminatedEvent): Unit = {}
 }
-
-/**
- * Expected output
- * Reader Measurement: batchId = 0. Count = 0
- * Writer Measurement: batchId = 0. Count = 50
- * Reader Measurement: batchId = 0. Count = 200
- * Reader Measurement: batchId = 1. Count = 0
- * Writer Measurement: batchId = 1. Count = 75
- * Reader Measurement: batchId = 1. Count = 300
- * Reader Measurement: batchId = 2. Count = 0
- * Writer Measurement: batchId = 2. Count = 125
- * Reader Measurement: batchId = 2. Count = 500
- * Reader Measurement: batchId = 3. Count = 0
- * Total number of rows written: 250
-*/
