@@ -29,22 +29,25 @@ import scala.collection.mutable
 private[hyperdrive] object KafkaUtil {
   private val logger = LogManager.getLogger
 
-  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], topicPartition: TopicPartition, numberOfRecords: Int)
+  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecordsPerPartition: Map[TopicPartition, Long])
     (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
-    consumer.assign(Seq(topicPartition).asJava)
-    val endOffsets = consumer.endOffsets(Seq(topicPartition).asJava).asScala
-    if (endOffsets.size != 1) {
-      throw new IllegalStateException(s"Expected exactly 1 end offset, got ${endOffsets}")
-    }
-    val partition = endOffsets.keys.head
-    val offset = endOffsets.values.head
+    val topicPartitions = numberOfRecordsPerPartition.keySet
+    consumer.assign(topicPartitions.asJava)
+    val endOffsets = consumer.endOffsets(topicPartitions.asJava).asScala
 
     var records: Seq[ConsumerRecord[K, V]] = Seq()
-    var offsetLowerBound = offset
-    while (records.size < numberOfRecords && offsetLowerBound != 0) {
-      offsetLowerBound = Math.max(0, offsetLowerBound - numberOfRecords)
-      consumer.seek(partition, offsetLowerBound)
-      records = getMessagesAtLeastToOffset(consumer, Map(topicPartition -> offset))
+    var recordSizesPerPartition: Map[TopicPartition, Long] = Map()
+    var offsetLowerBoundPerPartition = endOffsets.mapValues(_ + 0L)
+    while (topicPartitions.exists(p => recordSizesPerPartition(p) < numberOfRecordsPerPartition(p) && offsetLowerBoundPerPartition(p) != 0)) {
+      offsetLowerBoundPerPartition = offsetLowerBoundPerPartition.map {
+        case (p, offsetLowerBound) => p -> Math.max(0, offsetLowerBound - numberOfRecordsPerPartition(p))
+      }
+      offsetLowerBoundPerPartition.foreach {
+        case (p, offsetLowerBound) => consumer.seek(p, offsetLowerBound)
+      }
+
+      records = getMessagesAtLeastToOffset(consumer, endOffsets.mapValues(_ + 0L).toMap)
+      // TODO: Fill recordSizesPerPartition
     }
 
     records

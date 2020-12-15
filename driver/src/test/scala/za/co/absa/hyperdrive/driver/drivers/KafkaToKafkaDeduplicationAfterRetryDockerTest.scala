@@ -96,6 +96,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     while(!topicCreationFut.isDone) {}
   }
 
+  // TODO: Add failing test without DeduplicateTransformer
   it should "execute the whole kafka-to-kafka pipeline" in {
     // given
     val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper

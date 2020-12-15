@@ -46,7 +46,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     kafka.stop()
   }
 
-  "getAllAvailableMessages" should "get all available messages" in {
+  "getMessagesAtLeastToOffset" should "get all available messages" in {
     // given
     val partitions = 3
     createTopic(kafka, topic, partitions)
@@ -70,6 +70,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   it should "get all available messages, even if polling is required multiple times" in {
     // given
     val partitions = 3
+    // TODO: Use max.poll.records
     createTopic(kafka, topic, partitions, Map("segment.ms" -> "100"))
     val producer = createProducer(kafka)
     val messages = (1 to 100).map(i => s"message_${i}")
