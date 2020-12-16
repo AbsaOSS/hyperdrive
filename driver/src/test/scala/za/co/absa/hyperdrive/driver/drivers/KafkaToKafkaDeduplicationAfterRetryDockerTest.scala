@@ -53,17 +53,167 @@ import za.co.absa.hyperdrive.shared.exceptions.IngestionException
  * and transformer.[kafka.deduplicator].destination.id.columns)
  *
  * Finally, the destination topic is expected to contain all messages from the source topic
- * exactly once. Without the deduplication transformer, the 41st-50th messages would be duplicated.
+ * exactly once, thanks to the deduplication transformer (see test case 1).
+ * Without the deduplication transformer, the 41st-50th messages are duplicated (see test case 2).
  */
 class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
   import scala.collection.JavaConverters._
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-  private val baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
-  private val baseDirPath = baseDir.path.toUri
-  private val checkpointDir = s"$baseDirPath/checkpoint"
+  private var baseDir: TempDirectory = _
 
   behavior of "CommandLineIngestionDriver"
+
+  it should "write exactly-once using the deduplicate transformer" in {
+    val recordIdsV1 = 0 until 50
+    val recordIdsV2 = 50 until 100
+    val deduplicatorConfig = Map(
+      "component.transformer.id.2" -> "[kafka.deduplicator]",
+      "component.transformer.class.[kafka.deduplicator]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.DeduplicateKafkaSinkTransformer",
+      "transformer.[kafka.deduplicator].source.id.columns" -> "offset,partition",
+      "transformer.[kafka.deduplicator].destination.id.columns" -> "value.hyperdrive_id.source_offset, value.hyperdrive_id.source_partition"
+    )
+    val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
+    val destinationTopic = "deduplication_dest"
+
+    executeTestCase(deduplicatorConfig, recordIdsV1, recordIdsV2, kafkaSchemaRegistryWrapper, destinationTopic)
+
+    val consumer = createConsumer(kafkaSchemaRegistryWrapper)
+    val records = getAllMessages(consumer, destinationTopic)
+    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
+    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
+    val actualRecordIds = records.map(_.value().get("record_id"))
+    actualRecordIds.distinct.size shouldBe actualRecordIds.size
+    val expectedRecordIds = 0 until recordIdsV1.size + recordIdsV2.size
+    actualRecordIds should contain theSameElementsAs expectedRecordIds
+  }
+
+  it should "write duplicate entries without the deduplicate transformer" in {
+    val recordIdsV1 = 0 until 50
+    val recordIdsV2 = 50 until 100
+    val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
+    val destinationTopic = "deduplication_dest"
+
+    executeTestCase(Map(), recordIdsV1, recordIdsV2, kafkaSchemaRegistryWrapper, destinationTopic)
+
+    val consumer = createConsumer(kafkaSchemaRegistryWrapper)
+    val records = getAllMessages(consumer, destinationTopic)
+    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
+    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
+    val actualRecordIds = records.map(_.value().get("record_id"))
+    actualRecordIds.distinct.size should be < actualRecordIds.size
+  }
+
+  // scalastyle:off method.length
+  private def executeTestCase(deduplicatorConfig: Map[String, String], recordIdsV1: Seq[Int], recordIdsV2: Seq[Int],
+                              kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper, destinationTopic: String) = {
+    // given
+    val checkpointDir = s"${baseDir.path.toUri}/checkpoint"
+    val sourceTopic = "deduplication_src"
+    val sourceTopicPartitions = 5
+    val destinationTopicPartitions = 3
+    val schemaManager = SchemaManagerFactory.create(Map("schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl))
+    val subject = SchemaSubject.usingTopicNameStrategy(sourceTopic)
+    val parserV1 = new Parser()
+    val schemaV1 = parserV1.parse(schemaV1String(sourceTopic))
+    val parserV2 = new Parser()
+    val schemaV2 = parserV2.parse(schemaV2String(sourceTopic))
+    val schemaV1Id = schemaManager.register(subject, schemaV1)
+    val schemaV2Id = schemaManager.register(subject, schemaV2)
+
+    val producer = createProducer(kafkaSchemaRegistryWrapper)
+    createTopic(kafkaSchemaRegistryWrapper, sourceTopic, sourceTopicPartitions)
+    createTopic(kafkaSchemaRegistryWrapper, destinationTopic, destinationTopicPartitions)
+
+    val recordsV1 = recordIdsV1.map(i => {
+      val valueRecord = new GenericData.Record(schemaV1)
+      valueRecord.put("record_id", i)
+      valueRecord.put("value_field", s"valueHello_$i")
+      valueRecord
+    })
+    val recordsV2 = recordIdsV2.map(i => {
+      val valueRecord = new GenericData.Record(schemaV2)
+      valueRecord.put("record_id", i)
+      valueRecord.put("value_field", null)
+      valueRecord
+    })
+    sendData(producer, recordsV1, sourceTopic, sourceTopicPartitions)
+    sendData(producer, recordsV2, sourceTopic, sourceTopicPartitions)
+
+    Thread.sleep(3000)
+
+    val driverConfig = Map(
+      // Pipeline settings
+      "component.ingestor" -> "spark",
+      "component.reader" -> "za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader",
+      "component.transformer.id.0" -> "[column.copy]",
+      "component.transformer.class.[column.copy]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy.ColumnCopyStreamTransformer",
+      "component.transformer.id.1" -> "[avro.decoder]",
+      "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
+      "component.transformer.id.3" -> "[avro.encoder]",
+      "component.transformer.class.[avro.encoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer",
+      "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
+
+      // Spark settings
+      "ingestor.spark.app.name" -> "ingestor-app",
+      "ingestor.spark.termination.timeout" -> "60000",
+
+      // Source(Kafka) settings
+      "reader.kafka.topic" -> sourceTopic,
+      "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
+      "reader.option.maxOffsetsPerTrigger" -> "20",
+
+      "transformer.[column.copy].columns.copy.from" -> "offset, partition",
+      "transformer.[column.copy].columns.copy.to" -> "hyperdrive_id.source_offset, hyperdrive_id.source_partition",
+
+      // Avro Decoder (ABRiS) settings
+      "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
+      "transformer.[avro.decoder].value.schema.id" -> s"$schemaV1Id",
+      "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
+      "transformer.[avro.decoder].keep.columns" -> "hyperdrive_id",
+
+      // Avro Encoder (ABRiS) settings
+      "transformer.[avro.encoder].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
+      "transformer.[avro.encoder].value.schema.naming.strategy" -> "topic.name",
+
+      // Sink(Kafka) settings
+      "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),
+      "writer.common.trigger.type" -> "ProcessingTime",
+      "writer.kafka.topic" -> destinationTopic,
+      "writer.kafka.brokers" -> "${reader.kafka.brokers}"
+    ) ++ deduplicatorConfig
+    val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
+
+    // when, then
+    var exceptionWasThrown = false
+    try {
+      CommandLineIngestionDriver.main(driverConfigArray)
+    } catch {
+      case _: IngestionException =>
+        exceptionWasThrown = true
+        val retryConfig = driverConfig ++ Map(
+          "transformer.[avro.decoder].value.schema.id" -> s"$schemaV2Id",
+          "writer.common.trigger.type" -> "Once",
+          "reader.option.maxOffsetsPerTrigger" -> "9999"
+        )
+        val retryConfigArray = retryConfig.map { case (key, value) => s"$key=$value"}.toArray
+        CommandLineIngestionDriver.main(retryConfigArray) // first rerun only retries the failed micro-batch
+        CommandLineIngestionDriver.main(retryConfigArray) // second rerun consumes the rest of the messages
+    }
+
+    exceptionWasThrown shouldBe true
+    fs.exists(new Path(s"$checkpointDir/$sourceTopic")) shouldBe true
+  }
+  // scalastyle:on method.length
+
+  before {
+    baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
+  }
+
+  after {
+    SchemaManagerFactory.resetSRClientInstance()
+    baseDir.delete()
+  }
 
   private def schemaV1String(name: String) =
     raw"""{"type": "record", "name": "$name", "fields": [
@@ -94,127 +244,6 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     val topic = new NewTopic(topicName, partitions, replication)
     val topicCreationFut = localKafkaAdmin.createTopics(util.Arrays.asList(topic)).all()
     while(!topicCreationFut.isDone) {}
-  }
-
-  // TODO: Add failing test without DeduplicateTransformer
-  it should "execute the whole kafka-to-kafka pipeline" in {
-    // given
-    val kafkaSchemaRegistryWrapper = new KafkaSchemaRegistryWrapper
-    val sourceTopic = "deduplication_src"
-    val destinationTopic = "deduplication_dest"
-    val sourceTopicPartitions = 5
-    val destinationTopicPartitions = 3
-    val schemaManager = SchemaManagerFactory.create(Map("schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl))
-    val subject = SchemaSubject.usingTopicNameStrategy(sourceTopic)
-    val parserV1 = new Parser()
-    val schemaV1 = parserV1.parse(schemaV1String(sourceTopic))
-    val parserV2 = new Parser()
-    val schemaV2 = parserV2.parse(schemaV2String(sourceTopic))
-    val schemaV1Id = schemaManager.register(subject, schemaV1)
-    val schemaV2Id = schemaManager.register(subject, schemaV2)
-
-    val producer = createProducer(kafkaSchemaRegistryWrapper)
-    createTopic(kafkaSchemaRegistryWrapper, sourceTopic, sourceTopicPartitions)
-    createTopic(kafkaSchemaRegistryWrapper, destinationTopic, destinationTopicPartitions)
-
-    val recordsV1 = (0 until 50).map(i => {
-      val valueRecord = new GenericData.Record(schemaV1)
-      valueRecord.put("record_id", i)
-      valueRecord.put("value_field", s"valueHello_$i")
-      valueRecord
-    })
-    val recordsV2 = (50 until 100).map(i => {
-      val valueRecord = new GenericData.Record(schemaV2)
-      valueRecord.put("record_id", i)
-      valueRecord.put("value_field", null)
-      valueRecord
-    })
-    sendData(producer, recordsV1, sourceTopic, sourceTopicPartitions)
-    sendData(producer, recordsV2, sourceTopic, sourceTopicPartitions)
-
-    Thread.sleep(3000)
-
-    val driverConfig = Map(
-      // Pipeline settings
-      "component.ingestor" -> "spark",
-      "component.reader" -> "za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader",
-      "component.transformer.id.0" -> "[column.copy]",
-      "component.transformer.class.[column.copy]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy.ColumnCopyStreamTransformer",
-      "component.transformer.id.1" -> "[avro.decoder]",
-      "component.transformer.class.[avro.decoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer",
-      "component.transformer.id.2" -> "[kafka.deduplicator]",
-      "component.transformer.class.[kafka.deduplicator]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.DeduplicateKafkaSinkTransformer",
-      "component.transformer.id.3" -> "[avro.encoder]",
-      "component.transformer.class.[avro.encoder]" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer",
-      "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
-
-      // Spark settings
-      "ingestor.spark.app.name" -> "ingestor-app",
-      "ingestor.spark.termination.timeout" -> "60000",
-
-      // Source(Kafka) settings
-      "reader.kafka.topic" -> sourceTopic,
-      "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,
-      "reader.option.maxOffsetsPerTrigger" -> "20",
-
-      "transformer.[column.copy].columns.copy.from" -> "offset, partition",
-      "transformer.[column.copy].columns.copy.to" -> "hyperdrive_id.source_offset, hyperdrive_id.source_partition",
-
-      // Avro Decoder (ABRiS) settings
-      "transformer.[avro.decoder].schema.registry.url" -> kafkaSchemaRegistryWrapper.schemaRegistryUrl,
-      "transformer.[avro.decoder].value.schema.id" -> s"$schemaV1Id",
-      "transformer.[avro.decoder].value.schema.naming.strategy" -> "topic.name",
-      "transformer.[avro.decoder].keep.columns" -> "hyperdrive_id",
-
-      // comma separated list of columns to select
-      "transformer.[kafka.deduplicator].source.id.columns" -> "offset,partition",
-      "transformer.[kafka.deduplicator].destination.id.columns" -> "value.hyperdrive_id.source_offset, value.hyperdrive_id.source_partition",
-
-      // Avro Encoder (ABRiS) settings
-      "transformer.[avro.encoder].schema.registry.url" -> "${transformer.[avro.decoder].schema.registry.url}",
-      "transformer.[avro.encoder].value.schema.naming.strategy" -> "topic.name",
-
-      // Sink(Kafka) settings
-      "writer.common.checkpoint.location" -> (checkpointDir + "/${reader.kafka.topic}"),
-      "writer.common.trigger.type" -> "ProcessingTime",
-      "writer.kafka.topic" -> destinationTopic,
-      "writer.kafka.brokers" -> "${reader.kafka.brokers}"
-    )
-    val driverConfigArray = driverConfig.map { case (key, value) => s"$key=$value" }.toArray
-
-    // when, then
-    var exceptionWasThrown = false
-    try {
-      CommandLineIngestionDriver.main(driverConfigArray)
-    } catch {
-      case _: IngestionException =>
-        exceptionWasThrown = true
-        val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-        val retryConfig = driverConfig ++ Map(
-          "transformer.[avro.decoder].value.schema.id" -> s"$schemaV2Id",
-          "writer.common.trigger.type" -> "Once",
-          "reader.option.maxOffsetsPerTrigger" -> "9999"
-        )
-        val retryConfigArray = retryConfig.map { case (key, value) => s"$key=$value"}.toArray
-        CommandLineIngestionDriver.main(retryConfigArray) // first rerun only retries the failed micro-batch
-        CommandLineIngestionDriver.main(retryConfigArray) // second rerun consumes the rest of the messages
-    }
-
-    exceptionWasThrown shouldBe true
-    fs.exists(new Path(s"$checkpointDir/$sourceTopic")) shouldBe true
-
-    val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-    val records = getAllMessages(consumer, destinationTopic)
-
-    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
-    val actualRecordIds = records.map(_.value().get("record_id"))
-    val expectedRecordIds = 0 until recordsV1.size + recordsV2.size
-    actualRecordIds should contain theSameElementsAs expectedRecordIds
-  }
-
-  after {
-    SchemaManagerFactory.resetSRClientInstance()
   }
 
   private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {

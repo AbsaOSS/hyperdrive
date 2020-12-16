@@ -29,27 +29,33 @@ import scala.collection.mutable
 private[hyperdrive] object KafkaUtil {
   private val logger = LogManager.getLogger
 
-  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecordsPerPartition: Map[TopicPartition, Long])
+  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecords: Map[TopicPartition, Long])
     (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
-    consumer.assign(numberOfRecordsPerPartition.keySet.asJava)
-    val endOffsets = consumer.endOffsets(numberOfRecordsPerPartition.keySet.asJava).asScala
+    consumer.assign(numberOfRecords.keySet.asJava)
+    val endOffsets = consumer.endOffsets(numberOfRecords.keySet.asJava).asScala
     val topicPartitions = endOffsets.keySet
 
     var records: Seq[ConsumerRecord[K, V]] = Seq()
-    var recordSizesPerPartition: Map[TopicPartition, Long] = topicPartitions.map(p => p -> 0L).toMap
-    var offsetLowerBoundPerPartition = endOffsets.mapValues(_ + 0L)
-    while (topicPartitions.exists(p => recordSizesPerPartition(p) < numberOfRecordsPerPartition(p) && offsetLowerBoundPerPartition(p) != 0)) {
-      offsetLowerBoundPerPartition = offsetLowerBoundPerPartition.map {
-        case (p, offsetLowerBound) => p -> Math.max(0, offsetLowerBound - numberOfRecordsPerPartition(p))
-      }
-      offsetLowerBoundPerPartition.foreach {
-        case (p, offsetLowerBound) => consumer.seek(p, offsetLowerBound)
-      }
+    val offsetLowerBounds = mutable.Map(endOffsets.mapValues(_ + 0L).toSeq: _*)
+    import scala.util.control.Breaks._
+    breakable {
+      while (true) {
+        val recordSizes = records
+          .groupBy(r => new TopicPartition(r.topic(), r.partition()))
+          .mapValues(records => records.size)
+        val unfinishedPartitions = topicPartitions.filter(p => recordSizes.getOrElse(p, 0) < numberOfRecords(p) && offsetLowerBounds(p) != 0)
+        if (unfinishedPartitions.isEmpty) {
+          break()
+        }
 
-      records = getMessagesAtLeastToOffset(consumer, endOffsets.mapValues(_ + 0L).toMap)
-      recordSizesPerPartition = records
-        .groupBy(r => new TopicPartition(r.topic(), r.partition()))
-        .mapValues(records => records.size)
+        unfinishedPartitions.foreach { p =>
+          offsetLowerBounds(p) = Math.max(0, offsetLowerBounds(p) - numberOfRecords(p))
+        }
+        offsetLowerBounds.foreach {
+          case (partition, offset) => consumer.seek(partition, offset)
+        }
+        records = getMessagesAtLeastToOffset(consumer, endOffsets.mapValues(_ + 0L).toMap)
+      }
     }
 
     records

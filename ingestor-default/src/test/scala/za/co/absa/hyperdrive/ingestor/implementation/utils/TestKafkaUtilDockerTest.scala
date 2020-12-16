@@ -37,6 +37,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   private val kafkaSufficientTimeout = Duration.ofSeconds(5L)
   private val kafkaInsufficientTimeout = Duration.ofMillis(1L)
   private val topic = "test-topic"
+  private val maxPollRecords = 10
 
   before{
     kafka.start()
@@ -50,28 +51,6 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     // given
     val partitions = 3
     createTopic(kafka, topic, partitions)
-    val producer = createProducer(kafka)
-    val messages = (1 to 100).map(i => s"message_${i}")
-    produceData(producer, messages, topic, partitions)
-
-    val consumer = createConsumer(kafka)
-    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
-    val offsets = consumer.endOffsets(topicPartitions.asJava).asScala.toMap.mapValues(_.asInstanceOf[Long])
-
-    // when
-    implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
-
-    // then
-    val actualMessages = records.map(_.value()).toList.sorted
-    actualMessages should contain theSameElementsAs messages
-  }
-
-  it should "get all available messages, even if polling is required multiple times" in {
-    // given
-    val partitions = 3
-    // TODO: Use max.poll.records
-    createTopic(kafka, topic, partitions, Map("segment.ms" -> "100"))
     val producer = createProducer(kafka)
     val messages = (1 to 100).map(i => s"message_${i}")
     produceData(producer, messages, topic, partitions)
@@ -232,8 +211,8 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     val values = actualRecords.map(_.value())
 
     values.size should be >= 12
-    values should contain allElementsOf Seq("msg_103", "msg_102", "msg_101", "msg_100", "msg_97", "msg_95", "msg_94",
-      "msg_92", "msg_90", "msg_88", "msg_86", "msg_84")
+    values should contain allElementsOf Seq("msg_103", "msg_102", "msg_101", "msg_100", "msg_99", "msg_97", "msg_95",
+      "msg_94", "msg_92", "msg_90", "msg_84")
   }
 
   it should "get from multiple topics simultaneously" in {
@@ -359,6 +338,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getCanonicalName)
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getCanonicalName)
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
+    props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords.toString)
     new KafkaConsumer[String, String](props)
   }
 
