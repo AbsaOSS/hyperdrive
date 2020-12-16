@@ -186,20 +186,22 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     exception.getMessage should include ("Requested consumption")
   }
 
-  "getAtLeastNLatestRecords" should "get at least the n latest records" in {
-    createTopic(kafka, topic, 1, Map(
+  "getAtLeastNLatestRecords" should "get at least the n latest records if there are gaps in the offsets" in {
+    val messageCreationTimeout = 100L
+    val partitions = 3
+    createTopic(kafka, topic, partitions, Map(
       "cleanup.policy" -> "compact",
       "delete.retention.ms" -> "100",
-      "segment.ms" -> "100",
+      "segment.ms" -> s"$messageCreationTimeout",
       "min.cleanable.dirty.ratio" -> "0.01"
     ))
 
     val producer = createProducer(kafka)
-    val messages = (1 to 100).map(i => {
-      val key = if (i % 2 == 0) 1000 + i else 1
-      (key.toString, s"msg_${i}")
+    val messages = (1 to 103).map(i => {
+      val key = if (i % 2 == 0 || i > 100) 1000 + i else 1
+      (key.toString, s"msg_${i}", i % partitions)
     })
-    produceData2(producer, messages, topic)
+    produceData(producer, messages, topic, Some(messageCreationTimeout))
 
     val waitForCompactionMillis = 20000L
     Thread.sleep(waitForCompactionMillis)
@@ -219,20 +221,22 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     }
 
     withClue(){
-      records.size shouldBe messages.map(_._1).distinct.size
+      records.size shouldBe messages.map(r => (r._1, r._3)).distinct.size
     } withClue(s"This is likely an artifact of the test itself. You may want to increase waitForCompactionMillis." +
       s" The current value is $waitForCompactionMillis")
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topic, 0), 10)
+    val recordsPerPartition = (0 to partitions).map(p => new TopicPartition(topic, p) -> 4L).toMap
+    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition)
     val values = actualRecords.map(_.value())
 
-    values.size should be >= 10
-    values should contain allElementsOf Seq("msg_100", "msg_99", "msg_98", "msg_96", "msg_94", "msg_92", "msg_90", "msg_88", "msg_86", "msg_84")
+    values.size should be >= 12
+    values should contain allElementsOf Seq("msg_103", "msg_102", "msg_101", "msg_100", "msg_97", "msg_95", "msg_94",
+      "msg_92", "msg_90", "msg_88", "msg_86", "msg_84")
   }
 
-  it should "be able to reuse a consumer" in {
+  it should "get from multiple topics simultaneously" in {
     // given
     val partitions = 3
     createTopic(kafka, topic, partitions)
@@ -245,7 +249,8 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val records = topicPartitions.flatMap(tp => KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, tp, 1000))
+    val recordsPerPartition = topicPartitions.map(t => t -> 1000L).toMap
+    val records = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition)
 
     // then
     val actualMessages = records.map(_.value()).toList.sorted
@@ -262,7 +267,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, new TopicPartition(topic, 0), 10)
+    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, Map(new TopicPartition(topic, 0) -> 10))
     result.getMessage should include("increasing the consumer timeout")
   }
 
@@ -357,21 +362,20 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     new KafkaConsumer[String, String](props)
   }
 
-  private def produceData(producer: KafkaProducer[String, String], records: Seq[String], topic: String, partitions: Int): Unit = {
-    records.zipWithIndex.foreach {
-      case (record, i) =>
-        val partition = i % partitions
-        val producerRecord = new ProducerRecord[String, String](topic, partition, null, record)
-        producer.send(producerRecord)
+  private def produceData(producer: KafkaProducer[String, String], valueRecords: Seq[String], topic: String, partitions: Int): Unit = {
+    val records = valueRecords.zipWithIndex.map {
+      case (value, i) => (null, value, i % partitions)
     }
-    producer.flush()
+    produceData(producer, records, topic)
   }
 
-  private def produceData2(producer: KafkaProducer[String, String], records: Seq[(String, String)], topic: String): Unit = {
-    records.foreach { record =>
-        val producerRecord = new ProducerRecord[String, String](topic, record._1, record._2)
+  private def produceData(producer: KafkaProducer[String, String], records: Seq[(String, String, Int)], topic: String,
+    timeout: Option[Long] = None): Unit = {
+    records.foreach {
+      record =>
+        val producerRecord = new ProducerRecord[String, String](topic, record._3, record._1, record._2)
         producer.send(producerRecord)
-        Thread.sleep(100L)
+        timeout.foreach(Thread.sleep)
     }
     producer.flush()
   }

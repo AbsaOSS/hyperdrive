@@ -31,12 +31,12 @@ private[hyperdrive] object KafkaUtil {
 
   def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecordsPerPartition: Map[TopicPartition, Long])
     (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
-    val topicPartitions = numberOfRecordsPerPartition.keySet
-    consumer.assign(topicPartitions.asJava)
-    val endOffsets = consumer.endOffsets(topicPartitions.asJava).asScala
+    consumer.assign(numberOfRecordsPerPartition.keySet.asJava)
+    val endOffsets = consumer.endOffsets(numberOfRecordsPerPartition.keySet.asJava).asScala
+    val topicPartitions = endOffsets.keySet
 
     var records: Seq[ConsumerRecord[K, V]] = Seq()
-    var recordSizesPerPartition: Map[TopicPartition, Long] = Map()
+    var recordSizesPerPartition: Map[TopicPartition, Long] = topicPartitions.map(p => p -> 0L).toMap
     var offsetLowerBoundPerPartition = endOffsets.mapValues(_ + 0L)
     while (topicPartitions.exists(p => recordSizesPerPartition(p) < numberOfRecordsPerPartition(p) && offsetLowerBoundPerPartition(p) != 0)) {
       offsetLowerBoundPerPartition = offsetLowerBoundPerPartition.map {
@@ -47,14 +47,16 @@ private[hyperdrive] object KafkaUtil {
       }
 
       records = getMessagesAtLeastToOffset(consumer, endOffsets.mapValues(_ + 0L).toMap)
-      // TODO: Fill recordSizesPerPartition
+      recordSizesPerPartition = records
+        .groupBy(r => new TopicPartition(r.topic(), r.partition()))
+        .mapValues(records => records.size)
     }
 
     records
   }
 
   def getMessagesAtLeastToOffset[K, V](consumer: KafkaConsumer[K, V], toOffsets: Map[TopicPartition, Long])
-    (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
+                                      (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
     consumer.assign(toOffsets.keySet.asJava)
     val endOffsets = consumer.endOffsets(toOffsets.keys.toSeq.asJava).asScala
     endOffsets.foreach { case (topicPartition, offset) =>

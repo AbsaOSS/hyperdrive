@@ -83,10 +83,10 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
     val sinkTopicPartitions = KafkaUtil.getTopicPartitions(sinkConsumer, writerTopic)
-    val latestSinkRecords = consumeAndClose(sinkConsumer, consumer => sinkTopicPartitions.map {
-        topicPartition => KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, topicPartition, sourceRecords.size)
-      })
-    val publishedIds = latestSinkRecords.flatten.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
+    val recordsPerPartition = sinkTopicPartitions.map(p => p -> sourceRecords.size.toLong).toMap
+    val latestSinkRecords = consumeAndClose(sinkConsumer, consumer =>
+      KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition))
+    val publishedIds = latestSinkRecords.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
 
     val duplicatedIds = sourceIds.intersect(publishedIds)
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
