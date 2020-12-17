@@ -20,25 +20,26 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.DummyStreamTransformer._
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory.{classKeyPrefix, idsKeyPrefix}
-
+import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory._
 
 class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamTransformerAbstractFactory.getClass.getSimpleName
 
-  it should "create transformer instances in the correct order" in {
-    import StreamTransformerAbstractFactory._
-    val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
-    config.addProperty(s"${classKeyPrefix}.dummy.transformer.A", DummyStreamTransformer.getClass.getName)
-    config.addProperty(s"${transformerKeyPrefix}.dummy.transformer.A.$DummyProperty1Name", "value1")
-    config.addProperty(s"${transformerKeyPrefix}.dummy.transformer.A.$DummyProperty2Name", "100")
+  private val dummyTransformerA = "dummy.transformer.A"
+  private val dummyTransformerB = "dummy.transformer.B"
 
-    config.addProperty(s"${idsKeyPrefix}.2", "dummy.transformer.B")
-    config.addProperty(s"${classKeyPrefix}.dummy.transformer.B", DummyStreamTransformer.getClass.getName)
-    config.addProperty(s"${transformerKeyPrefix}.dummy.transformer.B.$DummyProperty1Name", "value2")
-    config.addProperty(s"${transformerKeyPrefix}.dummy.transformer.B.$DummyProperty2Name", "200")
+  it should "create transformer instances in the correct order" in {
+    val config = getBaseConfiguration
+    config.addProperty(s"${IdsKeyPrefix}.1", dummyTransformerA)
+    config.addProperty(s"${ClassKeyPrefix}.$dummyTransformerA", DummyStreamTransformer.getClass.getName)
+    config.addProperty(s"${TransformerKeyPrefix}.$dummyTransformerA.$DummyProperty1Name", "value1")
+    config.addProperty(s"${TransformerKeyPrefix}.$dummyTransformerA.$DummyProperty2Name", "100")
+
+    config.addProperty(s"${IdsKeyPrefix}.2", dummyTransformerB)
+    config.addProperty(s"${ClassKeyPrefix}.$dummyTransformerB", DummyStreamTransformer.getClass.getName)
+    config.addProperty(s"${TransformerKeyPrefix}.$dummyTransformerB.$DummyProperty1Name", "value2")
+    config.addProperty(s"${TransformerKeyPrefix}.$dummyTransformerB.$DummyProperty2Name", "200")
 
     val transformers = StreamTransformerAbstractFactory.build(config)
     transformers should have size 2
@@ -57,13 +58,12 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
   }
 
   it should "support negative orders" in {
-    import StreamTransformerAbstractFactory._
     val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.2", "[column.transformer]")
-    config.addProperty(s"${classKeyPrefix}.[column.transformer]", ColumnSelectorStreamTransformer.getClass.getName)
+    config.addProperty(s"${IdsKeyPrefix}.2", "[column.transformer]")
+    config.addProperty(s"${ClassKeyPrefix}.[column.transformer]", ColumnSelectorStreamTransformer.getClass.getName)
 
-    config.addProperty(s"${idsKeyPrefix}.-1", "dummy.transformer.A")
-    config.addProperty(s"${classKeyPrefix}.dummy.transformer.A", DummyStreamTransformer.getClass.getName)
+    config.addProperty(s"${IdsKeyPrefix}.-1", dummyTransformerA)
+    config.addProperty(s"${ClassKeyPrefix}.$dummyTransformerA", DummyStreamTransformer.getClass.getName)
 
     val transformers = StreamTransformerAbstractFactory.build(config)
     transformers should have size 2
@@ -79,34 +79,34 @@ class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterE
 
   it should "throw if transformer ids are not unique" in {
     val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
-    config.addProperty(s"${idsKeyPrefix}.2", "dummy.transformer.A")
+    config.addProperty(s"${IdsKeyPrefix}.1", dummyTransformerA)
+    config.addProperty(s"${IdsKeyPrefix}.2", dummyTransformerA)
 
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
-    throwable.getMessage should include(s"dummy.transformer.A")
+    throwable.getMessage should include(dummyTransformerA)
   }
 
   it should "throw if transformer id is non-numeric" in {
     val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.First", "dummy.transformer.A")
+    config.addProperty(s"${IdsKeyPrefix}.First", dummyTransformerA)
 
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
-    throwable.getMessage should include(s"${idsKeyPrefix}.First")
+    throwable.getMessage should include(s"${IdsKeyPrefix}.First")
   }
 
   it should "throw if no class name is associated to the transformer id" in {
     val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
+    config.addProperty(s"${IdsKeyPrefix}.1", dummyTransformerA)
 
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
-    throwable.getMessage should include(s"${classKeyPrefix}.dummy.transformer.A")
+    throwable.getMessage should include(s"${ClassKeyPrefix}.$dummyTransformerA")
   }
 
   it should "throw if data transformer parameter is invalid" in {
     val invalidFactoryName = "an-invalid-factory-name"
     val config = getBaseConfiguration
-    config.addProperty(s"${idsKeyPrefix}.1", "dummy.transformer.A")
-    config.addProperty(s"${classKeyPrefix}.dummy.transformer.A", invalidFactoryName)
+    config.addProperty(s"${IdsKeyPrefix}.1", dummyTransformerA)
+    config.addProperty(s"${ClassKeyPrefix}.$dummyTransformerA", invalidFactoryName)
     val throwable = intercept[IllegalArgumentException](StreamTransformerAbstractFactory.build(config))
 
     assert(throwable.getMessage.contains(invalidFactoryName))

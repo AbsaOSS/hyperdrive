@@ -15,8 +15,10 @@
 
 package za.co.absa.hyperdrive.ingestor.api.utils
 
-import org.apache.commons.configuration2.Configuration
+import org.apache.commons.configuration2.{Configuration, ConfigurationConverter}
+import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 
+import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object ConfigUtils {
@@ -96,6 +98,18 @@ object ConfigUtils {
         target.addProperty(targetKey, value)
       }
       Success(target)
+    }
+  }
+
+  def getTransformerPrefix[T <: StreamTransformer](config: Configuration, transformerClass: Class[T]): Option[String] = {
+    import scala.collection.JavaConverters._
+    val className = transformerClass.getCanonicalName
+    val transformerPrefixConfig = config.subset(StreamTransformerFactory.ClassKeyPrefix)
+    val transformerPrefixMap = ConfigurationConverter.getMap(transformerPrefixConfig).asScala
+    transformerPrefixMap.find {
+      case (_: String, value: String) => value == className
+    }.map {
+      case (key: String, _) => key
     }
   }
 }

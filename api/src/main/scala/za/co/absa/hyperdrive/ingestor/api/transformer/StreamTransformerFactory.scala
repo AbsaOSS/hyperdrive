@@ -31,3 +31,9 @@ trait StreamTransformerFactory extends ComponentFactory[StreamTransformer] {
    */
   def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map()
 }
+
+object StreamTransformerFactory {
+  val IdsKeyPrefix = "component.transformer.id"
+  val ClassKeyPrefix = "component.transformer.class"
+  val TransformerKeyPrefix = "transformer"
+}
