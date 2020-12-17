@@ -212,7 +212,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     values.size should be >= 12
     values should contain allElementsOf Seq("msg_103", "msg_102", "msg_101", "msg_100", "msg_99", "msg_97", "msg_95",
-      "msg_94", "msg_92", "msg_90", "msg_84")
+      "msg_98", "msg_96", "msg_94", "msg_92", "msg_90")
   }
 
   it should "get from multiple topics simultaneously" in {

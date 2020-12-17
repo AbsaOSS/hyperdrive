@@ -32,11 +32,11 @@ private[hyperdrive] object KafkaUtil {
   def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecords: Map[TopicPartition, Long])
     (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
     consumer.assign(numberOfRecords.keySet.asJava)
-    val endOffsets = consumer.endOffsets(numberOfRecords.keySet.asJava).asScala
+    val endOffsets = consumer.endOffsets(numberOfRecords.keySet.asJava).asScala.mapValues(Long2long)
     val topicPartitions = endOffsets.keySet
 
     var records: Seq[ConsumerRecord[K, V]] = Seq()
-    val offsetLowerBounds = mutable.Map(endOffsets.mapValues(_ + 0L).toSeq: _*)
+    val offsetLowerBounds = mutable.Map(endOffsets.toSeq: _*)
     import scala.util.control.Breaks._
     breakable {
       while (true) {
@@ -54,7 +54,7 @@ private[hyperdrive] object KafkaUtil {
         offsetLowerBounds.foreach {
           case (partition, offset) => consumer.seek(partition, offset)
         }
-        records = getMessagesAtLeastToOffset(consumer, endOffsets.mapValues(_ + 0L).toMap)
+        records = getMessagesAtLeastToOffset(consumer, endOffsets.toMap)
       }
     }
 

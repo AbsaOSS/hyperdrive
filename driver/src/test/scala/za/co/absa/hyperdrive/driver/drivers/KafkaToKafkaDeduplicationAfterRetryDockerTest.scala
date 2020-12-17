@@ -84,8 +84,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
     val actualRecordIds = records.map(_.value().get("record_id"))
     actualRecordIds.distinct.size shouldBe actualRecordIds.size
-    val expectedRecordIds = 0 until recordIdsV1.size + recordIdsV2.size
-    actualRecordIds should contain theSameElementsAs expectedRecordIds
+    actualRecordIds should contain theSameElementsAs recordIdsV1 ++ recordIdsV2
   }
 
   it should "write duplicate entries without the deduplicate transformer" in {
@@ -242,8 +241,7 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     val localKafkaAdmin = AdminClient.create(config)
     val replication = 1.toShort
     val topic = new NewTopic(topicName, partitions, replication)
-    val topicCreationFut = localKafkaAdmin.createTopics(util.Arrays.asList(topic)).all()
-    while(!topicCreationFut.isDone) {}
+    localKafkaAdmin.createTopics(util.Arrays.asList(topic)).all().get()
   }
 
   private def createProducer(kafkaSchemaRegistryWrapper: KafkaSchemaRegistryWrapper): KafkaProducer[GenericRecord, GenericRecord] = {
@@ -271,6 +269,6 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
     val offsets = consumer.endOffsets(topicPartitions.asJava)
     implicit val kafkaConsumerTimeout: Duration = Duration.ofSeconds(10L)
-    KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets.asScala.mapValues(_ + 0L).toMap)
+    KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets.asScala.mapValues(Long2long).toMap)
   }
 }
