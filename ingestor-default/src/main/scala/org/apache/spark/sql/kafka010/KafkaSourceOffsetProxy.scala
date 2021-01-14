@@ -16,11 +16,13 @@
 package org.apache.spark.sql.kafka010
 
 import org.apache.kafka.common.TopicPartition
+import org.apache.spark.sql.connector.read.streaming.{Offset => OffsetV2}
 import org.apache.spark.sql.execution.streaming.Offset
 
 object KafkaSourceOffsetProxy {
-  def getPartitionOffsets(offset: Offset): Map[TopicPartition, Long] = {
-    KafkaSourceOffset.getPartitionOffsets(offset)
+  def getPartitionOffsets(offset: OffsetV2): Map[TopicPartition, Long] = {
+    // TODO: Remove casting as soon as spark kafka is migrated to OffsetV2
+    KafkaSourceOffset.getPartitionOffsets(offset.asInstanceOf[Offset])
   }
 
   def apply(offsetTuples: (String, Int, Long)*): KafkaSourceOffset = {

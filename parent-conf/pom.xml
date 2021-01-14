@@ -40,7 +40,9 @@
     <properties>
         <!--Enforced versions-->
         <fasterxml.jackson.version>2.10.0</fasterxml.jackson.version> <!--Same as Spark uses-->
-        <avro.version>1.9.1</avro.version> <!--Same as Abris uses-->
+        <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
+        <commons.text.version>1.8</commons.text.version>
+        <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -65,7 +67,7 @@
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
         <!--Spark-->
-        <spark.version>3.0.0-preview2</spark.version>
+        <spark.version>3.0.1</spark.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -99,16 +101,26 @@
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.paranamer</groupId>
+            <artifactId>paranamer</artifactId>
+        </dependency>
         <!--END Enforced dependency versions-->
 
         <!--Spark-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!--Logging-->
         <dependency>
@@ -166,6 +178,16 @@
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons.text.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.thoughtworks.paranamer</groupId>
+                <artifactId>paranamer</artifactId>
+                <version>${paranamer.version}</version>
             </dependency>
             <!--END Enforced dependency versions-->
 
@@ -233,6 +255,7 @@
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!--Configurations-->

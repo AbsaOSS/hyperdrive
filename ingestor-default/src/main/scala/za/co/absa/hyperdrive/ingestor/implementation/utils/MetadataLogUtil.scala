@@ -58,7 +58,7 @@ object MetadataLogUtil {
   }
 
   private def getMetadataLogFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-      val metadataLogFileIndex = new MetadataLogFileIndex(spark, new Path(rootPath), None)
+      val metadataLogFileIndex = new MetadataLogFileIndex(spark, new Path(rootPath), Map.empty, None)
       val parquetFilesArr = metadataLogFileIndex.inputFiles
       val parquetFiles = parquetFilesArr.toSet
       if (parquetFiles.size != parquetFilesArr.length) {

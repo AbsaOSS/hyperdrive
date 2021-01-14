@@ -20,7 +20,8 @@ import java.time.Duration
 import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.execution.streaming.{CommitLog, Offset, OffsetSeqLog}
+import org.apache.spark.sql.connector.read.streaming.{Offset => OffsetV2}
+import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
 
 import scala.collection.JavaConverters._
@@ -133,7 +134,7 @@ private[hyperdrive] object KafkaUtil {
     offsetSeqOpt.flatMap(parseOffsetSeq)
   }
 
-  private def parseOffsetSeq(offsetSeq: Seq[Option[Offset]]) = {
+  private def parseOffsetSeq(offsetSeq: Seq[Option[OffsetV2]]) = {
     if (offsetSeq.size == 1) {
       if (offsetSeq.head.isDefined) {
         Some(KafkaSourceOffsetProxy.getPartitionOffsets(offsetSeq.head.get))
