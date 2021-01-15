@@ -73,7 +73,10 @@ object MongoDbStreamWriter extends StreamWriterFactory with MongoDbStreamWriterA
     val dbOptions = Seq(
       database.map(db => ("database", db)),
       collection.map(c => ("collection", c))
-    ).flatMap { case Some((k, v)) => s"$k='$v'" }
+    ).flatMap {
+      case Some((k, v)) => Some(s"$k='$v'")
+      case None => None
+    }
       .mkString(", ", ", ", "")
 
     LogManager.getLogger.info(s"Going to create MongoDbStreamWriter instance using: " +
