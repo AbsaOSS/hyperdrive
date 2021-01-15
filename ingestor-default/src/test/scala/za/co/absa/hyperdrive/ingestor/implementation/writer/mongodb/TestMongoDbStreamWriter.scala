@@ -22,7 +22,6 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 
 class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
@@ -30,7 +29,6 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
   private val connectionString: String = s"mongodb://localhost:1234"
   private val dbName: String = "unit_test_database"
 
-  private val tempDir = TempDirectory().deleteOnExit()
   private val configuration = new Configuration()
 
   behavior of "MongoDbStreamWriter"
@@ -71,7 +69,7 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
     val dataStreamWriter = getDataStreamWriter
 
     invokeWriter(dataStreamWriter, Map())
-    verify(dataStreamWriter).start(connectionString)
+    verify(dataStreamWriter).start()
   }
 
   it should " include extra options in case they exist" in {
@@ -80,7 +78,7 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
     val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
 
     invokeWriter(dataStreamWriter, extraConfs)
-    verify(dataStreamWriter).start(connectionString)
+    verify(dataStreamWriter).start()
     verify(dataStreamWriter).options(extraConfs)
   }
 

@@ -52,7 +52,7 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       .outputMode(OutputMode.Append())
       .options(extraConfOptions)
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
-      .start(uri)
+      .start()
   }
 
   def getDestination: String = uri
