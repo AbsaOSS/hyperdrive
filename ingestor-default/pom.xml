@@ -52,6 +52,11 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
         </dependency>
+        <!--MongoDb-->
+        <dependency>
+            <groupId>org.mongodb.spark</groupId>
+            <artifactId>mongo-spark-connector_${scala.compat.version}</artifactId>
+        </dependency>
 
         <!-- Tests -->
         <dependency>
@@ -62,5 +67,12 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>kafka</artifactId>
         </dependency>
+        <!--Embedded Mongo for testing-->
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

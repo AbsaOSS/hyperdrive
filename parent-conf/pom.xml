@@ -64,6 +64,7 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
+        <spark.sql.mongo.version>2.4.2</spark.sql.mongo.version>
         <testcontainers.kafka.version>1.12.4</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
@@ -72,6 +73,8 @@
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
+
+        <embedded.mongo.version>2.1.2</embedded.mongo.version>
 
         <absa.commons.version>0.0.12</absa.commons.version>
         <!--Shade Maven plug-in-->
@@ -238,6 +241,13 @@
                 <version>${spark.sql.kafka.version}</version>
             </dependency>
 
+            <!--MongoDb-->
+            <dependency>
+                <groupId>org.mongodb.spark</groupId>
+                <artifactId>mongo-spark-connector_${scala.compat.version}</artifactId>
+                <version>${spark.sql.mongo.version}</version>
+            </dependency>
+
             <!--Configurations-->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -267,6 +277,11 @@
                 <groupId>za.co.absa.commons</groupId>
                 <artifactId>commons_${scala.compat.version}</artifactId>
                 <version>${absa.commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>${embedded.mongo.version}</version>
             </dependency>
 
             <dependency>
