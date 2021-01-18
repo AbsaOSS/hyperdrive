@@ -77,7 +77,10 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
   it should " include extra options in case they exist" in {
     val dataStreamWriter = getDataStreamWriter
 
-    val extraConfs = Map("key.1" -> "value-1", "key.2" -> "value-2")
+    val extraConfs = Map("key.1" -> "value-1",
+      "key.2" -> "value-2",
+      "spark.mongodb.output.database" -> dbName,
+      "spark.mongodb.output.collection" -> "testcollection")
 
     invokeWriter(dataStreamWriter, extraConfs)
     verify(dataStreamWriter).start()

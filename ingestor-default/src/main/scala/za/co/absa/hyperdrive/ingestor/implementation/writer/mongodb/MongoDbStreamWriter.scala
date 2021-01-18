@@ -40,7 +40,7 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
 
     logger.info(s"Writing to $uri")
     if (options.nonEmpty) {
-      val optionsStr = options.map { case (k, v) => s"$k='$v" }.mkString(", ")
+      val optionsStr = options.map { case (k, v) => s"$k='$v'" }.mkString(", ")
       logger.info(s"Options: $optionsStr")
     }
 
@@ -58,14 +58,14 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       .trigger(trigger)
       .outputMode(OutputMode.Append())
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
-      .options(extraConfOptions)
+      .options(options)
       .foreachBatch((df, batchId) => {
         logger.info(s"Writing batchId: $batchId")
         df.write
           .mode(SaveMode.Append)
           .format("mongo")
           .option("spark.mongodb.output.uri", uri)
-          .options(extraConfOptions)
+          .options(options)
           .save()
       })
       .start()
