@@ -26,15 +26,16 @@ import za.co.absa.commons.spark.SparkTestBase
 
 class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 
-  private val connectionString: String = s"mongodb://localhost:1234"
-  private val dbName: String = "unit_test_database"
+  private val connectionString = s"mongodb://localhost:1234"
+  private val dbName = "unit_test_database"
+  private val checkpointDir = "/tmp/mongo-checkpoint"
 
   private val configuration = new Configuration()
 
   behavior of "MongoDbStreamWriter"
 
   it should "throw on blank destination" in {
-    assertThrows[IllegalArgumentException](new MongoDbStreamWriter(Trigger.Once(), "/tmp/checkpoint", "  ", None, None, Map()))
+    assertThrows[IllegalArgumentException](new MongoDbStreamWriter(Trigger.Once(), checkpointDir, "  ", None, None, Map()))
   }
 
 // Uncomment this when Spark MongoDB connector starts to support structure stream writer
@@ -87,7 +88,7 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
                            extraOptions: Map[String,String],
                            trigger: Trigger = Trigger.Once(),
                            collection: Option[String] = Some("testcollection"),
-                           checkpointLocation: String = "/tmp/mongo-checkpoint-location"): Unit = {
+                           checkpointLocation: String = checkpointDir): Unit = {
     val dataFrame = getDataFrame(dataStreamWriter)
     val writer = new MongoDbStreamWriter(trigger, checkpointLocation, connectionString, Some(dbName), collection, extraOptions)
     writer.write(dataFrame)
