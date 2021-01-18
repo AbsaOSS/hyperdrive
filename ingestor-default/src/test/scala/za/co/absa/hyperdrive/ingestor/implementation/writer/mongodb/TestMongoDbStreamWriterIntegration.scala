@@ -28,7 +28,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
   import spark.implicits._
   import ScalaMongoImplicits._
 
-  private val baseDir = TempDirectory("TestMongodbStreamWriter").deleteOnExit()
+  private val baseDirPath = TempDirectory("TestMongodbStreamWriter").deleteOnExit().path
 
   behavior of "MongoDbStreamWriter"
 
@@ -41,7 +41,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
 
     val config = new BaseConfiguration()
     config.addProperty(KEY_URI, s"$connectionString/$dbName.$collectionName")
-    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDir/checkpoint1")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDirPath/checkpoint1")
     val writer = MongoDbStreamWriter(config).asInstanceOf[MongoDbStreamWriter]
 
     withStreamingData(inputData) { streamDf =>
@@ -71,7 +71,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
 
     val config = new BaseConfiguration()
     config.addProperty(KEY_URI, uri)
-    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDir/checkpoint2")
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDirPath/checkpoint2")
     val writer = MongoDbStreamWriter(config).asInstanceOf[MongoDbStreamWriter]
 
     // expected
