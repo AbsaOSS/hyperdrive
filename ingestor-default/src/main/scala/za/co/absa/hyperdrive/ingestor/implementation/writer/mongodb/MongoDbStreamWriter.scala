@@ -44,10 +44,9 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       logger.info(s"Options: $optionsStr")
     }
 
-    val dataStreamWriter = dataFrame.writeStream
-    dataStreamWriter
+    dataFrame.writeStream
       .trigger(trigger)
-      .format(source = "mongo")
+      .format("mongo")
       .option("spark.mongodb.output.uri", uri)
       .outputMode(OutputMode.Append())
       .options(extraConfOptions)

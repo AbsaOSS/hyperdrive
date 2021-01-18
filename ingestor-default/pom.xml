@@ -58,6 +58,19 @@
             <artifactId>mongo-spark-connector_${scala.compat.version}</artifactId>
         </dependency>
 
+        <!--Embedded Mongo for testing-->
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MongoDB driver for testing -->
+        <dependency>
+            <groupId>org.mongodb.scala</groupId>
+            <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.testcontainers</groupId>

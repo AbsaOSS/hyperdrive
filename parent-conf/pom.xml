@@ -71,6 +71,9 @@
         <!--Spark-->
         <spark.version>2.4.3</spark.version>
 
+        <mongodb.driver.version>2.7.0</mongodb.driver.version>
+        <embedded.mongo.version>2.1.2</embedded.mongo.version>
+
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
 
@@ -239,12 +242,27 @@
                 <version>${spark.sql.kafka.version}</version>
             </dependency>
 
-            <!--MongoDb-->
+            <!-- MongoDb Spark connector -->
             <dependency>
                 <groupId>org.mongodb.spark</groupId>
                 <artifactId>mongo-spark-connector_${scala.compat.version}</artifactId>
                 <version>${spark.sql.mongo.version}</version>
             </dependency>
+
+            <!-- MongoDB driver -->
+            <dependency>
+                <groupId>org.mongodb.scala</groupId>
+                <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
+                <version>${mongodb.driver.version}</version>
+            </dependency>
+
+            <!--Embedded Mongo for testing-->
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>${embedded.mongo.version}</version>
+            </dependency>
+
 
             <!--Configurations-->
             <dependency>
@@ -275,6 +293,11 @@
                 <groupId>za.co.absa.commons</groupId>
                 <artifactId>commons_${scala.compat.version}</artifactId>
                 <version>${absa.commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>${embedded.mongo.version}</version>
             </dependency>
 
             <dependency>
