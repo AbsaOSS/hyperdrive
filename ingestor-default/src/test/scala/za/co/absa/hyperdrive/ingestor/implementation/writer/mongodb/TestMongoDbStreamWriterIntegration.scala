@@ -35,7 +35,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
   it should "write data to MongoDB" in {
     // given
     val inputData = Range(0, 100).toDF
-    val collectionName = "testcollection"
+    val collectionName = "testcollection1"
 
     db.createCollection(collectionName)
 
@@ -54,6 +54,74 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
         .execute()
 
       assert(count == 100)
+    }
+  }
+
+  it should "write structured data to MongoDB" in {
+    // given
+    val inputData = Seq(
+      ("John Doe", 48, 181.5, BigDecimal(10500.22), List(1, 10, 100)),
+      ("Jane Williams", 39, 165.2, BigDecimal(1050011.22), List(200, 300)),
+      ("N", 33, 171.4, BigDecimal("12345678901234567.5522"), List(1, 2, 3, 4, 5))
+    ).toDF("name", "age", "height", "income", "numbers")
+    val collectionName = "testcollection2"
+    val uri = s"$connectionString/$dbName.$collectionName"
+
+    db.createCollection(collectionName)
+
+    val config = new BaseConfiguration()
+    config.addProperty(KEY_URI, uri)
+    config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDir/checkpoint2")
+    val writer = MongoDbStreamWriter(config).asInstanceOf[MongoDbStreamWriter]
+
+    // expected
+    val expectedJson =
+    """[
+      |  {
+      |    "name": "JaneWilliams",
+      |    "age": 39,
+      |    "height": 165.2,
+      |    "income": 1050011.220000000000000000,
+      |    "numbers": [ 200, 300 ]
+      |  },
+      |  {
+      |    "name": "JohnDoe",
+      |    "age": 48,
+      |    "height": 181.5,
+      |    "income": 10500.220000000000000000,
+      |    "numbers": [ 1, 10, 100 ]
+      |  },
+      |  {
+      |    "name": "N",
+      |    "age": 33,
+      |    "height": 171.4,
+      |    "income": 12345678901234567.552200000000000000,
+      |    "numbers": [ 1, 2, 3, 4, 5 ]
+      |  }
+      |]""".stripMargin.replaceAll("\\s", "")
+
+    withStreamingData(inputData) { streamDf =>
+      val sink = writer.write(streamDf)
+      sink.processAllAvailable()
+      sink.stop()
+
+      val count = db.getCollection(collectionName)
+        .countDocuments()
+        .execute()
+      assert(count == 3)
+
+      val json = spark.read
+        .format("mongo")
+        .option("spark.mongodb.input.uri", uri)
+        .load()
+        .select("name", "age", "height", "income", "numbers")
+        .orderBy("name")
+        .toJSON
+        .collect()
+        .mkString("[", ",", "]")
+        .replaceAll("\\s", "")
+
+      assert(json == expectedJson)
     }
   }
 
