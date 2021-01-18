@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.mongodb
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterProperties}
@@ -44,6 +44,7 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       logger.info(s"Options: $optionsStr")
     }
 
+    /* This is how this should work when MongoDB Spark connector starts supporting streaming write:
     dataFrame.writeStream
       .trigger(trigger)
       .format("mongo")
@@ -51,6 +52,21 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       .outputMode(OutputMode.Append())
       .options(extraConfOptions)
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
+      .start()
+     */
+    dataFrame.writeStream
+      .trigger(trigger)
+      .outputMode(OutputMode.Append())
+      .options(extraConfOptions)
+      .foreachBatch((df, batchId) => {
+        logger.info(s"Writing batchId: $batchId")
+        df.write
+          .mode(SaveMode.Append)
+          .format("mongo")
+          .option("spark.mongodb.output.uri", uri)
+          .options(extraConfOptions)
+          .save()
+      })
       .start()
   }
 

@@ -20,41 +20,41 @@ import org.scalatest.FlatSpec
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
-import za.co.absa.hyperdrive.ingestor.implementation.mongodbutils.MongoDbFixture
+import za.co.absa.hyperdrive.ingestor.implementation.mongodbutils.{MongoDbFixture, ScalaMongoImplicits}
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.MemoryStreamFixture
 import za.co.absa.hyperdrive.ingestor.implementation.writer.mongodb.MongoDbStreamWriter.KEY_URI
 
-class TestMongoDbStreamWriter2 extends FlatSpec with SparkTestBase with MongoDbFixture with MemoryStreamFixture {
+class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase with MongoDbFixture with MemoryStreamFixture {
+  import spark.implicits._
+  import ScalaMongoImplicits._
 
   private val baseDir = TempDirectory("TestMongodbStreamWriter").deleteOnExit()
 
   behavior of "MongoDbStreamWriter"
 
   it should "write data to MongoDB" in {
-    import spark.implicits._
-
     // given
     val inputData = Range(0, 100).toDF
+    val collectionName = "testcollection"
+
+    db.createCollection(collectionName)
 
     val config = new BaseConfiguration()
-    config.addProperty(KEY_URI, s"$connectionString/testdb/testcollection")
+    config.addProperty(KEY_URI, s"$connectionString/$dbName.$collectionName")
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, s"$baseDir/checkpoint1")
     val writer = MongoDbStreamWriter(config).asInstanceOf[MongoDbStreamWriter]
 
     withStreamingData(inputData) { streamDf =>
-      // (!) Uncomment to use the actual MongoDB writer
-      //val sink = writer.write(streamDf)
-      val sink = streamDf
-        .writeStream
-        .queryName("tmp_table")
-        .outputMode("append")
-        .format("memory")
-        .start()
-
+      val sink = writer.write(streamDf)
       sink.processAllAvailable()
       sink.stop()
-    }
 
+      val count = db.getCollection(collectionName)
+        .countDocuments()
+        .execute()
+
+      assert(count == 100)
+    }
   }
 
 }
