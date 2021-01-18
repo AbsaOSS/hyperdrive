@@ -276,11 +276,6 @@
                 <artifactId>commons_${scala.compat.version}</artifactId>
                 <version>${absa.commons.version}</version>
             </dependency>
-            <dependency>
-                <groupId>de.flapdoodle.embed</groupId>
-                <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                <version>${embedded.mongo.version}</version>
-            </dependency>
 
             <dependency>
                 <!-- Cannot have scope test because it is used by abris -->
