@@ -52,6 +52,24 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
         </dependency>
+        <!--MongoDb-->
+        <dependency>
+            <groupId>org.mongodb.spark</groupId>
+            <artifactId>mongo-spark-connector_${scala.compat.version}</artifactId>
+        </dependency>
+
+        <!--Embedded Mongo for testing-->
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MongoDB driver for testing -->
+        <dependency>
+            <groupId>org.mongodb.scala</groupId>
+            <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Tests -->
         <dependency>
