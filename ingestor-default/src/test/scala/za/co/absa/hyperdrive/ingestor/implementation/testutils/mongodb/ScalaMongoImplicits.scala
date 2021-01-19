@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.mongodbutils
+package za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb
 
 import java.util.concurrent.TimeUnit
 
@@ -40,23 +40,4 @@ object ScalaMongoImplicits {
   implicit class FindObservableExecutor[T](observable: FindObservable[T]) {
     def execute(): Seq[T] = Await.result(observable.toFuture, executionTimeout)
   }
-
-  implicit class FindObservableTraversable[T](observable: FindObservable[T]) {
-    def syncForeach(transform: T => Unit): Unit = {
-      val p = Promise[Unit]()
-      val f = p.future
-
-      observable.subscribe(new Observer[T] {
-        override def onNext(result: T): Unit = transform(result)
-
-        override def onError(e: Throwable): Unit = p.failure(new RuntimeException("Error fetching MongoDB documents.", e))
-
-        override def onComplete(): Unit = p.success((): Unit)
-      })
-
-      // An infinite wait since processing all documents in a collection can take a long time
-      Await.result(f, Duration.Inf)
-    }
-  }
-
 }

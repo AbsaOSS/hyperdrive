@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.mongodbutils
+package za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb
 
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 

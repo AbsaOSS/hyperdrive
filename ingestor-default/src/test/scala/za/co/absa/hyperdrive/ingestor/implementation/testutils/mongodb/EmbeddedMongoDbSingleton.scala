@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.mongodbutils
+package za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb
 
 import de.flapdoodle.embed.mongo.config.{MongodConfigBuilder, Net, RuntimeConfigBuilder}
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.{Command, MongodExecutable, MongodStarter}
 import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 
 object EmbeddedMongoDbSingleton {
-  private val log = LoggerFactory.getLogger(this.getClass)
+  private val log = LogManager.getLogger
 
   lazy val embeddedMongoDb: (MongodExecutable, Int) = startEmbeddedMongoDb()
 
@@ -39,7 +39,7 @@ object EmbeddedMongoDbSingleton {
 
     // Do not print Embedded MongoDB logs
     val runtimeConfig = new RuntimeConfigBuilder()
-      .defaultsWithLogger(Command.MongoD, log)
+      .defaults(Command.MongoD)
       .processOutput(ProcessOutput.getDefaultInstanceSilent)
       .build()
 

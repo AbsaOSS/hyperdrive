@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.mongodbutils
+package za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb
 
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import org.scalatest.{BeforeAndAfterAll, Suite}
@@ -26,7 +26,7 @@ trait MongoDbFixture extends BeforeAndAfterAll {
 
   private val (mongoDbExecutable, mongoPort) = EmbeddedMongoDbSingleton.embeddedMongoDb
 
-  def connectionString: String = s"mongodb://localhost:$mongoPort"
+  def uri: String = s"mongodb://localhost:$mongoPort"
 
   protected val dbName: String = "unit_test_database"
 
@@ -35,10 +35,19 @@ trait MongoDbFixture extends BeforeAndAfterAll {
 
   private var mongoClient: MongoClient = _
 
-  override protected def beforeAll(): Unit = {
-    mongoClient = MongoClient(connectionString)
+  def clearDb(): Unit = {
+    val dbs = mongoClient.listDatabaseNames().execute()
+    if (dbs.contains(dbName)) {
+      db.drop().execute()
+    }
 
-    connection = MongoDbConnection.getConnection(mongoClient, connectionString, dbName)
+    db = mongoClient.getDatabase(dbName)
+  }
+
+  override protected def beforeAll(): Unit = {
+    mongoClient = MongoClient(uri)
+
+    connection = MongoDbConnection.getConnection(mongoClient, uri, dbName)
 
     val dbs = mongoClient.listDatabaseNames().execute()
     if (dbs.contains(dbName)) {

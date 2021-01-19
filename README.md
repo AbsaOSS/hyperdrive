@@ -293,6 +293,25 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
+##### MongoDbStreamWriter
+| Property Name | Required | Description |
+| :--- | :---: | :--- |
+| `writer.mongodb.uri` | Yes | Output MongoDB URI, e.g. `mongodb://host:port/database.collection`. |
+| `writer.parquet.database` | No | Database name (if not specified as the part of URI). |
+| `writer.parquet.collection` | No | Collection name (if not specified as the part of URI). |
+| `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
+| `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
+
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.mongodb.options`, e.g. `writer.mongodb.options.key=value`
+
+Common MongoDB additional options
+
+| Property Name | Default | Description |
+| :--- | :--- | :--- |
+| `writer.mongodb.option.spark.mongodb.output.ordered` | `true` | When set to `false` inserts are done in parallel, increasing performance, but the order of documents is not preserved. |
+| `writer.mongodb.option.spark.mongodb.output.forceInsert` | `false`| Forces saves to use inserts, even if a Dataset contains `_id.` |
+More on these options: https://docs.mongodb.com/spark-connector/current/configuration
+
 #### Common writer properties
 
 | Property Name | Required |Description |

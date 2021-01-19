@@ -44,16 +44,6 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       logger.info(s"Options: $optionsStr")
     }
 
-    /* This is how this should work when MongoDB Spark connector starts supporting streaming write:
-    dataFrame.writeStream
-      .trigger(trigger)
-      .format("mongo")
-      .option("spark.mongodb.output.uri", uri)
-      .outputMode(OutputMode.Append())
-      .options(extraConfOptions)
-      .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
-      .start()
-     */
     dataFrame.writeStream
       .trigger(trigger)
       .outputMode(OutputMode.Append())
@@ -101,10 +91,10 @@ object MongoDbStreamWriter extends StreamWriterFactory with MongoDbStreamWriterA
     new MongoDbStreamWriter(trigger, checkpointLocation, uri, database, collection, extraOptions)
   }
 
-  def getUri(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_URI, configuration, errorMessage = s"Output MongoDB URI is not specified. Is '$KEY_URI' defined?")
-
-  def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
-
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
+
+  private def getUri(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_URI, configuration, errorMessage = s"Output MongoDB URI is not specified. Is '$KEY_URI' defined?")
+
+  private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 }
 

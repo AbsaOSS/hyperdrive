@@ -25,9 +25,9 @@ trait MongoDbStreamWriterAttributes extends HasComponentAttributes {
   val KEY_COLLECTION = s"$rootFactoryConfKey.collection"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
 
-  override def getName: String = "Parquet Stream Writer"
+  override def getName: String = "MongoDB Stream Writer"
 
-  override def getDescription: String = "This writer saves ingested data in Parquet format on a filesystem (e.g. HDFS)"
+  override def getDescription: String = "This writer saves ingested data in MongoDB"
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_URI -> PropertyMetadata("Output MongoDB URI (should start with 'mongodb://')", Some("Should start with 'mongodb://', e.g. 'mongodb://127.0.0.1/'"), required = true),
