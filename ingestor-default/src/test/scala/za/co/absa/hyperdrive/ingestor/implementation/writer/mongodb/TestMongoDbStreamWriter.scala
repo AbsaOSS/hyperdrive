@@ -38,14 +38,6 @@ class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers w
     assertThrows[IllegalArgumentException](new MongoDbStreamWriter(Trigger.Once(), checkpointDir, "  ", None, None, Map()))
   }
 
-// Uncomment this when Spark MongoDB connector starts to support structure stream writer
-//  it should "set format as 'mongo'" in {
-//    val dataStreamWriter = getDataStreamWriter
-//
-//    invokeWriter(dataStreamWriter, Map())
-//    verify(dataStreamWriter).format("mongo")
-//  }
-
   it should "set Trigger.Once" in {
     val dataStreamWriter = getDataStreamWriter
 
