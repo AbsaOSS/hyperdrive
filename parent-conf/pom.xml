@@ -39,7 +39,7 @@
 
     <properties>
         <!--Enforced versions-->
-        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
+        <fasterxml.jackson.databind.version>2.9.10.5</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
         <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
 
         <!--Maven-->
