@@ -20,8 +20,6 @@ def toolVersionMaven = getToolVersionMaven()
 def toolVersionGit = getToolVersionGit()
 def mavenSettingsId = getMavenSettingsId()
 
-String cron_string = BRANCH_NAME == "master" ? "@hourly" : ""
-
 pipeline {
     agent {
         label "${hyperdriveSlaveLabel}"
