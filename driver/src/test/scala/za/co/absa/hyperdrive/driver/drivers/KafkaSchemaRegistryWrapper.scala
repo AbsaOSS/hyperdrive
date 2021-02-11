@@ -20,8 +20,9 @@ import java.util.Properties
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.logging.log4j.LogManager
-import org.testcontainers.containers.{GenericContainer, KafkaContainer, Network}
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.{GenericContainer, KafkaContainer, Network}
+import org.testcontainers.utility.DockerImageName
 
 case class SchemaRegistryContainer(dockerImageName: String) extends GenericContainer[SchemaRegistryContainer](dockerImageName)
 
@@ -37,7 +38,8 @@ class KafkaSchemaRegistryWrapper {
   logger.info(s"Created network with id ${commonNetwork.getId}")
 
   private def startKafka(network: Network): KafkaContainer = {
-    val kafka = new KafkaContainer(confluentPlatformVersion).withNetwork(network)
+    val kafka = new KafkaContainer(DockerImageName.parse(s"confluentinc/cp-kafka:$confluentPlatformVersion"))
+      .withNetwork(network)
     kafka.start()
     kafka
   }

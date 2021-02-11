@@ -27,13 +27,14 @@ import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
 import org.scalatest.{AppendedClues, BeforeAndAfter, FlatSpec, Matchers}
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.utility.DockerImageName
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter with AppendedClues {
 
   private val confluentPlatformVersion = "5.3.4" // should be same as kafka.avro.serializer.version property in pom file
-  private val kafka = new KafkaContainer(confluentPlatformVersion)
+  private val kafka = new KafkaContainer(DockerImageName.parse(s"confluentinc/cp-kafka:$confluentPlatformVersion"))
   private val kafkaSufficientTimeout = Duration.ofSeconds(5L)
   private val kafkaInsufficientTimeout = Duration.ofMillis(1L)
   private val topic = "test-topic"

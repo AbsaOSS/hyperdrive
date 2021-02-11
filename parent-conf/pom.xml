@@ -65,7 +65,7 @@
         <kafka.spark.version>0-10</kafka.spark.version>
         <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
         <spark.sql.mongo.version>2.4.2</spark.sql.mongo.version>
-        <testcontainers.kafka.version>1.12.4</testcontainers.kafka.version>
+        <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
         <!--Spark-->
@@ -97,10 +97,10 @@
     <dependencies>
         <!--Enforced dependency versions-->
         <!--Jackson Databind-->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--        </dependency>-->
         <!--Avro-->
         <dependency>
             <groupId>org.apache.avro</groupId>
@@ -163,11 +163,11 @@
         <dependencies>
             <!--Enforced dependency versions-->
             <!--Jackson Databind-->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${fasterxml.jackson.databind.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--                <artifactId>jackson-databind</artifactId>-->
+<!--                <version>${fasterxml.jackson.databind.version}</version>-->
+<!--            </dependency>-->
             <!--Avro-->
             <dependency>
                 <groupId>org.apache.avro</groupId>
