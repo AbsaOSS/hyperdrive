@@ -49,7 +49,7 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
       .outputMode(OutputMode.Append())
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
       .options(options)
-      .foreachBatch((df, batchId) => {
+      .foreachBatch((df: DataFrame, batchId: Long) => {
         logger.info(s"Writing batchId: $batchId")
         df.write
           .mode(SaveMode.Append)
