@@ -39,7 +39,6 @@
 
     <properties>
         <!--Enforced versions-->
-        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version> <!--Same as Spark uses-->
         <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
 
         <!--Maven-->
@@ -96,11 +95,6 @@
 
     <dependencies>
         <!--Enforced dependency versions-->
-        <!--Jackson Databind-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--        </dependency>-->
         <!--Avro-->
         <dependency>
             <groupId>org.apache.avro</groupId>
@@ -162,12 +156,6 @@
 
         <dependencies>
             <!--Enforced dependency versions-->
-            <!--Jackson Databind-->
-<!--            <dependency>-->
-<!--                <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--                <artifactId>jackson-databind</artifactId>-->
-<!--                <version>${fasterxml.jackson.databind.version}</version>-->
-<!--            </dependency>-->
             <!--Avro-->
             <dependency>
                 <groupId>org.apache.avro</groupId>
