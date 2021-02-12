@@ -40,6 +40,7 @@
     <properties>
         <!--Enforced versions-->
         <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
+        <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -99,6 +100,10 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.paranamer</groupId>
+            <artifactId>paranamer</artifactId>
         </dependency>
         <!--END Enforced dependency versions-->
 
@@ -162,6 +167,12 @@
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.thoughtworks.paranamer</groupId>
+                <artifactId>paranamer</artifactId>
+                <version>${paranamer.version}</version>
+            </dependency>
+
             <!--END Enforced dependency versions-->
 
             <!--ABRiS-->
@@ -326,6 +337,7 @@
                 <version>${scala.maven.plugin.version}</version>
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
+                    <addScalacArgs>-target:jvm-1.8</addScalacArgs>
                 </configuration>
                 <executions>
                     <execution>
