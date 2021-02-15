@@ -21,7 +21,6 @@
     <artifactId>hyperdrive_2.12</artifactId>
     <packaging>pom</packaging>
     <version>4.1.1-SNAPSHOT</version>
-    <name>hyperdrive</name>
     <description>Hyperdrive is a configurable and scalable ingestion platform that allows data movement and
         transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
     </description>
@@ -93,7 +92,6 @@
 
     <properties>
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
-        <directory.maven.plugin.version>0.1</directory.maven.plugin.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <scala.cross.build.maven.plugin.version>0.2.1</scala.cross.build.maven.plugin.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
@@ -114,27 +112,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.commonjava.maven.plugins</groupId>
-                <artifactId>directory-maven-plugin</artifactId>
-                <version>${directory.maven.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>directories</id>
-                        <goals>
-                            <goal>directory-of</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                        <configuration>
-                            <property>root.dir</property>
-                            <project>
-                                <groupId>za.co.absa.hyperdrive</groupId>
-                                <artifactId>hyperdrive</artifactId>
-                            </project>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

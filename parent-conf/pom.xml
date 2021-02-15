@@ -410,7 +410,7 @@
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
                     <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
-                    <configLocation>${root.dir}/scalastyle-config.xml</configLocation>
+                    <configLocation>${project.basedir}/../scalastyle-config.xml</configLocation>
                     <outputFile>${project.basedir}/target/scalastyle-output.xml</outputFile>
                 </configuration>
                 <executions>
