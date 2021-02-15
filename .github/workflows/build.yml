@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         scala: [ 2.11, 2.12 ]
-    name: Build Scala ${{ matrix.scala }}, Spark 2.4
+    name: Scala ${{ matrix.scala }}, Spark 2.4
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
