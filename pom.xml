@@ -18,7 +18,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>za.co.absa.hyperdrive</groupId>
-    <artifactId>hyperdrive</artifactId>
+    <artifactId>hyperdrive_2.12</artifactId>
     <packaging>pom</packaging>
     <version>4.1.1-SNAPSHOT</version>
     <name>hyperdrive</name>

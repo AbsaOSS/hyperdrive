@@ -36,6 +36,7 @@
         <!-- Build -->
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
         <scala.version>${scala.version}</scala.version>
+        <scala.compat.version>${scala.compat.version}</scala.compat.version>
         <scala.maven.plugin.version>${scala.maven.plugin.version}</scala.maven.plugin.version>
 
         <!-- Tests -->
@@ -48,7 +49,7 @@
         <!-- Hyperdrive -->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>api</artifactId>
+            <artifactId>api_\${scala.compat.version}</artifactId>
             <version>\${hyperdrive.version}</version>
             <scope>provided</scope>
         </dependency>
