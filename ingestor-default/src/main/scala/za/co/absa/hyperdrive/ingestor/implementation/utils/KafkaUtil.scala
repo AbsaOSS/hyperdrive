@@ -16,12 +16,12 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import java.time.Duration
-
 import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{CommitLog, Offset, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
+import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -133,7 +133,7 @@ private[hyperdrive] object KafkaUtil {
     offsetSeqOpt.flatMap(parseOffsetSeq)
   }
 
-  private def parseOffsetSeq(offsetSeq: Seq[Option[Offset]]) = {
+  private def parseOffsetSeq(offsetSeq: Seq[Option[CompatibleOffset.Type]]) = {
     if (offsetSeq.size == 1) {
       if (offsetSeq.head.isDefined) {
         Some(KafkaSourceOffsetProxy.getPartitionOffsets(offsetSeq.head.get))
