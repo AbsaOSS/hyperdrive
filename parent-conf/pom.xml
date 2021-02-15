@@ -257,14 +257,6 @@
                 <version>${mongodb.driver.version}</version>
             </dependency>
 
-            <!--Embedded Mongo for testing-->
-            <dependency>
-                <groupId>de.flapdoodle.embed</groupId>
-                <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                <version>${embedded.mongo.version}</version>
-            </dependency>
-
-
             <!--Configurations-->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -295,6 +287,7 @@
                 <artifactId>commons_${scala.compat.version}</artifactId>
                 <version>${absa.commons.version}</version>
             </dependency>
+            <!--Embedded Mongo for testing-->
             <dependency>
                 <groupId>de.flapdoodle.embed</groupId>
                 <artifactId>de.flapdoodle.embed.mongo</artifactId>
