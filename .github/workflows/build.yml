@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scala: [ 2.11, 2.12 ]
+    name: Build Scala ${{ matrix.scala }}, Spark 2.4
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-${{ matrix.scala }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.scala }}-
+      - name: Switch scala version
+        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }}
+      - name: Build and run tests
+        run: mvn clean test -Pscala-${{ matrix.scala }},all-tests
