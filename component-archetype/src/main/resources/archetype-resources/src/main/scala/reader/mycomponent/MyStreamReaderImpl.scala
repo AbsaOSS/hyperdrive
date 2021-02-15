@@ -19,8 +19,7 @@ package ${package}.reader.mycomponent
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.streaming.DataStreamReader
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
@@ -30,7 +29,7 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
  */
 
 private[reader] class MyStreamReaderImpl() extends StreamReader {
-  override def read(spark: SparkSession): DataStreamReader = ???
+  override def read(spark: SparkSession): DataFrame = ???
 }
 
 object MyStreamReaderImpl extends StreamReaderFactory with MyStreamReaderImplAttributes {
