@@ -15,12 +15,11 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
-import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat
 import org.apache.spark.sql.execution.datasources.{DataSource, HadoopFsRelation}
-import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
+import za.co.absa.hyperdrive.compatibility.api.SparkCompatibilityProvider
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 import scala.util.{Failure, Success, Try}
@@ -58,7 +57,7 @@ object MetadataLogUtil {
   }
 
   private def getMetadataLogFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-      val metadataLogFileIndex = new MetadataLogFileIndex(spark, new Path(rootPath), None)
+      val metadataLogFileIndex = SparkCompatibilityProvider.createMetadataLogFileIndex(spark, rootPath)
       val parquetFilesArr = metadataLogFileIndex.inputFiles
       val parquetFiles = parquetFilesArr.toSet
       if (parquetFiles.size != parquetFilesArr.length) {

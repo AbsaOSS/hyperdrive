@@ -38,6 +38,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility-api_2.12</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!--ABRiS-->
         <dependency>
             <groupId>io.confluent</groupId>

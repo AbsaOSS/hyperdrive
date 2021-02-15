@@ -36,6 +36,9 @@
         <module>api</module>
         <module>ingestor-default</module>
         <module>shared</module>
+        <module>compatibility-api</module>
+        <module>compatibility_spark-2</module>
+        <module>compatibility_spark-3</module>
     </modules>
 
     <distributionManagement>
@@ -108,6 +111,12 @@
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
 
+        <!-- Spark -->
+        <spark_2.version>2.4.3</spark_2.version>
+        <spark_3.version>3.0.1</spark_3.version>
+        <spark.version>${spark_2.version}</spark.version>
+        <spark.compat.version>spark-2</spark.compat.version>
+
     </properties>
 
     <build>
@@ -152,6 +161,20 @@
             <properties>
                 <scala.compat.version>2.12</scala.compat.version>
                 <scala.version>${scala_2.12.version}</scala.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-2</id>
+            <properties>
+                <spark.compat.version>spark-2</spark.compat.version>
+                <spark.version>${spark_2.version}</spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3</id>
+            <properties>
+                <spark.compat.version>spark-3</spark.compat.version>
+                <spark.version>${spark_3.version}</spark.version>
             </properties>
         </profile>
 
