@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.compatibility.api
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
 
-trait SparkCompatibilityProvider {
+trait CompatibleSparkUtil {
   def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex
   def hasMetadata(spark: SparkSession, destination: String): Boolean
 }

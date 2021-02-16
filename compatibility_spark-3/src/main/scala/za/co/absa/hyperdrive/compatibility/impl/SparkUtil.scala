@@ -18,12 +18,12 @@ package za.co.absa.hyperdrive.compatibility.impl
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
-import za.co.absa.hyperdrive.compatibility.api.SparkCompatibilityProvider
+import za.co.absa.hyperdrive.compatibility.api.CompatibleSparkUtil
 
-object SparkCompatibilityUtil extends SparkCompatibilityProvider {
+object SparkUtil extends CompatibleSparkUtil {
   override def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex =
-    new MetadataLogFileIndex(spark, new Path(destination), None)
+    new MetadataLogFileIndex(spark, new Path(destination), Map.empty, None)
 
   override def hasMetadata(spark: SparkSession, destination: String): Boolean =
-    FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration)
+    FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration, spark.sessionState.conf)
 }

@@ -15,9 +15,15 @@
 
 package za.co.absa.hyperdrive.compatibility.provider
 
-import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
-import za.co.absa.hyperdrive.compatibility.impl.Offset
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
+import za.co.absa.hyperdrive.compatibility.api.CompatibleSparkUtil
+import za.co.absa.hyperdrive.compatibility.impl.SparkUtil
 
-object CompatibleOffset extends CompatibleOffset {
-  override type Type = Offset.Type
+object CompatibleSparkUtilProvider extends CompatibleSparkUtil {
+  def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex =
+    SparkUtil.createMetadataLogFileIndex(spark, destination)
+
+  def hasMetadata(spark: SparkSession, destination: String): Boolean =
+    SparkUtil.hasMetadata(spark, destination)
 }

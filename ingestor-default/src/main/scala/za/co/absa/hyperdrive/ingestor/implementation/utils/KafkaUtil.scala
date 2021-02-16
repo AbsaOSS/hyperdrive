@@ -21,7 +21,7 @@ import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
-import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffset
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffsetProvider
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -133,7 +133,7 @@ private[hyperdrive] object KafkaUtil {
     offsetSeqOpt.flatMap(parseOffsetSeq)
   }
 
-  private def parseOffsetSeq(offsetSeq: Seq[Option[CompatibleOffset.Type]]) = {
+  private def parseOffsetSeq(offsetSeq: Seq[Option[CompatibleOffsetProvider.Type]]) = {
     if (offsetSeq.size == 1) {
       if (offsetSeq.head.isDefined) {
         Some(KafkaSourceOffsetProxy.getPartitionOffsets(offsetSeq.head.get))
