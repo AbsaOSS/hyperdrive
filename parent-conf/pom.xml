@@ -64,8 +64,6 @@
         <kafka.version>2.1.1</kafka.version>
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
-        <spark.sql.mongo.version>2.4.2</spark.sql.mongo.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
@@ -247,7 +245,7 @@
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-                <version>${spark.sql.kafka.version}</version>
+                <version>${spark.version}</version>
             </dependency>
 
             <!-- MongoDb Spark connector -->

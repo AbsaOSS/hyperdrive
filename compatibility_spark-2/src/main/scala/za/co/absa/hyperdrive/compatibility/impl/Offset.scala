@@ -14,8 +14,8 @@
  */
 
 package za.co.absa.hyperdrive.compatibility.impl
-import org.apache.spark.sql.execution.streaming.Offset
+import org.apache.spark.sql.execution.streaming.{Offset => OffsetV1}
 
 object Offset {
-  type Type = Offset
+  type Type = OffsetV1
 }

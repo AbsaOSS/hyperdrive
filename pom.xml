@@ -116,6 +116,10 @@
         <spark_2.version>2.4.3</spark_2.version>
         <spark_3.version>3.0.1</spark_3.version>
         <spark.version>${spark_2.version}</spark.version>
+        <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
+        <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
+        <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
+
         <spark.compat.version>spark-2</spark.compat.version>
 
     </properties>
@@ -168,6 +172,7 @@
             <id>spark-2</id>
             <properties>
                 <spark.compat.version>spark-2</spark.compat.version>
+                <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
                 <spark.version>${spark_2.version}</spark.version>
             </properties>
         </profile>
@@ -175,6 +180,7 @@
             <id>spark-3</id>
             <properties>
                 <spark.compat.version>spark-3</spark.compat.version>
+                <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <spark.version>${spark_3.version}</spark.version>
             </properties>
         </profile>
