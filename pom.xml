@@ -38,8 +38,7 @@
         <module>shared</module>
         <module>compatibility-api</module>
         <module>compatibility-provider</module>
-        <module>compatibility_spark-2</module>
-        <module>compatibility_spark-3</module>
+        <module>compatibility_${spark.compat.version}</module>
     </modules>
 
     <distributionManagement>
