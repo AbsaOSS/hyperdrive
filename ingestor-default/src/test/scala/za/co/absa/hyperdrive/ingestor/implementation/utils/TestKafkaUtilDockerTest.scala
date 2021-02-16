@@ -207,7 +207,8 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val recordsPerPartition = (0 to partitions).map(p => new TopicPartition(topic, p) -> 4L).toMap
+    val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
+    val recordsPerPartition = topicPartitions.map(p => p -> 4L).toMap
     val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition)
     val values = actualRecords.map(_.value())
 
