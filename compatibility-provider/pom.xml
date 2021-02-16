@@ -24,6 +24,20 @@
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>compatibility-api_${scala.compat.version}</artifactId>
+    <artifactId>compatibility-provider_${scala.compat.version}</artifactId>
     <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility-api_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility_${spark.compat.version}_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
 </project>

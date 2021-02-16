@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.api
+package za.co.absa.hyperdrive.compatibility.provider
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
+import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
+import za.co.absa.hyperdrive.compatibility.impl.Offset
 
-trait SparkCompatibilityProvider {
-  def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex
-  def hasMetadata(spark: SparkSession, destination: String): Boolean
+object CompatibleOffset extends CompatibleOffset {
+  override type Type = Offset.Type
 }

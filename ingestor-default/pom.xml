@@ -40,7 +40,7 @@
 
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>compatibility-api_2.12</artifactId>
+            <artifactId>compatibility-provider_${scala.compat.version}</artifactId>
             <version>${project.version}</version>
         </dependency>
 

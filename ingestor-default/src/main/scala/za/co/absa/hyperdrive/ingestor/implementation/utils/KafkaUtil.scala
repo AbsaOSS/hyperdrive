@@ -19,9 +19,9 @@ import java.time.Duration
 import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.execution.streaming.{CommitLog, Offset, OffsetSeqLog}
+import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
-import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffset
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

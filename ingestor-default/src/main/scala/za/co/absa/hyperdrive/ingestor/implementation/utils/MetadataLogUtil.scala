@@ -19,7 +19,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat
 import org.apache.spark.sql.execution.datasources.{DataSource, HadoopFsRelation}
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
-import za.co.absa.hyperdrive.compatibility.api.SparkCompatibilityProvider
+import za.co.absa.hyperdrive.compatibility.provider.SparkCompatibilityProvider
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 import scala.util.{Failure, Success, Try}

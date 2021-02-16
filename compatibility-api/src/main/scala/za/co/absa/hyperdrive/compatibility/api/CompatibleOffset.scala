@@ -14,10 +14,7 @@
  */
 
 package za.co.absa.hyperdrive.compatibility.api
-import za.co.absa.hyperdrive.compatibility.impl.Offset
 
 trait CompatibleOffset {
-  type Type = Offset.Type
+  type Type
 }
-
-object CompatibleOffset extends CompatibleOffset

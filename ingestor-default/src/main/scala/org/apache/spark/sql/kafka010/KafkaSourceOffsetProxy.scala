@@ -17,7 +17,7 @@ package org.apache.spark.sql.kafka010
 
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.sql.execution.streaming.Offset
-import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffset
 
 object KafkaSourceOffsetProxy {
   def getPartitionOffsets(offset: CompatibleOffset.Type): Map[TopicPartition, Long] = {
