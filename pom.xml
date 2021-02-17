@@ -120,10 +120,10 @@
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
 
         <!-- Default versions -->
+        <spark.compat.version>spark-2</spark.compat.version>
         <spark.version>${spark_2.version}</spark.version>
         <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
         <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
-        <spark.compat.version>spark-2</spark.compat.version>
 
     </properties>
 
@@ -175,16 +175,18 @@
             <id>spark-2</id>
             <properties>
                 <spark.compat.version>spark-2</spark.compat.version>
-                <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
                 <spark.version>${spark_2.version}</spark.version>
+                <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
+                <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
             </properties>
         </profile>
         <profile>
             <id>spark-3</id>
             <properties>
                 <spark.compat.version>spark-3</spark.compat.version>
-                <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <spark.version>${spark_3.version}</spark.version>
+                <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
+                <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
             </properties>
         </profile>
 
