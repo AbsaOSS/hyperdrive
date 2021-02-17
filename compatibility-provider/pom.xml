@@ -24,7 +24,7 @@
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>compatibility-provider_${scala.compat.version}</artifactId>
+    <artifactId>compatibility-provider_2.12</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
