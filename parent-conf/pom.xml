@@ -67,7 +67,6 @@
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
-        <mongodb.driver.version>2.7.0</mongodb.driver.version>
         <embedded.mongo.version>2.1.2</embedded.mongo.version>
 
         <!--Mockito-->
