@@ -49,7 +49,7 @@
         <!-- Hyperdrive -->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
-            <artifactId>api</artifactId>
+            <artifactId>api_\${scala.compat.version}</artifactId>
             <version>\${hyperdrive.version}</version>
             <scope>provided</scope>
         </dependency>

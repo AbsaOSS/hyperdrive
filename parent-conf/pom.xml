@@ -16,7 +16,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>hyperdrive</artifactId>
+        <artifactId>hyperdrive_2.12</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
         <version>4.1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -24,7 +24,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 
-    <artifactId>parent-conf</artifactId>
+    <artifactId>parent-conf_2.12</artifactId>
 
     <repositories>
         <!-- Used for ABRiS-->
@@ -40,6 +40,7 @@
     <properties>
         <!--Enforced versions-->
         <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
+        <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -99,6 +100,10 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.paranamer</groupId>
+            <artifactId>paranamer</artifactId>
         </dependency>
         <!--END Enforced dependency versions-->
 
@@ -162,6 +167,12 @@
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.thoughtworks.paranamer</groupId>
+                <artifactId>paranamer</artifactId>
+                <version>${paranamer.version}</version>
+            </dependency>
+
             <!--END Enforced dependency versions-->
 
             <!--ABRiS-->
@@ -326,6 +337,7 @@
                 <version>${scala.maven.plugin.version}</version>
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
+                    <addScalacArgs>-target:jvm-1.8</addScalacArgs>
                 </configuration>
                 <executions>
                     <execution>
@@ -398,7 +410,7 @@
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
                     <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
-                    <configLocation>${root.dir}/scalastyle-config.xml</configLocation>
+                    <configLocation>${project.basedir}/../scalastyle-config.xml</configLocation>
                     <outputFile>${project.basedir}/target/scalastyle-output.xml</outputFile>
                 </configuration>
                 <executions>

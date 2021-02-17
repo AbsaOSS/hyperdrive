@@ -25,7 +25,7 @@ This is a Maven archetype for creating custom Hyperdrive components.
 
 Download the artifact to your local maven repository
 ```
-mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:4.0.0 
+mvn dependency:get -Dartifact=za.co.absa.hyperdrive:component-archetype:4.2.0 
 ```
 
 Update the local archetype catalog
@@ -37,8 +37,8 @@ Generate a skeleton project by executing the following command
 ```
 mvn archetype:generate \
     -DarchetypeGroupId=za.co.absa.hyperdrive \
-    -DarchetypeArtifactId=component-archetype \
-    -DarchetypeVersion=4.0.0 \
+    -DarchetypeArtifactId=component-archetype_2.12 \
+    -DarchetypeVersion=4.2.0 \
     -DgroupId=<groupId> \
     -DartifactId=<artifactId> \
     -Dversion=<artifact-version> 
@@ -46,6 +46,8 @@ mvn archetype:generate \
 - `<groupId>` is your group id, e.g. com.acme,
 - `<artifactId>` is the name for your artifact, e.g. mytransformer,
 - `<artifact-version>` is the version number of the artifact, e.g. 0.1.0-SNAPSHOT
+
+Hint: For Scala 2.11, use `-DarchetypeArtifactId=component-archetype_2.11`.
 
 ## Implementing a Hyperdrive component
 
