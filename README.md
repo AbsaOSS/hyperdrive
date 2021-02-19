@@ -369,8 +369,8 @@ mvn clean install -Pscala-2.12,spark-3
 ```
 - Scala 2.11, Spark 2.4
 ```
-mvn scala-cross-build:change-version -Pscala-2.11,spark-2
-mvn clean install -Pscala-2.11,spark-2
+mvn scala-cross-build:change-version -Pscala-2.11
+mvn clean install -Pscala-2.11
 mvn scala-cross-build:restore-version
 ```
 

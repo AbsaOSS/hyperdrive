@@ -29,6 +29,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-
       - name: Switch scala version
-        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
+        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }}
       - name: Build and run tests
         run: mvn clean test -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests
