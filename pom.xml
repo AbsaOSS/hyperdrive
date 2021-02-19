@@ -37,6 +37,8 @@
         <module>shared</module>
         <module>compatibility-api</module>
         <module>compatibility-provider</module>
+        <module>compatibility_spark-2</module>
+        <module>hyperdrive-release_spark-2</module>
     </modules>
 
     <distributionManagement>
@@ -118,10 +120,10 @@
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
 
         <!-- Default versions -->
-        <spark.compat.version />
-        <spark.version />
-        <spark.sql.mongo.version />
-        <mongodb.driver.version />
+        <spark.compat.version>spark-2</spark.compat.version>
+        <spark.version>${spark_2.version}</spark.version>
+        <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
+        <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
 
     </properties>
 
@@ -168,22 +170,6 @@
                 <scala.compat.version>2.12</scala.compat.version>
                 <scala.version>${scala_2.12.version}</scala.version>
             </properties>
-        </profile>
-        <profile>
-            <id>spark-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <spark.compat.version>spark-2</spark.compat.version>
-                <spark.version>${spark_2.version}</spark.version>
-                <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
-                <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
-            </properties>
-            <modules>
-                <module>compatibility_spark-2</module>
-                <module>hyperdrive-release_spark-2</module>
-            </modules>
         </profile>
         <profile>
             <id>spark-3</id>
