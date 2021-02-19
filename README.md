@@ -359,14 +359,19 @@ A key feature of the Workflow Manager are triggers, which define when an ingesti
 
 
 ## How to build
-- Scala 2.12 (default)
+- Scala 2.12, Spark 2.4 (default)
 ```
 mvn clean install
 ```
-- Scala 2.11
+- Scala 2.12, Spark 3.0
 ```
-mvn scala-cross-build:change-version -Pscala-2.11
-mvn clean install -Pscala-2.11
+mvn clean install -Pscala-2.12,spark-3
+```
+- Scala 2.11, Spark 2.4
+```
+mvn scala-cross-build:change-version -Pscala-2.11,spark-2
+mvn clean install -Pscala-2.11,spark-2
+mvn scala-cross-build:restore-version
 ```
 
 ### E2E tests with Docker
