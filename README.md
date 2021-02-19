@@ -356,3 +356,22 @@ writer.kafka.schema.registry.url=${transformer.[avro.decoder].schema.registry.ur
 Hyperdrive ingestions may be triggered using the Workflow Manager, which is developed in a separate repository: https://github.com/AbsaOSS/hyperdrive-trigger
 
 A key feature of the Workflow Manager are triggers, which define when an ingestion should be executed and how it should be requested. The workflow manager supports cron-based triggers as well as triggers that listen to a notification topic.
+
+
+## How to build
+- Scala 2.12 (default)
+```
+mvn clean install
+```
+- Scala 2.11
+```
+mvn scala-cross-build:change-version -Pscala-2.11
+mvn clean install -Pscala-2.11
+```
+
+### E2E tests with Docker
+E2E tests require a running Docker instance on the executing machine and are not executed by default.
+To execute them, build using the profile `all-tests`
+```
+mvn clean test -Pall-tests
+```

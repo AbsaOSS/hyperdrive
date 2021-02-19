@@ -32,6 +32,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Versions -->
         <hyperdrive.version>${project.version}</hyperdrive.version>
+        <spark.version>${spark.version}</spark.version>
 
         <!-- Build -->
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
@@ -40,7 +41,6 @@
         <scala.maven.plugin.version>${scala.maven.plugin.version}</scala.maven.plugin.version>
 
         <!-- Tests -->
-        <scala.compat.version>${scala.compat.version}</scala.compat.version>
         <scalatest.version>${scalatest.version}</scalatest.version>
         <scalatest.maven.version>${scalatest.maven.version}</scalatest.maven.version>
     </properties>
@@ -54,6 +54,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Spark -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_\${scala.compat.version}</artifactId>
+            <version>\${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_\${scala.compat.version}</artifactId>
+            <version>\${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Tests -->
         <dependency>
             <groupId>org.scalatest</groupId>
