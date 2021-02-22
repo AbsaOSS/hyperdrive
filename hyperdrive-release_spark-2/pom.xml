@@ -30,6 +30,17 @@
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>driver_${scala.compat.version}</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>za.co.absa.hyperdrive</groupId>
+                    <artifactId>compatibility_spark-3_${scala.compat.version}</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility_spark-2_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
