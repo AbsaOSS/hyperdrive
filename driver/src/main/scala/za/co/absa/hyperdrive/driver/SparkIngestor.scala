@@ -31,9 +31,9 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 /**
-  * This object is responsible for running the ingestion job by using the components it
-  * receives upon invocation.
-  */
+ * This object is responsible for running the ingestion job by using the components it
+ * receives upon invocation.
+ */
 class SparkIngestor(val spark: SparkSession,
                     val terminationMethod: TerminationMethod,
                     val awaitTerminationTimeout: Option[Long],
@@ -42,18 +42,15 @@ class SparkIngestor(val spark: SparkSession,
   private val logger = LogManager.getLogger
 
   /**
-    * This method performs the ingestion according to the components it receives.
-    *
-    * THIS METHOD IS BLOCKING, which is achieved by invoking "processAllAvailable" on the streaming query, thus, if you
-    * do not want a blocking behaviour, make sure you invoke it from inside a separate thread (or similar approach).
-    *
-    * IF this method is invoked to ingest from a continuous source (e.g. a topic that is receiving data no-stop), it WILL
-    * BLOCK UNTIL THERE IS NO MORE DATA because of how "processAllAvailable" works.
-    *
-    * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
-    * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
-    * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
-    */
+   * This method performs the ingestion according to the components it receives.
+   *
+   * THIS METHOD IS BLOCKING, which is achieved by invoking "awaitTermination" on the streaming query, thus, if you
+   * do not want a blocking behaviour, make sure you invoke it from inside a separate thread (or similar approach).
+   *
+   * @param streamReader       [[StreamReader]] implementation responsible for connecting to the source stream.
+   * @param streamTransformers List of [[StreamTransformer]] implementation responsible for performing any transformations on the stream data (e.g. conformance)
+   * @param streamWriter       [[StreamWriter]] implementation responsible for defining how and where the stream will be sent.
+   */
   @throws(classOf[IllegalArgumentException])
   @throws(classOf[IngestionStartException])
   @throws(classOf[IngestionException])
@@ -77,7 +74,7 @@ class SparkIngestor(val spark: SparkSession,
     try {
       terminationMethod match {
         case ProcessAllAvailable =>
-          ingestionQuery.processAllAvailable() // processes everything available at the source and stops after that
+          ingestionQuery.processAllAvailable()
           ingestionQuery.stop()
         case AwaitTermination =>
           awaitTerminationTimeout match {
