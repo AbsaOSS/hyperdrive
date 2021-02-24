@@ -119,7 +119,7 @@ object SparkIngestor extends SparkIngestorAttributes {
   private def getTerminationMethod(conf: Configuration): TerminationMethod = {
     ConfigUtils.getOrNone(KEY_TERMINATION_METHOD, conf) match {
       case Some(name) => parseTerminationMethod(name)
-      case None => ProcessAllAvailable
+      case None => AwaitTermination
     }
   }
 

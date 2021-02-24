@@ -81,7 +81,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     when(streamReader.read(any[SparkSession])).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
     when(streamWriter.write(dataFrame)).thenReturn(streamingQuery)
-    when(streamingQuery.stop()).thenThrow(classOf[RuntimeException])
+    when(streamingQuery.awaitTermination()).thenThrow(classOf[RuntimeException])
     assertThrows[IngestionException](sparkIngestor.ingest(streamReader, Seq(streamTransformer), streamWriter))
   }
 
@@ -97,8 +97,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
     inOrderCheck.verify(streamReader).read(any[SparkSession])
     inOrderCheck.verify(streamTransformer).transform(dataFrame)
     inOrderCheck.verify(streamWriter).write(dataFrame)
-    verify(streamingQuery).processAllAvailable
-    verify(streamingQuery).stop
+    verify(streamingQuery).awaitTermination()
   }
 
   it should "use the configured app name" in {
@@ -118,7 +117,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   it should "use terminationMethod awaitTermination if configured" in {
     val config = new BaseConfiguration
     config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
-    config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", AwaitTermination)
     val sparkIngestor = SparkIngestor(config)
     when(streamReader.read(any[SparkSession])).thenReturn(dataFrame)
     when(streamTransformer.transform(dataFrame)).thenReturn(dataFrame)
@@ -132,7 +130,6 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   it should "use timeout if configured with terminationMethod awaitTermination" in {
     val config = new BaseConfiguration
     config.addProperty(SparkIngestor.KEY_APP_NAME, "my-spark-app")
-    config.addProperty(s"${SparkIngestor.KEY_TERMINATION_METHOD}", AwaitTermination)
     config.addProperty(s"${SparkIngestor.KEY_AWAIT_TERMINATION_TIMEOUT}", "10000")
     val sparkIngestor = SparkIngestor(config)
     when(streamReader.read(any[SparkSession])).thenReturn(dataFrame)
