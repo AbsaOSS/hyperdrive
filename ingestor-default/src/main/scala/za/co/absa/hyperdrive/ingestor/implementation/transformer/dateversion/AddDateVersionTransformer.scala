@@ -15,18 +15,17 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
 import org.apache.commons.configuration2.Configuration
-import org.apache.hadoop.fs.Path
 import org.apache.logging.log4j.LogManager
-import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
 import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
+
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 private[transformer] class AddDateVersionTransformer(val reportDate: String, val destination: String) extends StreamTransformer {
 
@@ -58,8 +57,8 @@ private[transformer] class AddDateVersionTransformer(val reportDate: String, val
   }
 
   private def noCommittedParquetFilesExist(spark: SparkSession): Boolean = {
-    val fileCatalog = new MetadataLogFileIndex(spark, new Path(destination), None)
-    !FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration) || fileCatalog.allFiles().isEmpty
+    val fileCatalog = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, destination)
+    !CompatibleSparkUtilProvider.hasMetadata(spark, destination) || fileCatalog.allFiles().isEmpty
   }
 }
 

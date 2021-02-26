@@ -40,6 +40,7 @@
     <properties>
         <!--Enforced versions-->
         <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
+        <commons.text.version>1.8</commons.text.version>
         <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
@@ -63,15 +64,9 @@
         <kafka.version>2.1.1</kafka.version>
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <spark.sql.kafka.version>2.4.3</spark.sql.kafka.version>
-        <spark.sql.mongo.version>2.4.2</spark.sql.mongo.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
         <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
-        <!--Spark-->
-        <spark.version>2.4.3</spark.version>
-
-        <mongodb.driver.version>2.7.0</mongodb.driver.version>
         <embedded.mongo.version>2.1.2</embedded.mongo.version>
 
         <!--Mockito-->
@@ -85,7 +80,7 @@
         <maven.surefire.plugin.version>3.0.0-M3</maven.surefire.plugin.version>
 
         <!--Configurations-->
-        <commons.configuration2.version>2.7</commons.configuration2.version>
+        <commons.configuration2.version>2.4</commons.configuration2.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
@@ -100,6 +95,10 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
         </dependency>
         <dependency>
             <groupId>com.thoughtworks.paranamer</groupId>
@@ -166,6 +165,11 @@
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons.text.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.paranamer</groupId>
@@ -240,7 +244,7 @@
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-                <version>${spark.sql.kafka.version}</version>
+                <version>${spark.version}</version>
             </dependency>
 
             <!-- MongoDb Spark connector -->
@@ -256,14 +260,6 @@
                 <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
                 <version>${mongodb.driver.version}</version>
             </dependency>
-
-            <!--Embedded Mongo for testing-->
-            <dependency>
-                <groupId>de.flapdoodle.embed</groupId>
-                <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                <version>${embedded.mongo.version}</version>
-            </dependency>
-
 
             <!--Configurations-->
             <dependency>
@@ -295,6 +291,7 @@
                 <artifactId>commons_${scala.compat.version}</artifactId>
                 <version>${absa.commons.version}</version>
             </dependency>
+            <!--Embedded Mongo for testing-->
             <dependency>
                 <groupId>de.flapdoodle.embed</groupId>
                 <artifactId>de.flapdoodle.embed.mongo</artifactId>

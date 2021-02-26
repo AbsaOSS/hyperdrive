@@ -11,7 +11,11 @@ jobs:
       fail-fast: false
       matrix:
         scala: [ 2.11, 2.12 ]
-    name: Scala ${{ matrix.scala }}, Spark 2.4
+        spark: [ 2, 3 ]
+        exclude:
+          - scala: 2.11
+            spark: 3
+    name: Scala ${{ matrix.scala }}, Spark ${{ matrix.spark }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -21,10 +25,10 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-${{ matrix.scala }}-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.scala }}-
+            ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-
       - name: Switch scala version
-        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }}
+        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
       - name: Build and run tests
-        run: mvn clean test -Pscala-${{ matrix.scala }},all-tests
+        run: mvn clean test -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests

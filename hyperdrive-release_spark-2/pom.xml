@@ -23,12 +23,23 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>hyperdrive-release_2.12</artifactId>
+    <artifactId>hyperdrive-release_spark-2_2.12</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>driver_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>za.co.absa.hyperdrive</groupId>
+                    <artifactId>compatibility_spark-3_${scala.compat.version}</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility_spark-2_${scala.compat.version}</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

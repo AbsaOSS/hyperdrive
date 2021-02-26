@@ -38,6 +38,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>compatibility-provider_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!--ABRiS-->
         <dependency>
             <groupId>io.confluent</groupId>
