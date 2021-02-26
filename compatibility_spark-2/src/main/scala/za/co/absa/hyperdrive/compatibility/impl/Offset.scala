@@ -15,7 +15,8 @@
 
 package za.co.absa.hyperdrive.compatibility.impl
 import org.apache.spark.sql.execution.streaming.{Offset => OffsetV1}
+import za.co.absa.hyperdrive.compatibility.api.CompatibleOffset
 
-object Offset {
+object Offset extends CompatibleOffset {
   type Type = OffsetV1
 }
