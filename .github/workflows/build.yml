@@ -28,6 +28,8 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-
+      - name: License check
+        run: mvn clean validate -Plicense-check,spark-2,spark-3,scala-2.12
       - name: Switch scala version
         run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
       - name: Build and run tests
