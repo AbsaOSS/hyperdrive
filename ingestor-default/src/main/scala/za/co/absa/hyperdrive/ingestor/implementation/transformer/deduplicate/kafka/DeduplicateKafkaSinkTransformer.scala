@@ -17,15 +17,14 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.ka
 
 import java.time.Duration
 import java.util.{Properties, UUID}
-
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{ConfluentAvroDecodingTransformer, ConfluentAvroEncodingTransformer}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.KafkaUtil
-
 import org.apache.avro.generic.GenericRecord
 import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, KafkaConsumer}
+import org.apache.kafka.common.TopicPartition
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
@@ -74,9 +73,19 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     implicit val kafkaConsumerTimeoutImpl: Duration = kafkaConsumerTimeout
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
     val latestCommittedOffsets = KafkaUtil.getLatestCommittedOffset(offsetLog, commitLog)
+
+    logger.info(s"Latest committed source offsets for ${readerTopic}: ${offsetsToString(latestCommittedOffsets)}" )
+
     KafkaUtil.seekToOffsetsOrBeginning(sourceConsumer, readerTopic, latestCommittedOffsets)
 
+    val sourcePartitions = KafkaUtil.getTopicPartitions(sourceConsumer, readerTopic)
+    val currentPositions = sourcePartitions.map { tp => s"${tp.partition()}: ${sourceConsumer.position(tp)}"}.reduce(_ + ", " + _)
+    logger.info(s"Reset source offsets to ${currentPositions}")
+
     val latestOffsetsOpt = KafkaUtil.getLatestOffset(offsetLog)
+
+    logger.info(s"Latest source offsets for ${readerTopic}: ${offsetsToString(latestOffsetsOpt)}" )
+
     val sourceRecords = latestOffsetsOpt.map(latestOffset => consumeAndClose(sourceConsumer,
       consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset))).getOrElse(Seq())
     val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
@@ -86,12 +95,23 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     val recordsPerPartition = sinkTopicPartitions.map(p => p -> sourceRecords.size.toLong).toMap
     val latestSinkRecords = consumeAndClose(sinkConsumer, consumer =>
       KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition))
+    val offsetsByPartition = latestSinkRecords.map(r => r.partition() -> r.offset())
+      .groupBy(_._1)
+      .mapValues(_.map(_._2))
+    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduce(_ + ", " + _)
+    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduce(_ + ", " + _)
+    logger.info(s"Consumed ${latestSinkRecords.size} sink records. First three offsets: ${firstOffsets}. Last three offsets: ${lastOffsets}")
     val publishedIds = latestSinkRecords.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
 
     val duplicatedIds = sourceIds.intersect(publishedIds)
+    logger.info(s"Found ${duplicatedIds.size} duplicated ids. First three: ${duplicatedIds.take(3)}. Last three: ${duplicatedIds.takeRight(3)}")
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
     val idColumns = sourceIdColumnNames.map(col)
     dataFrame.filter(not(struct(idColumns: _*).isInCollection(duplicatedIdsLit)))
+  }
+
+  private def offsetsToString(offsets: Option[Map[TopicPartition, Long]]) = {
+    offsets.map(_.map { case (tp, offset) => s"${tp.partition()}: $offset"}.reduce(_ + ", " + _)).getOrElse("-")
   }
 
   private def extractIdFieldsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
