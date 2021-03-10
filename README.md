@@ -99,6 +99,7 @@ to identify which configuration options belong to a certain transformer instance
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `ingestor.spark.app.name` | Yes | User-defined name of the Spark application. See Spark property `spark.app.name` |
+| `ingestor.spark.termination.method` | No | Either `processAllAvailable` (stop query when no more messages are incoming) or `awaitTermination` (stop query on signal, e.g. Ctrl-C). Default: `awaitTermination`. See also [Combination of trigger and termination method](#combination-of-trigger-and-termination-method) |
 | `ingestor.spark.await.termination.timeout` | No | Timeout in milliseconds. Stops query when timeout is reached. This option is only valid with termination method `awaitTermination` |
 
 #### Settings for built-in components
@@ -322,11 +323,13 @@ More on these options: https://docs.mongodb.com/spark-connector/current/configur
 
 #### Behavior of Triggers
 
-| Trigger (`writer.common.trigger.type`) | Timeout (`ingestor.spark.termination.timeout`) | Runtime | Details |
+| Trigger (`writer.common.trigger.type`) | Termination method (`ingestor.spark.termination.method`) | Runtime | Details |
 | :--- | :--- | :--- | :--- |
-| Once | No timeout | Limited | Consumes all data that is available at the beginning of the micro-batch. The query processes exactly one micro-batch and stops then, even if more data would be available at the end of the micro-batch. |
-| ProcessingTime | With timeout | Limited | Consumes data in micro-batches and only stops when the timeout is reached or the query is killed. |
-| ProcessingTime | No timeout | Long-running | Consumes data in micro-batches and only stops when the query is killed. |
+| Once | AwaitTermination or ProcessAllAvailable | Limited | Consumes all data that is available at the beginning of the micro-batch. The query processes exactly one micro-batch and stops then, even if more data would be available at the end of the micro-batch. |
+| Once | AwaitTermination with timeout | Limited | Same as above, but terminates at the timeout. If the timeout is reached before the micro-batch is processed, it won't be completed and no data will be committed. |
+| ProcessingTime | ProcessAllAvailable | Only long-running if topic continuously produces messages, otherwise limited | Consumes all available data in micro-batches and only stops when no new data arrives, i.e. when the available offsets are the same as in the previous micro-batch. Thus, it completely depends on the topic, if and when the query terminates. |
+| ProcessingTime | AwaitTermination with timeout | Limited | Consumes data in micro-batches and only stops when the timeout is reached or the query is killed. |
+| ProcessingTime | AwaitTermination | Long-running | Consumes data in micro-batches and only stops when the query is killed. |
 
 - Note 1: The first micro-batch of the query will contain all available messages to consume and can therefore be quite large,
  even if the trigger `ProcessingTime` is configured, and regardless of what micro-batch interval is configured.
