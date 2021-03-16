@@ -96,7 +96,13 @@ private[reader] class KafkaStreamReader(
 
   private def getStartingOffsets(checkpointLocation: String, configuration: org.apache.hadoop.conf.Configuration): Option[String] = {
     if (FileUtils.exists(checkpointLocation, configuration)) {
-      Option.empty
+      if(FileUtils.existsAndNotEmpty(checkpointLocation, configuration)){
+        Option.empty
+      }
+      else{
+        Option(STARTING_OFFSETS_EARLIEST)
+      }
+
     }
     else {
       Option(STARTING_OFFSETS_EARLIEST)

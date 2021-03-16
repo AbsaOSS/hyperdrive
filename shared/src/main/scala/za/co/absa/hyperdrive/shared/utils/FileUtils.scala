@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{FileSystem, Path, LocatedFileStatus, RemoteIterator}
 
 private[hyperdrive] object FileUtils {
 
@@ -26,6 +26,12 @@ private[hyperdrive] object FileUtils {
   }
 
   def notExists(file: String, configuration: Configuration): Boolean = !exists(file, configuration)
+
+  def existsAndNotEmpty(file: String, configuration: Configuration): Boolean = {
+    val fileSystem = getFileSystem(configuration)
+    val files: RemoteIterator[LocatedFileStatus] = fileSystem.listFiles(new Path(file), true)
+    files.hasNext
+  }
 
   def isDirectory(file: String, configuration: Configuration): Boolean = {
     val fileSystem = getFileSystem(configuration)
