@@ -298,8 +298,8 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
 | `writer.mongodb.uri` | Yes | Output MongoDB URI, e.g. `mongodb://host:port/database.collection`. |
-| `writer.parquet.database` | No | Database name (if not specified as the part of URI). |
-| `writer.parquet.collection` | No | Collection name (if not specified as the part of URI). |
+| `writer.mongodb.database` | No | Database name (if not specified as the part of URI). |
+| `writer.mongodb.collection` | No | Collection name (if not specified as the part of URI). |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 

@@ -74,6 +74,8 @@
                                         <Implementation-Version>${buildNumber}</Implementation-Version>
                                     </manifestEntries>
                                 </transformer>
+                                <!-- This allows to support several library data sources for Spark by referring to them by short name. -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <filters>
                                 <filter>
