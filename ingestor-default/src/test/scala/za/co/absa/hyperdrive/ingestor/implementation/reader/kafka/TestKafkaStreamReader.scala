@@ -25,6 +25,8 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReaderProps._
 
+import java.nio.file.{Files, Paths}
+
 class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val validTopic = "test-topic"
@@ -97,19 +99,43 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     verify(dataStreamReader, never()).options(validExtraConfs)
   }
 
-  it should "set offsets to earliest if no checkpoint location exists" in {
+  it should "set offsets to earliest if checkpoint location does not exist" in {
     val sparkContext = getMockedSparkContext(stopped = false)
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
-
     val nonExistent = tempDir.path.resolve("non-existent")
+
     val reader = new KafkaStreamReader(validTopic, validBrokers, nonExistent.toUri.getPath, Map())
     reader.read(sparkSession)
 
     verify(dataStreamReader).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
   }
 
-  it should "set offsets to user-defined property if no checkpoint location exists" in {
+  it should "set offsets to earliest if checkpoint location is empty" in {
+    val sparkContext = getMockedSparkContext(stopped = false)
+    val dataStreamReader = getMockedDataStreamReader
+    val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
+    Files.createDirectories(Paths.get(s"$tempDirPath/empty1/empty2/empty3"))
+
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map())
+    reader.read(sparkSession)
+
+    verify(dataStreamReader).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
+  }
+
+  it should "not set offsets to earliest if a checkpoint location exists and is not empty" in {
+    val sparkContext = getMockedSparkContext(stopped = false)
+    val dataStreamReader = getMockedDataStreamReader
+    val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
+    Files.createFile(Paths.get(s"$tempDirPath/anyFile"))
+
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map())
+    reader.read(sparkSession)
+
+    verify(dataStreamReader, never()).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
+  }
+
+  it should "always set offsets to user-defined property e.g. if checkpoint location does not exist" in {
     val sparkContext = getMockedSparkContext(stopped = false)
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
@@ -121,15 +147,18 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     verify(dataStreamReader).options(Map(WORD_STARTING_OFFSETS -> "latest"))
   }
 
-  it should "not set offsets if a checkpoint location exists" in {
+  it should "always set offsets to user-defined property e.g. if checkpoint location exists" in {
     val sparkContext = getMockedSparkContext(stopped = false)
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map())
+    Files.createFile(Paths.get(s"$tempDirPath/anyFile"))
+
+    val nonExistent = tempDir.path.resolve("non-existent")
+    val reader = new KafkaStreamReader(validTopic, validBrokers, nonExistent.toUri.getPath, Map(WORD_STARTING_OFFSETS -> "latest"))
     reader.read(sparkSession)
 
-    verify(dataStreamReader, never()).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
+    verify(dataStreamReader).options(Map(WORD_STARTING_OFFSETS -> "latest"))
   }
 
   private def getMockedSparkContext(stopped: Boolean): SparkContext = {
