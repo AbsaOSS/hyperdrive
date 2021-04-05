@@ -16,8 +16,7 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import java.util.UUID
-
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
@@ -49,11 +48,22 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     FileUtils.isEmpty(directory, config) shouldBe true
   }
 
+  it should "return true if the directory only contains other directories, but no files" in {
+    // given
+    val directory = s"$baseDirPath/empty1"
+    val subDirectory = s"$baseDirPath/empty1/empty2/empty3"
+    fs.mkdirs(new Path(subDirectory))
+
+    // when, then
+    FileUtils.isEmpty(directory, config) shouldBe true
+  }
+
   it should "return false if the directory is not empty" in {
     // given
     val directory = s"$baseDirPath/empty"
+    val subDirectory = s"$baseDirPath/empty/empty2"
     fs.mkdirs(new Path(directory))
-    fs.create(new Path(directory, "_INFO"))
+    fs.create(new Path(subDirectory, "_INFO"))
 
     // when, then
     FileUtils.isEmpty(directory, config) shouldBe false

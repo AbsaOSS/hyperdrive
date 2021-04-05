@@ -33,9 +33,6 @@ object PropertiesIngestionDriver extends IngestionDriver {
   private val logger = LogManager.getLogger
 
   def main(args: Array[String]): Unit = {
-
-    //System.setProperty("hadoop.home.dir", "C:\\winutils\\")
-
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
       throw new IllegalArgumentException("No properties file supplied.")
