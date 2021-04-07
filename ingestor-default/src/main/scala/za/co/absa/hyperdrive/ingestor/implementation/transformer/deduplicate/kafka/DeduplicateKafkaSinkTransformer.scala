@@ -73,18 +73,13 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     implicit val kafkaConsumerTimeoutImpl: Duration = kafkaConsumerTimeout
     val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
     val latestCommittedOffsets = KafkaUtil.getLatestCommittedOffset(offsetLog, commitLog)
-
-    logger.info(s"Latest committed source offsets for ${readerTopic}: ${offsetsToString(latestCommittedOffsets)}" )
+    logCommittedOffsets(latestCommittedOffsets)
 
     KafkaUtil.seekToOffsetsOrBeginning(sourceConsumer, readerTopic, latestCommittedOffsets)
-
-    val sourcePartitions = KafkaUtil.getTopicPartitions(sourceConsumer, readerTopic)
-    val currentPositions = sourcePartitions.map { tp => s"${tp.partition()}: ${sourceConsumer.position(tp)}"}.reduce(_ + ", " + _)
-    logger.info(s"Reset source offsets to ${currentPositions}")
+    logCurrentPositions(sourceConsumer)
 
     val latestOffsetsOpt = KafkaUtil.getLatestOffset(offsetLog)
-
-    logger.info(s"Latest source offsets for ${readerTopic}: ${offsetsToString(latestOffsetsOpt)}" )
+    logOffsets(latestOffsetsOpt)
 
     val sourceRecords = latestOffsetsOpt.map(latestOffset => consumeAndClose(sourceConsumer,
       consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset))).getOrElse(Seq())
@@ -95,23 +90,49 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     val recordsPerPartition = sinkTopicPartitions.map(p => p -> sourceRecords.size.toLong).toMap
     val latestSinkRecords = consumeAndClose(sinkConsumer, consumer =>
       KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition))
-    val offsetsByPartition = latestSinkRecords.map(r => r.partition() -> r.offset())
-      .groupBy(_._1)
-      .mapValues(_.map(_._2))
-    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduce(_ + ", " + _)
-    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduce(_ + ", " + _)
-    logger.info(s"Consumed ${latestSinkRecords.size} sink records. First three offsets: ${firstOffsets}. Last three offsets: ${lastOffsets}")
-    val publishedIds = latestSinkRecords.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
+    logConsumedSinkRecords(latestSinkRecords)
 
+    val publishedIds = latestSinkRecords.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
     val duplicatedIds = sourceIds.intersect(publishedIds)
-    logger.info(s"Found ${duplicatedIds.size} duplicated ids. First three: ${duplicatedIds.take(3)}. Last three: ${duplicatedIds.takeRight(3)}")
+    logDuplicatedIds(duplicatedIds)
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
     val idColumns = sourceIdColumnNames.map(col)
     dataFrame.filter(not(struct(idColumns: _*).isInCollection(duplicatedIdsLit)))
   }
 
+  private def logCommittedOffsets(offsets: Option[Map[TopicPartition, Long]]): Unit =
+    logger.info(s"Latest committed source offsets by partition for ${readerTopic}: { ${offsetsToString(offsets)} }" )
+
+  private def logOffsets(offsets: Option[Map[TopicPartition, Long]]): Unit =
+    logger.info(s"Latest source offsets by partition for ${readerTopic}: { ${offsetsToString(offsets)} }" )
+
   private def offsetsToString(offsets: Option[Map[TopicPartition, Long]]) = {
-    offsets.map(_.map { case (tp, offset) => s"${tp.partition()}: $offset"}.reduce(_ + ", " + _)).getOrElse("-")
+    offsets.map(_.toSeq
+      .sortBy{ case (tp, _) => tp.partition()}
+      .map{ case (tp, offset) => s"${tp.partition()}: $offset"}.reduce(_ + ", " + _)).getOrElse("-")
+  }
+
+  private def logCurrentPositions(consumer: KafkaConsumer[GenericRecord, GenericRecord]): Unit = {
+    val sourcePartitions = KafkaUtil.getTopicPartitions(consumer, readerTopic)
+    val currentPositions = sourcePartitions
+      .sortBy(_.partition())
+      .map { tp => s"${tp.partition()}: ${consumer.position(tp)}"}.reduce(_ + ", " + _)
+    logger.info(s"Reset source offsets by partition to { ${currentPositions} }")
+  }
+
+  private def logConsumedSinkRecords(latestSinkRecords: Seq[ConsumerRecord[GenericRecord, GenericRecord]]): Unit = {
+    val offsetsByPartition = latestSinkRecords.map(r => r.partition() -> r.offset())
+      .groupBy(_._1)
+      .mapValues(_.map(_._2))
+      .toSeq
+      .sortBy(_._1)
+    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduce(_ + ", " + _)
+    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduce(_ + ", " + _)
+    logger.info(s"Consumed ${latestSinkRecords.size} sink records. First three offsets by partition: { ${firstOffsets} }. Last three offsets: { ${lastOffsets} }")
+  }
+
+  private def logDuplicatedIds(duplicatedIds: Seq[Seq[Any]]): Unit = {
+    logger.info(s"Found ${duplicatedIds.size} duplicated ids. First three: ${duplicatedIds.take(3)}.")
   }
 
   private def extractIdFieldsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
