@@ -222,6 +222,29 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
     result.map(_.getAs[Int]("partition")) should contain theSameElementsAs partitions
   }
 
+  it should "make value columns nullable if disableNullabilityPreservation is true" in {
+    // given
+    MockSchemaRegistryClient.register(s"$Topic-value", ValueSchemaAvro)
+    val records = createValueRecords(1, 100)
+    val serializer = new KafkaAvroSerializer(MockSchemaRegistryClient)
+    val rows = records.map(record => Row(serializer.serialize(Topic, record)))
+    val schema = new StructType().add("value", BinaryType)
+    val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(schema))
+    memoryStream.addData(rows)
+    val df = memoryStream.toDF()
+    val decoder = createBasicDecoder(Map(
+      KEY_DISABLE_NULLABILITY_PRESERVATION -> "true",
+    ))
+
+    // when
+    val resultDf = decoder.transform(df)
+
+    // then
+    val fields = resultDf.schema.toList
+    fields.foreach(_.nullable shouldBe true)
+  }
+
+
   it should "throw an exception if there is a column name collision between columns to keep and value columns" in {
     // given
     MockSchemaRegistryClient.register(s"$Topic-value", ValueSchemaAvro)

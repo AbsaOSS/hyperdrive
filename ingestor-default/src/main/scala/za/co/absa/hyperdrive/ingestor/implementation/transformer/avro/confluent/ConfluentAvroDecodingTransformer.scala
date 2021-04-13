@@ -35,7 +35,8 @@ import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, Sch
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,
   val keyAvroConfigOpt: Option[FromAvroConfig],
-  val keepColumns: Seq[String]
+  val keepColumns: Seq[String],
+  val disableNullabilityPreservation: Boolean
 )
   extends StreamTransformer {
 
@@ -96,9 +97,13 @@ private[transformer] class ConfluentAvroDecodingTransformer(
   }
 
   private def setColumnNonNullable(dataFrame: DataFrame, columnName: String) = {
-    dataFrame
-      .filter(col(columnName).isNotNull)
-      .withColumn(columnName, new Column(AssertNotNull(col(columnName).expr)))
+    if (disableNullabilityPreservation) {
+      dataFrame
+    } else {
+      dataFrame
+        .filter(col(columnName).isNotNull)
+        .withColumn(columnName, new Column(AssertNotNull(col(columnName).expr)))
+    }
   }
 
 }
@@ -125,11 +130,12 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
       None
     }
     val keepColumns = ConfigUtils.getSeqOrNone(KEY_KEEP_COLUMNS, config).getOrElse(Seq())
+    val disableNullabilityPreservation = ConfigUtils.getOptionalBoolean(KEY_DISABLE_NULLABILITY_PRESERVATION, config).getOrElse(false)
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
         s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt', keepColumns='$keepColumns'")
 
-    new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt, keepColumns)
+    new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt, keepColumns, disableNullabilityPreservation)
   }
 
   override def getMappingFromRetainedGlobalConfigToLocalConfig(globalConfig: Configuration): Map[String, String] = Map(
