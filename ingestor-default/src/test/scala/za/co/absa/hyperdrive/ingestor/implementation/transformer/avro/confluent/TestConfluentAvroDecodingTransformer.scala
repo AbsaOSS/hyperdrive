@@ -233,7 +233,7 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
     memoryStream.addData(rows)
     val df = memoryStream.toDF()
     val decoder = createBasicDecoder(Map(
-      KEY_DISABLE_NULLABILITY_PRESERVATION -> "true",
+      KEY_DISABLE_NULLABILITY_PRESERVATION -> "true"
     ))
 
     // when
