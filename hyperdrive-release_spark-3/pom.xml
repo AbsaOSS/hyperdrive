@@ -18,7 +18,7 @@
     <parent>
         <artifactId>parent-conf_2.12</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>4.2.2-SNAPSHOT</version>
+        <version>4.2.2</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -75,7 +75,7 @@
                                     </manifestEntries>
                                 </transformer>
                                 <!-- This allows to support several library data sources for Spark by referring to them by short name. -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                             <filters>
                                 <filter>
