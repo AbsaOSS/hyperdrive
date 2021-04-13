@@ -99,7 +99,6 @@ private[hyperdrive] object KafkaUtil {
   private def offsetsHaveBeenReached[K, V](consumer: KafkaConsumer[K, V], toOffsets: Map[TopicPartition, Long]) = {
     toOffsets.forall { case (tp, toOffset) =>
       val position = consumer.position(tp)
-      logger.info(s"Reached position $position on topic partition $tp. Target offset is $toOffset")
       position >= toOffset
     }
   }
