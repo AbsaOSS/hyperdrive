@@ -58,14 +58,12 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   private val keySchemaRegistryRecordName = "schema.registry.record.name"
   private val keySchemaRegistryRecordNamespace = "schema.registry.record.namespace"
   private object ProducerConfigKeys extends AbrisProducerConfigKeys {
-    override val schemaRegistryUrl: String = keySchemaRegistryUrl
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
     override val recordName: String = keySchemaRegistryRecordName
     override val recordNamespace: String = keySchemaRegistryRecordNamespace
     override val topic: String = keyTopic
   }
   private object ConsumerConfigKeys extends AbrisConsumerConfigKeys {
-    override val schemaRegistryUrl: String = keySchemaRegistryUrl
     override val schemaId: String = keySchemaRegistrySchemaId
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
     override val recordName: String = keySchemaRegistryRecordName
@@ -85,11 +83,12 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   "getKeyProducerSettings" should "return settings and register subject with topic name strategy" in {
     // given
     val config = createBaseConfiguration
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
 
     // when
-    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
+    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyTopicNameSchema.toString
@@ -100,13 +99,14 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   it should "return settings and register subject with record name strategy" in {
     // given
     val config = createBaseConfiguration
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.RecordNameStrategy)
     config.addProperty(keySchemaRegistryRecordName, recordName)
     config.addProperty(keySchemaRegistryRecordNamespace, recordNamespace)
 
     // when
-    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
+    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyRecordNameSchema.toString
@@ -117,13 +117,14 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   it should "return settings and register subject with topic record name strategy" in {
     // given
     val config = createBaseConfiguration
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicRecordNameStrategy)
     config.addProperty(keySchemaRegistryRecordName, recordName)
     config.addProperty(keySchemaRegistryRecordNamespace, recordNamespace)
 
     // when
-    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
+    val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyRecordNameSchema.toString
@@ -136,9 +137,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val config = createBaseConfiguration
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getValueProducerSettings(config, ProducerConfigKeys, dummyExpr)
+    val settings = AbrisConfigUtil.getValueProducerSettings(config, ProducerConfigKeys, dummyExpr, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyTopicNameSchema.toString
@@ -154,9 +156,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
+    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyTopicNameSchema.toString
@@ -181,9 +184,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistrySchemaId, 2)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
+    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe schema2.toString
@@ -200,9 +204,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistryRecordNamespace, recordNamespace)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.RecordNameStrategy)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
+    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyRecordNameSchema.toString
@@ -219,9 +224,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistryRecordNamespace, recordNamespace)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicRecordNameStrategy)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
+    val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyRecordNameSchema.toString
@@ -236,9 +242,10 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
-    val settings = AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys)
+    val settings = AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig)
 
     // then
     settings.schemaString shouldBe dummyTopicNameSchema.toString
@@ -247,8 +254,9 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
   it should "throw an exception if schema id is not configured" in {
     val config = new BaseConfiguration
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig))
 
     exception.getMessage should include(keySchemaRegistrySchemaId)
   }
@@ -257,8 +265,9 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val config = new BaseConfiguration
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicRecordNameStrategy)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig))
 
     exception.getMessage should include(keyTopic)
   }
@@ -269,7 +278,7 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[Exception](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, Map()))
 
     exception.getMessage should include(keySchemaRegistryUrl)
   }
@@ -279,8 +288,9 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keyTopic, topic)
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig))
 
     exception.getMessage should include(keySchemaRegistryNamingStrategy)
   }
@@ -291,8 +301,9 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.RecordNameStrategy)
     config.addProperty(keySchemaRegistryRecordNamespace, "any.namespace")
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig))
 
     exception.getMessage should include(keySchemaRegistryRecordName)
   }
@@ -303,17 +314,19 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.RecordNameStrategy)
     config.addProperty(keySchemaRegistryRecordName, "any.name")
+    val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
-    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys))
+    val exception = intercept[IllegalArgumentException](AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys, schemaRegistryConfig))
 
     exception.getMessage should include(keySchemaRegistryRecordNamespace)
   }
 
   private def createBaseConfiguration = {
     val config = new BaseConfiguration
-    config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config
   }
 
+  private def createBaseSchemaRegistryConfig =
+    Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummySchemaRegistryUrl)
 }

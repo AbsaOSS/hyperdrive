@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import java.util.UUID
-
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.logging.log4j.LogManager
@@ -28,9 +27,10 @@ import za.co.absa.abris.config.FromAvroConfig
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisConsumerConfigKeys}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigKeys, AbrisConfigUtil, AbrisConsumerConfigKeys, SchemaRegistryConfigUtil}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,
@@ -113,7 +113,6 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
 
   object SchemaConfigKeys extends AbrisConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
-    override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
     override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
@@ -121,14 +120,12 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
   }
 
   override def apply(config: Configuration): StreamTransformer = {
-    val userInfoFile = ConfigUtils.getOrNone(KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE, config)
-    // extract value from userInfoFile
-    //
-    val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys)
+    val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
+    val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys, schemaRegistryConfig)
 
     val consumeKeys = ConfigUtils.getOptionalBoolean(KEY_CONSUME_KEYS, config).getOrElse(false)
     val keyAvroConfigOpt = if (consumeKeys) {
-      Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys))
+      Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys, schemaRegistryConfig))
     } else {
       None
     }
