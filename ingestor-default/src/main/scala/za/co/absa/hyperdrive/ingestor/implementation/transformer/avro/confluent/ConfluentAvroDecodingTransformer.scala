@@ -30,7 +30,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, SchemaRegistryConsumerConfigKeys}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisConsumerConfigKeys}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,
@@ -111,7 +111,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
 
-  object SchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
+  object SchemaConfigKeys extends AbrisConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
     override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
     override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
@@ -121,6 +121,9 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
   }
 
   override def apply(config: Configuration): StreamTransformer = {
+    val userInfoFile = ConfigUtils.getOrNone(KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE, config)
+    // extract value from userInfoFile
+    //
     val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys)
 
     val consumeKeys = ConfigUtils.getOptionalBoolean(KEY_CONSUME_KEYS, config).getOrElse(false)

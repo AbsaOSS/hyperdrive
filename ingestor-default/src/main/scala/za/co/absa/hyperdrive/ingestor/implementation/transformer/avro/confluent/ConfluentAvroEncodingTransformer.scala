@@ -27,7 +27,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{getKeyAvroConfig, getValueAvroConfig}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, SchemaRegistryProducerConfigKeys}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisProducerConfigKeys}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter.KEY_TOPIC
 
 private[transformer] class ConfluentAvroEncodingTransformer(
@@ -75,7 +75,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
 
 object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with ConfluentAvroEncodingTransformerAttributes {
 
-  object SchemaConfigKeys extends SchemaRegistryProducerConfigKeys {
+  object SchemaConfigKeys extends AbrisProducerConfigKeys {
     override val topic: String = KEY_TOPIC
     override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY

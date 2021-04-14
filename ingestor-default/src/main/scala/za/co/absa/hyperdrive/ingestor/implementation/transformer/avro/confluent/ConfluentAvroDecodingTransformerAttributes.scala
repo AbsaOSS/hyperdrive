@@ -19,6 +19,7 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes {
   val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
+  val KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE = "schema.registry.basic.auth.user.info.file"
 
   val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
   val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = "value.schema.id"
@@ -33,6 +34,8 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
 
   val KEY_KEEP_COLUMNS = "keep.columns"
   val KEY_DISABLE_NULLABILITY_PRESERVATION = "disable.nullability.preservation"
+
+  val KEY_EXTRA_CONFS_ROOT = "options"
 
   override def getName: String = "Confluent Avro Stream Decoder"
 
@@ -56,4 +59,6 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
     KEY_KEEP_COLUMNS -> PropertyMetadata("Columns to keep", Some("Comma-separated list of columns to keep (e.g. offset, partition)"), required = false),
     KEY_DISABLE_NULLABILITY_PRESERVATION -> PropertyMetadata("Disable nullability preservation", Some("Keep same behaviour as for versions prior to and including v3.2.2"), required = false)
   )
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
 }

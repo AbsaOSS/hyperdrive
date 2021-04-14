@@ -28,13 +28,13 @@ private[hyperdrive] object AbrisConfigUtil {
   val RecordNameStrategy = "record.name"
   val TopicRecordNameStrategy = "topic.record.name"
 
-  def getKeyConsumerSettings(configuration: Configuration, configKeys: SchemaRegistryConsumerConfigKeys): FromAvroConfig =
+  def getKeyConsumerSettings(configuration: Configuration, configKeys: AbrisConsumerConfigKeys): FromAvroConfig =
     getConsumerSettings(configuration, configKeys, isKey = true)
 
-  def getValueConsumerSettings(configuration: Configuration, configKeys: SchemaRegistryConsumerConfigKeys): FromAvroConfig =
+  def getValueConsumerSettings(configuration: Configuration, configKeys: AbrisConsumerConfigKeys): FromAvroConfig =
     getConsumerSettings(configuration, configKeys, isKey = false)
 
-  private def getConsumerSettings(configuration: Configuration, configKeys: SchemaRegistryConsumerConfigKeys, isKey: Boolean): FromAvroConfig = {
+  private def getConsumerSettings(configuration: Configuration, configKeys: AbrisConsumerConfigKeys, isKey: Boolean): FromAvroConfig = {
     val fromConfluentAvroConfigFragment = AbrisConfig.fromConfluentAvro
     val schemaId = getSchemaId(configuration, configKeys)
     val topic = getTopic(configuration, configKeys)
@@ -57,16 +57,18 @@ private[hyperdrive] object AbrisConfigUtil {
       fromConfluentAvroConfigFragment.downloadReaderSchemaById(schemaId.toInt)
     }
 
+    // TODO: Allow for arbitrary schema registry parameters
     fromSchemaRegisteringConfigFragment.usingSchemaRegistry(getSchemaRegistryUrl(configuration, configKeys))
   }
 
-  def getKeyProducerSettings(configuration: Configuration, configKeys: SchemaRegistryProducerConfigKeys, expression: Expression): ToAvroConfig =
+  def getKeyProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression): ToAvroConfig =
     getProducerSettings(configuration, configKeys, isKey = true, expression)
 
-  def getValueProducerSettings(configuration: Configuration, configKeys: SchemaRegistryProducerConfigKeys, expression: Expression): ToAvroConfig =
+  def getValueProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression): ToAvroConfig =
     getProducerSettings(configuration, configKeys, isKey = false, expression)
 
-  private def getProducerSettings(configuration: Configuration, configKeys: SchemaRegistryProducerConfigKeys, isKey: Boolean, expression: Expression): ToAvroConfig = {
+  private def getProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, isKey: Boolean, expression: Expression): ToAvroConfig = {
+    // TODO: Allow for arbitrary parameters
     val schemaManager = SchemaManagerFactory.create(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> getSchemaRegistryUrl(configuration, configKeys)))
     val topic = getTopic(configuration, configKeys)
     val namingStrategy = getNamingStrategy(configuration, configKeys)
@@ -91,24 +93,25 @@ private[hyperdrive] object AbrisConfigUtil {
     AbrisConfig
       .toConfluentAvro
       .downloadSchemaById(schemaId)
+      // TODO: Allow for arbitrary args
       .usingSchemaRegistry(getSchemaRegistryUrl(configuration, configKeys))
   }
 
-  private def getTopic(configuration: Configuration, configKeys: SchemaRegistryConfigKeys): String =
+  private def getTopic(configuration: Configuration, configKeys: AbrisConfigKeys): String =
     getOrThrow(configKeys.topic, configuration, errorMessage = s"Topic not found. Is '${configKeys.topic}' properly set?")
 
-  private def getSchemaId(configuration: Configuration, configKeys: SchemaRegistryConsumerConfigKeys) =
+  private def getSchemaId(configuration: Configuration, configKeys: AbrisConsumerConfigKeys) =
     getOrThrow(configKeys.schemaId, configuration, errorMessage = s"Schema id not specified. Is '${configKeys.schemaId}' configured?")
 
-  private def getNamingStrategy(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
+  private def getNamingStrategy(configuration: Configuration, configKeys: AbrisConfigKeys) =
     getOrThrow(configKeys.namingStrategy, configuration, errorMessage = s"Schema naming strategy not specified. Is '${configKeys.namingStrategy}' configured?")
 
-  private def getRecordName(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
+  private def getRecordName(configuration: Configuration, configKeys: AbrisConfigKeys) =
     getOrThrow(configKeys.recordName, configuration, errorMessage = s"Record name not specified for value. Is '${configKeys.recordName}' configured?")
 
-  private def getRecordNamespace(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
+  private def getRecordNamespace(configuration: Configuration, configKeys: AbrisConfigKeys) =
     getOrThrow(configKeys.recordNamespace, configuration, errorMessage = s"Record namespace not specified for value. Is '${configKeys.recordNamespace}' configured?")
 
-  private def getSchemaRegistryUrl(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
+  private def getSchemaRegistryUrl(configuration: Configuration, configKeys: AbrisConfigKeys) =
     getOrThrow(configKeys.schemaRegistryUrl, configuration, errorMessage = s"Schema Registry URL not specified. Is '${configKeys.schemaRegistryUrl}' configured?")
 }
