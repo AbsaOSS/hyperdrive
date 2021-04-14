@@ -18,18 +18,23 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import org.apache.commons.configuration2.Configuration
 import za.co.absa.abris.config.AbrisConfig
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SchemaRegistryAttributes
 
 private[hyperdrive] object SchemaRegistryConfigUtil {
   def getSchemaRegistryConfig(config: Configuration): Map[String, String] = {
-    Map(AbrisConfig.SCHEMA_REGISTRY_URL -> getSchemaRegistryUrl(config))
+    Map(AbrisConfig.SCHEMA_REGISTRY_URL -> getSchemaRegistryUrl(config)) ++
+      getExtraConfig(config)
     // TODO: Add method to extract value from file
-    // TODO: Add method to extract arbitrary options
   }
 
   private def getSchemaRegistryUrl(config: Configuration) = {
-    val key = "schema.registry.url"
+    val key = SchemaRegistryAttributes.KEY_SCHEMA_REGISTRY_URL
     getOrThrow(key, config, errorMessage = s"Schema Registry URL not specified. Is '${key}' configured?")
   }
+
+  private def getExtraConfig(config: Configuration) =
+    ConfigUtils.getPropertySubset(config, SchemaRegistryAttributes.KEY_SCHEMA_REGISTRY_EXTRA_CONFS_ROOT)
 
 }
