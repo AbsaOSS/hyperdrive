@@ -111,7 +111,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
 
-  object SchemaConfigKeys extends AbrisConsumerConfigKeys {
+  object AbrisConfigKeys extends AbrisConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
     override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
@@ -121,11 +121,11 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
 
   override def apply(config: Configuration): StreamTransformer = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, SchemaConfigKeys, schemaRegistryConfig)
+    val valueAvroConfig = AbrisConfigUtil.getValueConsumerSettings(config, AbrisConfigKeys, schemaRegistryConfig)
 
     val consumeKeys = ConfigUtils.getOptionalBoolean(KEY_CONSUME_KEYS, config).getOrElse(false)
     val keyAvroConfigOpt = if (consumeKeys) {
-      Some(AbrisConfigUtil.getKeyConsumerSettings(config, SchemaConfigKeys, schemaRegistryConfig))
+      Some(AbrisConfigUtil.getKeyConsumerSettings(config, AbrisConfigKeys, schemaRegistryConfig))
     } else {
       None
     }
