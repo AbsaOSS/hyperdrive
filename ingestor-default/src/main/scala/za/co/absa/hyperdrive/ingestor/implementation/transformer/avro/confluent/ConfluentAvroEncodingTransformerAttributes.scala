@@ -17,8 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
-trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes {
-  val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
+trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes with SchemaRegistryAttributes {
   val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = "value.schema.record.name"
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = "value.schema.record.namespace"
