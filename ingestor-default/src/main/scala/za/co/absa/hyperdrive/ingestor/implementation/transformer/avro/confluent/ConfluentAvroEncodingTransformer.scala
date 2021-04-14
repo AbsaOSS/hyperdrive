@@ -75,7 +75,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
 
 object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with ConfluentAvroEncodingTransformerAttributes {
 
-  object SchemaConfigKeys extends AbrisProducerConfigKeys {
+  object AbrisConfigKeys extends AbrisProducerConfigKeys {
     override val topic: String = KEY_TOPIC
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
@@ -93,12 +93,12 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
 
   def getKeyAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    AbrisConfigUtil.getKeyProducerSettings(config, SchemaConfigKeys, expression, schemaRegistryConfig)
+    AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
   }
 
   def getValueAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    AbrisConfigUtil.getValueProducerSettings(config, SchemaConfigKeys, expression, schemaRegistryConfig)
+    AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
   }
 }
 
