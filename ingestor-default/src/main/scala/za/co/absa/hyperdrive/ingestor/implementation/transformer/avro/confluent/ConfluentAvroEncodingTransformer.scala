@@ -58,8 +58,8 @@ private[transformer] class ConfluentAvroEncodingTransformer(
     val valueStruct = struct(valueColumns: _*) as 'value
     val keyToAvroConfig = getKeyAvroConfig(config, keyStruct.expr)
     val valueToAvroConfig = getValueAvroConfig(config, valueStruct.expr)
-    logger.info(s"Key ToAvro settings: $keyToAvroConfig")
-    logger.info(s"Value ToAvro settings: $valueToAvroConfig")
+    logger.info(s"Key ToAvro settings: ${AbrisConfigUtil.configToString(keyToAvroConfig)}")
+    logger.info(s"Value ToAvro settings: ${AbrisConfigUtil.configToString(valueToAvroConfig)}")
     dataFrame.select(
       to_avro(keyStruct, keyToAvroConfig) as 'key,
       to_avro(valueStruct, valueToAvroConfig) as 'value)
@@ -68,7 +68,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
   private def getValueDataFrame(dataFrame: DataFrame): DataFrame = {
     val allColumns = struct(dataFrame.columns.map(c => dataFrame(c)): _*)
     val toAvroConfig = getValueAvroConfig(config, allColumns.expr)
-    logger.info(s"ToAvro settings: $toAvroConfig")
+    logger.info(s"ToAvro settings: ${AbrisConfigUtil.configToString(toAvroConfig)}")
     dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
   }
 }

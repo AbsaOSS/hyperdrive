@@ -40,11 +40,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 )
   extends StreamTransformer {
 
-  private val logger = LogManager.getLogger
-
   override def transform(dataFrame: DataFrame): DataFrame = {
-    logger.info(s"SchemaRegistry settings: $valueAvroConfig")
-
     keyAvroConfigOpt match {
       case Some(keyAvroConfig) => getKeyValueDataFrame(dataFrame, keyAvroConfig)
       case None => getValueDataFrame(dataFrame)
@@ -133,7 +129,8 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     val disableNullabilityPreservation = ConfigUtils.getOptionalBoolean(KEY_DISABLE_NULLABILITY_PRESERVATION, config).getOrElse(false)
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
-        s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt', keepColumns='$keepColumns'")
+        s"value avro config='${AbrisConfigUtil.configToString(valueAvroConfig)}', key avro config='" +
+        s"${keyAvroConfigOpt.map(AbrisConfigUtil.configToString)}', keepColumns='$keepColumns'")
 
     new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt, keepColumns, disableNullabilityPreservation)
   }

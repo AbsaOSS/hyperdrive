@@ -19,19 +19,35 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 import org.apache.commons.configuration2.Configuration
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SchemaRegistryAttributes
 
+import scala.io.Source
+
 private[hyperdrive] object SchemaRegistryConfigUtil {
+  val BasicAuthUserInfoKey = "basic.auth.user.info"
   def getSchemaRegistryConfig(config: Configuration): Map[String, String] = {
     Map(AbrisConfig.SCHEMA_REGISTRY_URL -> getSchemaRegistryUrl(config)) ++
+      getBasicAuthUserInfo(config).map(userInfo => Map(BasicAuthUserInfoKey -> userInfo)).getOrElse(Map()) ++
       getExtraConfig(config)
-    // TODO: Add method to extract value from file
   }
 
   private def getSchemaRegistryUrl(config: Configuration) = {
     val key = SchemaRegistryAttributes.KEY_SCHEMA_REGISTRY_URL
     getOrThrow(key, config, errorMessage = s"Schema Registry URL not specified. Is '${key}' configured?")
+  }
+
+  private def getBasicAuthUserInfo(config: Configuration) = {
+    getOrNone(SchemaRegistryAttributes.KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE, config).map(file => {
+      val source = Source.fromFile(file)
+      try {
+       source.getLines().toList.headOption.map(_.trim).getOrElse(throw new IllegalArgumentException(
+          s"The file ${SchemaRegistryAttributes.KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE} was empty, " +
+            s"expected one line in the form <username>:<password>"))
+      } finally {
+        source.close()
+      }
+    })
   }
 
   private def getExtraConfig(config: Configuration) =
