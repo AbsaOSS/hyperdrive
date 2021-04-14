@@ -57,14 +57,14 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   private val keySchemaRegistryNamingStrategy = "schema.registry.naming.strategy"
   private val keySchemaRegistryRecordName = "schema.registry.record.name"
   private val keySchemaRegistryRecordNamespace = "schema.registry.record.namespace"
-  private object ProducerConfigKeys extends SchemaRegistryProducerConfigKeys {
+  private object ProducerConfigKeys extends AbrisProducerConfigKeys {
     override val schemaRegistryUrl: String = keySchemaRegistryUrl
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
     override val recordName: String = keySchemaRegistryRecordName
     override val recordNamespace: String = keySchemaRegistryRecordNamespace
     override val topic: String = keyTopic
   }
-  private object ConsumerConfigKeys extends SchemaRegistryConsumerConfigKeys {
+  private object ConsumerConfigKeys extends AbrisConsumerConfigKeys {
     override val schemaRegistryUrl: String = keySchemaRegistryUrl
     override val schemaId: String = keySchemaRegistrySchemaId
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
