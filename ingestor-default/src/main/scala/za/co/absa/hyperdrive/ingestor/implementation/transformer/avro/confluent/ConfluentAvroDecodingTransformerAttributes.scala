@@ -18,6 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes {
+  // TODO: Extract keys to AbrisAttributes, SchemaRegistryAttributes
   val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
   val KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE = "schema.registry.basic.auth.user.info.file"
 

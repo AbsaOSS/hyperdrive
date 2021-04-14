@@ -17,7 +17,6 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 private[hyperdrive] trait AbrisConfigKeys {
   val topic: String
-  val schemaRegistryUrl: String
   val namingStrategy: String
   val recordName: String
   val recordNamespace: String
