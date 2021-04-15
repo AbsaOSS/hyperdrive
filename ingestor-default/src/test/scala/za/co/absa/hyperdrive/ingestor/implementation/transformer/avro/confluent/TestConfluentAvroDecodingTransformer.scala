@@ -293,6 +293,7 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
   "apply" should "throw if topic is not configured" in {
     val config = new BaseConfiguration
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID, SchemaRegistryValueSchemaId)
+    config.addProperty(KEY_SCHEMA_REGISTRY_URL, SchemaRegistryURL)
 
     val throwable = intercept[IllegalArgumentException](ConfluentAvroDecodingTransformer(config))
     assert(throwable.getMessage.toLowerCase.contains("topic"))
