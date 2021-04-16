@@ -71,14 +71,6 @@ private[hyperdrive] object AbrisConfigUtil {
                                schemaRegistryConfig: Map[String, String]): ToAvroConfig =
     getProducerSettings(configuration, configKeys, isKey = false, expression, schemaRegistryConfig)
 
-  def configToString(config: FromAvroConfig): String = {
-    s"FromAvroConfig(${config.schemaString}, ${config.schemaRegistryConf.flatMap(_.get(AbrisConfig.SCHEMA_REGISTRY_URL))})"
-  }
-
-  def configToString(config: ToAvroConfig): String = {
-    s"ToAvroConfig(${config.schemaString}, ${config.schemaId})"
-  }
-
   private def getProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, isKey: Boolean,
                                   expression: Expression, schemaRegistryConfig: Map[String, String]): ToAvroConfig = {
     val schemaManager = SchemaManagerFactory.create(schemaRegistryConfig)

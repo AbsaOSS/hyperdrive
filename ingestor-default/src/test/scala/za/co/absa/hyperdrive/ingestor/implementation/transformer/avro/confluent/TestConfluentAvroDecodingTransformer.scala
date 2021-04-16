@@ -31,6 +31,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
+import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.getSchemaRegistryConf
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
@@ -304,7 +305,7 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
 
     val decoder = createBasicDecoder()
 
-    decoder.valueAvroConfig.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
+    getSchemaRegistryConf(decoder.valueAvroConfig).get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
     decoder.keyAvroConfigOpt shouldBe None
   }
 
@@ -322,8 +323,8 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 
-    decoder.valueAvroConfig.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
-    decoder.keyAvroConfigOpt.get.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
+    getSchemaRegistryConf(decoder.valueAvroConfig).get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
+    getSchemaRegistryConf(decoder.keyAvroConfigOpt.get).get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe SchemaRegistryURL
   }
 
   "determineKeyColumnPrefix" should "return prefix key__ by default" in {

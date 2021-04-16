@@ -129,8 +129,8 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     val disableNullabilityPreservation = ConfigUtils.getOptionalBoolean(KEY_DISABLE_NULLABILITY_PRESERVATION, config).getOrElse(false)
     LogManager.getLogger.info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
-        s"value avro config='${AbrisConfigUtil.configToString(valueAvroConfig)}', key avro config='" +
-        s"${keyAvroConfigOpt.map(AbrisConfigUtil.configToString)}', keepColumns='$keepColumns'")
+        s"value avro config='$valueAvroConfig}', key avro config='" +
+        s"${keyAvroConfigOpt}', keepColumns='$keepColumns'")
 
     new ConfluentAvroDecodingTransformer(valueAvroConfig, keyAvroConfigOpt, keepColumns, disableNullabilityPreservation)
   }
