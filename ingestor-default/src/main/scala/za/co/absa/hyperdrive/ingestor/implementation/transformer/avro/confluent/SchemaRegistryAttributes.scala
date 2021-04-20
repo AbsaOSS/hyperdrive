@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 ABSA Group Limited
  *
@@ -13,18 +14,12 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-private[hyperdrive] trait SchemaRegistryConfigKeys {
-  val topic: String
-  val schemaRegistryUrl: String
-  val namingStrategy: String
-  val recordName: String
-  val recordNamespace: String
+trait SchemaRegistryAttributes {
+  val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
+  val KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE = "schema.registry.basic.auth.user.info.file"
+  val KEY_SCHEMA_REGISTRY_EXTRA_CONFS_ROOT = "schema.registry.options"
 }
 
-private[hyperdrive] trait SchemaRegistryConsumerConfigKeys extends SchemaRegistryConfigKeys {
-  val schemaId: String
-}
-
-private[hyperdrive] trait SchemaRegistryProducerConfigKeys extends SchemaRegistryConfigKeys
+object SchemaRegistryAttributes extends SchemaRegistryAttributes

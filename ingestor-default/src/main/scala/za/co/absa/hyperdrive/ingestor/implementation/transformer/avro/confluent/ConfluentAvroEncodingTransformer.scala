@@ -27,7 +27,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{getKeyAvroConfig, getValueAvroConfig}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, SchemaRegistryProducerConfigKeys}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisProducerConfigKeys, SchemaRegistryConfigUtil}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter.KEY_TOPIC
 
 private[transformer] class ConfluentAvroEncodingTransformer(
@@ -75,9 +75,8 @@ private[transformer] class ConfluentAvroEncodingTransformer(
 
 object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with ConfluentAvroEncodingTransformerAttributes {
 
-  object SchemaConfigKeys extends SchemaRegistryProducerConfigKeys {
+  object AbrisConfigKeys extends AbrisProducerConfigKeys {
     override val topic: String = KEY_TOPIC
-    override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
@@ -92,11 +91,15 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
     KEY_TOPIC -> KEY_TOPIC
   )
 
-  def getKeyAvroConfig(config: Configuration, expression: Expression): ToAvroConfig =
-    AbrisConfigUtil.getKeyProducerSettings(config, SchemaConfigKeys, expression)
+  def getKeyAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
+    val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
+    AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
+  }
 
-  def getValueAvroConfig(config: Configuration, expression: Expression): ToAvroConfig =
-    AbrisConfigUtil.getValueProducerSettings(config, SchemaConfigKeys, expression)
+  def getValueAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
+    val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
+    AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
+  }
 }
 
 

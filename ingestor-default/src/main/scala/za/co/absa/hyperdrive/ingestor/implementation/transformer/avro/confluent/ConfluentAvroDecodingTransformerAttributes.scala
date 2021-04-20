@@ -17,8 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
-trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes {
-  val KEY_SCHEMA_REGISTRY_URL = "schema.registry.url"
+trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes with SchemaRegistryAttributes {
 
   val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
   val KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID = "value.schema.id"
@@ -33,6 +32,7 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
 
   val KEY_KEEP_COLUMNS = "keep.columns"
   val KEY_DISABLE_NULLABILITY_PRESERVATION = "disable.nullability.preservation"
+
 
   override def getName: String = "Confluent Avro Stream Decoder"
 
@@ -54,6 +54,9 @@ trait ConfluentAvroDecodingTransformerAttributes extends HasComponentAttributes 
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false),
     KEY_KEEP_COLUMNS -> PropertyMetadata("Columns to keep", Some("Comma-separated list of columns to keep (e.g. offset, partition)"), required = false),
-    KEY_DISABLE_NULLABILITY_PRESERVATION -> PropertyMetadata("Disable nullability preservation", Some("Keep same behaviour as for versions prior to and including v3.2.2"), required = false)
+    KEY_DISABLE_NULLABILITY_PRESERVATION -> PropertyMetadata("Disable nullability preservation", Some("Keep same behaviour as for versions prior to and including v3.2.2"), required = false),
+    KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE -> PropertyMetadata("Basic auth user info file", Some("Text file containing one line in the form <username>:<password> for basic auth in schema registry"), required = false)
   )
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(KEY_SCHEMA_REGISTRY_EXTRA_CONFS_ROOT)
 }
