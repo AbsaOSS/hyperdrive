@@ -33,4 +33,4 @@ jobs:
       - name: Switch scala version
         run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
       - name: Build and run tests
-        run: mvn clean test -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests
+        run: mvn clean verify -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests
