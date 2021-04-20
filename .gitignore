@@ -24,7 +24,6 @@ syntax: glob
 
 # building
 target
-build
 null
 tmp*
 temp*
