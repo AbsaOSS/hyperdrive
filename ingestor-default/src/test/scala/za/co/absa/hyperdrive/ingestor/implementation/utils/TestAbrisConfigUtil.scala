@@ -24,6 +24,7 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
+import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.{getFromSchemaString, getSchemaId, getSchemaRegistryConf, getToSchemaString}
 
 class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
@@ -92,8 +93,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
 
     // then
-    settings.schemaString shouldBe dummyTopicNameSchema.toString
-    settings.schemaId shouldBe Some(1)
+    getToSchemaString(settings) shouldBe dummyTopicNameSchema.toString
+    getSchemaId(settings) shouldBe Some(1)
     mockSchemaRegistryClient.getAllSubjects.asScala should contain theSameElementsAs Seq(s"${topic}-key")
   }
 
@@ -109,8 +110,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
 
     // then
-    settings.schemaString shouldBe dummyRecordNameSchema.toString
-    settings.schemaId shouldBe Some(1)
+    getToSchemaString(settings) shouldBe dummyRecordNameSchema.toString
+    getSchemaId(settings) shouldBe Some(1)
     mockSchemaRegistryClient.getAllSubjects.asScala should contain theSameElementsAs Seq(s"$recordNamespace.$recordName")
   }
 
@@ -126,8 +127,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyProducerSettings(config, ProducerConfigKeys, dummyExpr)
 
     // then
-    settings.schemaString shouldBe dummyRecordNameSchema.toString
-    settings.schemaId shouldBe Some(1)
+    getToSchemaString(settings) shouldBe dummyRecordNameSchema.toString
+    getSchemaId(settings) shouldBe Some(1)
     mockSchemaRegistryClient.getAllSubjects.asScala should contain theSameElementsAs Seq(s"$topic-$recordNamespace.$recordName")
   }
 
@@ -141,8 +142,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getValueProducerSettings(config, ProducerConfigKeys, dummyExpr)
 
     // then
-    settings.schemaString shouldBe dummyTopicNameSchema.toString
-    settings.schemaId shouldBe Some(1)
+    getToSchemaString(settings) shouldBe dummyTopicNameSchema.toString
+    getSchemaId(settings) shouldBe Some(1)
     mockSchemaRegistryClient.getAllSubjects.asScala should contain theSameElementsAs Seq(s"$topic-value")
   }
 
@@ -159,8 +160,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
 
     // then
-    settings.schemaString shouldBe dummyTopicNameSchema.toString
-    settings.schemaRegistryConf.get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
+    getFromSchemaString(settings) shouldBe dummyTopicNameSchema.toString
+    getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
   it should "return settings and register subject with topic name strategy for schema id" in {
@@ -186,8 +187,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
 
     // then
-    settings.schemaString shouldBe schema2.toString
-    settings.schemaRegistryConf.get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
+    getFromSchemaString(settings) shouldBe schema2.toString
+    getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
   it should "return settings and register subject with record name strategy" in {
@@ -205,8 +206,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
 
     // then
-    settings.schemaString shouldBe dummyRecordNameSchema.toString
-    settings.schemaRegistryConf.get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
+    getFromSchemaString(settings) shouldBe dummyRecordNameSchema.toString
+    getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
   it should "return settings and register subject with topic record name strategy" in {
@@ -224,8 +225,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getKeyConsumerSettings(config, ConsumerConfigKeys)
 
     // then
-    settings.schemaString shouldBe dummyRecordNameSchema.toString
-    settings.schemaRegistryConf.get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
+    getFromSchemaString(settings) shouldBe dummyRecordNameSchema.toString
+    getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
   "getValueConsumerSettings" should "return settings and register subject with topic name strategy for latest schema" in {
@@ -241,8 +242,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val settings = AbrisConfigUtil.getValueConsumerSettings(config, ConsumerConfigKeys)
 
     // then
-    settings.schemaString shouldBe dummyTopicNameSchema.toString
-    settings.schemaRegistryConf.get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
+    getFromSchemaString(settings) shouldBe dummyTopicNameSchema.toString
+    getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
   it should "throw an exception if schema id is not configured" in {
