@@ -15,32 +15,24 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 
 private[hyperdrive] object FileUtils {
 
-  def exists(file: String, configuration: Configuration): Boolean = {
-    val fileSystem = getFileSystem(configuration)
-    fileSystem.exists(new Path(file))
+  def exists(file: String)(implicit fs: FileSystem): Boolean = {
+    fs.exists(new Path(file))
   }
 
-  def notExists(file: String, configuration: Configuration): Boolean = !exists(file, configuration)
+  def notExists(file: String)(implicit fs: FileSystem): Boolean = !exists(file)
 
-  def isDirectory(file: String, configuration: Configuration): Boolean = {
-    val fileSystem = getFileSystem(configuration)
-    fileSystem.isDirectory(new Path(file))
+  def isDirectory(file: String)(implicit fs: FileSystem): Boolean = {
+    fs.isDirectory(new Path(file))
   }
 
-  def isNotDirectory(file: String, configuration: Configuration): Boolean = !isDirectory(file, configuration)
+  def isNotDirectory(file: String)(implicit fs: FileSystem): Boolean = !isDirectory(file)
 
-  def isEmpty(directory: String, configuration: Configuration): Boolean = {
-    val fs = getFileSystem(configuration)
+  def isEmpty(directory: String)(implicit fs: FileSystem): Boolean = {
     val path = new Path(directory)
     fs.exists(path) &&  !fs.listFiles(path, true).hasNext
-  }
-
-  private def getFileSystem(configuration: Configuration): FileSystem = {
-    FileSystem.get(configuration)
   }
 }
