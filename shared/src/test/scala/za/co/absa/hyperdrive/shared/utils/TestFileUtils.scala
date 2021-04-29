@@ -25,9 +25,10 @@ import za.co.absa.commons.spark.SparkTestBase
 class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   behavior of "FileUtils"
-  private implicit val fs: FileSystem = FileSystem.get(new URI("checkpoint-location"), spark.sparkContext.hadoopConfiguration)
   private var baseDirectory: TempDirectory = _
   private var baseDirPath: String = _
+  private val dummyDirectory = TempDirectory("DummyDirectory")
+  private implicit val fs: FileSystem = FileSystem.get(dummyDirectory.path.toUri, spark.sparkContext.hadoopConfiguration)
 
   before {
     baseDirectory = TempDirectory("FileUtilsTest")

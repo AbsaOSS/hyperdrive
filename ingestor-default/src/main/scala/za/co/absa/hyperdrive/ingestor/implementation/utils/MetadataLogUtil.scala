@@ -30,11 +30,9 @@ import za.co.absa.commons.spark.SparkTestBase
 import scala.util.{Failure, Success, Try}
 
 object MetadataLogUtil {
-  private val spark = initSpark()
-  private implicit val fs: FileSystem = FileSystem.get(new URI("metaData"), spark.sparkContext.hadoopConfiguration)
-
 
   def getParquetFilesNotListedInMetadataLog(spark: SparkSession, rootPath: String): Try[Set[String]] = {
+    implicit val fs: FileSystem = FileSystem.get(new URI(rootPath), spark.sparkContext.hadoopConfiguration)
     if(FileUtils.notExists(rootPath) || FileUtils.isEmpty(rootPath)) {
       Success(Set.empty)
     } else {
@@ -75,5 +73,4 @@ object MetadataLogUtil {
     Success(parquetFiles)
   }
 
-  private def initSpark(): SparkSession = SparkSession.builder().appName("metadata").getOrCreate()
 }

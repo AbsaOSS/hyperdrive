@@ -49,8 +49,6 @@ private[reader] class KafkaStreamReader(
   import KafkaStreamReaderProps._
 
   private val logger = LogManager.getLogger()
-  private val spark = initSpark()
-  private implicit val fs: FileSystem = FileSystem.get(new URI("kafkaReader"), spark.sparkContext.hadoopConfiguration)
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException(s"Invalid topic: '$topic'")
@@ -67,6 +65,7 @@ private[reader] class KafkaStreamReader(
    * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
    */
   override def read(spark: SparkSession): DataFrame = {
+    implicit val fs: FileSystem = FileSystem.get(new URI(checkpointLocation), spark.sparkContext.hadoopConfiguration)
 
     if (spark.sparkContext.isStopped) {
       throw new IllegalStateException("SparkSession is stopped.")
@@ -86,7 +85,7 @@ private[reader] class KafkaStreamReader(
       .load()
   }
 
-  private def configureStartingOffsets(streamReader: DataStreamReader): DataStreamReader = {
+  private def configureStartingOffsets(streamReader: DataStreamReader)(implicit fileSystem: FileSystem): DataStreamReader = {
     val startingOffsets = getStartingOffsets(checkpointLocation)
 
     startingOffsets match {
@@ -99,7 +98,7 @@ private[reader] class KafkaStreamReader(
     }
   }
 
-  private def getStartingOffsets(checkpointLocation: String): Option[String] = {
+  private def getStartingOffsets(checkpointLocation: String)(implicit fileSystem: FileSystem): Option[String] = {
     if (FileUtils.exists(checkpointLocation) && !FileUtils.isEmpty(checkpointLocation)) {
       Option.empty
     }
@@ -107,8 +106,6 @@ private[reader] class KafkaStreamReader(
       Option(STARTING_OFFSETS_EARLIEST)
     }
   }
-
-  private def initSpark(): SparkSession = SparkSession.builder().appName("kafkaReaders").getOrCreate()
 
 }
 
