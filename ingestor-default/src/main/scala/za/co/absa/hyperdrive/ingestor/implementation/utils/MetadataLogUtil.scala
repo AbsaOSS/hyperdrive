@@ -41,32 +41,32 @@ object MetadataLogUtil {
   }
 
   private def getFileSystemFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-    val dummySchemaToAvoidSchemaInference = new StructType()
-      .add(StructField("dummy", IntegerType, nullable = true))
-    val parquetDataSource = DataSource(
-      spark,
-      classOf[ParquetFileFormat].getCanonicalName,
-      Seq(s"$rootPath/*"),
-      userSpecifiedSchema = Some(dummySchemaToAvoidSchemaInference)
-    )
-    val fileSystemRelation = parquetDataSource.resolveRelation().asInstanceOf[HadoopFsRelation]
-    val parquetFilesArr = fileSystemRelation.location.inputFiles
-    val parquetFiles = parquetFilesArr.toSet
-    if (parquetFiles.size != parquetFilesArr.length) {
-      Failure(new IllegalStateException("Parquet file paths on filesystem are not unique"))
-    }
+      val dummySchemaToAvoidSchemaInference = new StructType()
+        .add(StructField("dummy", IntegerType, nullable = true))
+      val parquetDataSource = DataSource(
+        spark,
+        classOf[ParquetFileFormat].getCanonicalName,
+        Seq(s"$rootPath/*"),
+        userSpecifiedSchema = Some(dummySchemaToAvoidSchemaInference)
+      )
+      val fileSystemRelation = parquetDataSource.resolveRelation().asInstanceOf[HadoopFsRelation]
+      val parquetFilesArr = fileSystemRelation.location.inputFiles
+      val parquetFiles = parquetFilesArr.toSet
+      if (parquetFiles.size != parquetFilesArr.length) {
+        Failure(new IllegalStateException("Parquet file paths on filesystem are not unique"))
+      }
 
-    Success(parquetFiles)
+      Success(parquetFiles)
   }
 
   private def getMetadataLogFiles(spark: SparkSession, rootPath: String): Try[Set[String]] = {
-    val metadataLogFileIndex = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, rootPath)
-    val parquetFilesArr = metadataLogFileIndex.inputFiles
-    val parquetFiles = parquetFilesArr.toSet
-    if (parquetFiles.size != parquetFilesArr.length) {
-      Failure(new IllegalStateException("Parquet file paths in metadata log are not unique"))
-    }
+      val metadataLogFileIndex = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, rootPath)
+      val parquetFilesArr = metadataLogFileIndex.inputFiles
+      val parquetFiles = parquetFilesArr.toSet
+      if (parquetFiles.size != parquetFilesArr.length) {
+        Failure(new IllegalStateException("Parquet file paths in metadata log are not unique"))
+      }
 
-    Success(parquetFiles)
+      Success(parquetFiles)
   }
 }
