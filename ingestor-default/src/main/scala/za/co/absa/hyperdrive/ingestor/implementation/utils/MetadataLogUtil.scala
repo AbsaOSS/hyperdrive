@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import java.net.URI
-import java.nio.file.Files
 
 import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.SparkSession
@@ -25,12 +24,10 @@ import org.apache.spark.sql.execution.datasources.{DataSource, HadoopFsRelation}
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
 import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
 import za.co.absa.hyperdrive.shared.utils.FileUtils
-import za.co.absa.commons.spark.SparkTestBase
 
 import scala.util.{Failure, Success, Try}
 
 object MetadataLogUtil {
-
   def getParquetFilesNotListedInMetadataLog(spark: SparkSession, rootPath: String): Try[Set[String]] = {
     implicit val fs: FileSystem = FileSystem.get(new URI(rootPath), spark.sparkContext.hadoopConfiguration)
     if(FileUtils.notExists(rootPath) || FileUtils.isEmpty(rootPath)) {
@@ -72,5 +69,4 @@ object MetadataLogUtil {
 
     Success(parquetFiles)
   }
-
 }
