@@ -15,7 +15,10 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
+import java.net.URI
+
 import org.apache.commons.configuration2.Configuration
+import org.apache.hadoop.fs.FileSystem
 import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -62,6 +65,7 @@ private[reader] class KafkaStreamReader(
    * thus, if not properly configured, the issue will ONLY BE FOUND AT RUNTIME.
    */
   override def read(spark: SparkSession): DataFrame = {
+    implicit val fs: FileSystem = FileSystem.get(new URI(checkpointLocation), spark.sparkContext.hadoopConfiguration)
 
     if (spark.sparkContext.isStopped) {
       throw new IllegalStateException("SparkSession is stopped.")
@@ -75,14 +79,14 @@ private[reader] class KafkaStreamReader(
       .option(TOPIC_SUBSCRIPTION_KEY, topic)
       .option(SPARK_BROKERS_SETTING_KEY, brokers)
 
-    val streamReaderWithStartingOffsets = configureStartingOffsets(streamReader, spark.sparkContext.hadoopConfiguration)
+    val streamReaderWithStartingOffsets = configureStartingOffsets(streamReader)
     streamReaderWithStartingOffsets
       .options(extraConfs)
       .load()
   }
 
-  private def configureStartingOffsets(streamReader: DataStreamReader, configuration: org.apache.hadoop.conf.Configuration): DataStreamReader = {
-    val startingOffsets = getStartingOffsets(checkpointLocation, configuration)
+  private def configureStartingOffsets(streamReader: DataStreamReader)(implicit fileSystem: FileSystem): DataStreamReader = {
+    val startingOffsets = getStartingOffsets(checkpointLocation)
 
     startingOffsets match {
       case Some(startOffset) =>
@@ -94,9 +98,9 @@ private[reader] class KafkaStreamReader(
     }
   }
 
-  private def getStartingOffsets(checkpointLocation: String, configuration: org.apache.hadoop.conf.Configuration): Option[String] = {
-    if (FileUtils.exists(checkpointLocation, configuration) && !FileUtils.isEmpty(checkpointLocation, configuration)) {
-        Option.empty
+  private def getStartingOffsets(checkpointLocation: String)(implicit fileSystem: FileSystem): Option[String] = {
+    if (FileUtils.exists(checkpointLocation) && !FileUtils.isEmpty(checkpointLocation)) {
+      Option.empty
     }
     else {
       Option(STARTING_OFFSETS_EARLIEST)

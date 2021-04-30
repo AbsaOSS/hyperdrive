@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import java.util.UUID
-import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.commons.spark.SparkTestBase
@@ -24,10 +24,10 @@ import za.co.absa.commons.spark.SparkTestBase
 class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   behavior of "FileUtils"
-  private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-  private val config = spark.sparkContext.hadoopConfiguration
   private var baseDirectory: TempDirectory = _
   private var baseDirPath: String = _
+  private val dummyDirectory = TempDirectory("DummyDirectory")
+  private implicit val fs: FileSystem = FileSystem.get(dummyDirectory.path.toUri, spark.sparkContext.hadoopConfiguration)
 
   before {
     baseDirectory = TempDirectory("FileUtilsTest")
@@ -45,7 +45,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     fs.mkdirs(new Path(directory))
 
     // when, then
-    FileUtils.isEmpty(directory, config) shouldBe true
+    FileUtils.isEmpty(directory) shouldBe true
   }
 
   it should "return true if the directory only contains other directories, but no files" in {
@@ -55,7 +55,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     fs.mkdirs(new Path(subDirectory))
 
     // when, then
-    FileUtils.isEmpty(directory, config) shouldBe true
+    FileUtils.isEmpty(directory) shouldBe true
   }
 
   it should "return false if the directory is not empty" in {
@@ -66,7 +66,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     fs.create(new Path(subDirectory, "_INFO"))
 
     // when, then
-    FileUtils.isEmpty(directory, config) shouldBe false
+    FileUtils.isEmpty(directory) shouldBe false
   }
 
   it should "return false if the directory does not exist" in {
@@ -74,7 +74,7 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     val doesNotExist = s"$baseDirPath/${UUID.randomUUID().toString}"
 
     // when, then
-    FileUtils.isEmpty(doesNotExist, config) shouldBe false
+    FileUtils.isEmpty(doesNotExist) shouldBe false
   }
 
   it should "return false if the argument is a file" in {
@@ -83,6 +83,6 @@ class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with Befor
     fs.create(new Path(file))
 
     // when, then
-    FileUtils.isEmpty(file, config) shouldBe false
+    FileUtils.isEmpty(file) shouldBe false
   }
 }
