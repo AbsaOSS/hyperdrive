@@ -16,9 +16,10 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
+import org.apache.avro.JsonProperties
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
@@ -48,6 +49,7 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
      ]
     }"""
   }
+
   private val dummyRecordNameSchema = AvroSchemaUtils.parse(getSchemaString(recordName, recordNamespace))
   private val dummyTopicNameSchema = AvroSchemaUtils.parse(getSchemaString("topLevelRecord", ""))
 
@@ -57,12 +59,14 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   private val keySchemaRegistryNamingStrategy = "schema.registry.naming.strategy"
   private val keySchemaRegistryRecordName = "schema.registry.record.name"
   private val keySchemaRegistryRecordNamespace = "schema.registry.record.namespace"
+
   private object ProducerConfigKeys extends AbrisProducerConfigKeys {
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
     override val recordName: String = keySchemaRegistryRecordName
     override val recordNamespace: String = keySchemaRegistryRecordNamespace
     override val topic: String = keyTopic
   }
+
   private object ConsumerConfigKeys extends AbrisConsumerConfigKeys {
     override val schemaId: String = keySchemaRegistrySchemaId
     override val namingStrategy: String = keySchemaRegistryNamingStrategy
@@ -100,6 +104,56 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val schema = AbrisConfigUtil.generateSchema(config, ProducerConfigKeys, dummyExpr, Map())
 
     schema shouldBe dummyRecordNameSchema
+  }
+
+  it should "set default values for the specified fields" in {
+    val config = createBaseConfiguration
+    config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
+    val expression = struct(
+      lit(null).cast(IntegerType).as("col1"),
+      lit("abc").cast(StringType).as("col2"),
+      struct(
+        lit(null).cast(IntegerType).as("subcol1")
+      ).as("col3"),
+      array(struct(
+        lit(null).cast(BooleanType).as("subcol1")
+      )).as("col4"),
+      map(
+        lit("abc").as("keycol1"),
+        struct(lit(null).cast(StringType).as("valuecol1")
+        )).as("col5")
+    ).expr
+
+    val expectedSchemaString =
+      raw"""{
+     "type": "record",
+     "name": "topLevelRecord",
+     "fields":[
+         {"name": "col1", "type": ["int", "null"], "default": 42 },
+         {"name": "col2", "type": "string"},
+         {"name": "col3", "type":
+            {"type": "record", "name": "col3", "namespace": "topLevelRecord", "fields":[
+              {"name": "subcol1", "type": ["null", "int"], "default": null}]}},
+         {"name": "col4", "type":
+            { "type": "array", "items":
+                { "type": "record", "name": "col4", "namespace": "topLevelRecord", "fields":[
+                    {"name": "subcol1", "type": ["null", "boolean"], "default": null}]}}},
+         {"name": "col5", "type":
+            { "type":"map", "values":
+                { "type": "record", "name": "col5", "namespace":"topLevelRecord", "fields":[
+                    {"name":"valuecol1","type":["null","string"], "default": null}]}}}
+     ]
+    }"""
+    val expectedSchema = AvroSchemaUtils.parse(expectedSchemaString)
+
+    val schema = AbrisConfigUtil.generateSchema(config, ProducerConfigKeys, expression, Map(
+      "col1" -> 42.asInstanceOf[Object],
+      "col3.subcol1" -> JsonProperties.NULL_VALUE,
+      "col4.subcol1" -> JsonProperties.NULL_VALUE,
+      "col5.valuecol1" -> JsonProperties.NULL_VALUE
+    ))
+
+    schema shouldBe expectedSchema
   }
 
   "getKeyProducerSettings" should "return settings and register subject with topic name strategy" in {
