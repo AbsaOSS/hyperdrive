@@ -15,6 +15,7 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
+import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -63,32 +64,57 @@ private[hyperdrive] object AbrisConfigUtil {
     fromSchemaRegisteringConfigFragment.usingSchemaRegistry(schemaRegistryConfig)
   }
 
-  def getKeyProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
+  def getKeyProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, schema: Schema,
                              schemaRegistryConfig: Map[String, String]): ToAvroConfig =
-    getProducerSettings(configuration, configKeys, isKey = true, expression, schemaRegistryConfig)
+    getProducerSettings(configuration, configKeys, isKey = true, schema, schemaRegistryConfig)
 
-  def getValueProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
+  def getValueProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, schema: Schema,
                                schemaRegistryConfig: Map[String, String]): ToAvroConfig =
-    getProducerSettings(configuration, configKeys, isKey = false, expression, schemaRegistryConfig)
+    getProducerSettings(configuration, configKeys, isKey = false, schema, schemaRegistryConfig)
+
+  def generateSchema(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
+                     newDefaultValues: Map[String, Object]): Schema = {
+    val namingStrategy = getNamingStrategy(configuration, configKeys)
+    val initialSchema = namingStrategy match {
+      case TopicNameStrategy => toAvroType(expression.dataType, expression.nullable)
+      case x if x == RecordNameStrategy || x == TopicRecordNameStrategy => toAvroType(expression.dataType,
+        expression.nullable, getRecordName(configuration, configKeys), getRecordNamespace(configuration, configKeys))
+      case _ => throw new IllegalArgumentException("Naming strategy must be one of topic.name, record.name or topic.record.name")
+    }
+
+    cloneSchema(initialSchema, newDefaultValues)
+  }
+
+  private def cloneSchema(schema: Schema, newDefaultValues: Map[String, Object], fieldPrefix: String = ""): Schema = {
+    val prefixSeparator = if (fieldPrefix.isEmpty) "" else "."
+    import scala.collection.JavaConverters._
+    if (schema.getType != Schema.Type.RECORD) {
+      schema
+    } else {
+      val newFields = schema.getFields.asScala.map(f => {
+        val fullFieldName = s"$fieldPrefix$prefixSeparator${f.name()}"
+        val defaultValue = newDefaultValues.getOrElse(fullFieldName, f.defaultVal())
+        new Schema.Field(f.name(), cloneSchema(f.schema(), newDefaultValues, fullFieldName),
+          f.doc(), defaultValue, f.order())
+      })
+      Schema.createRecord(schema.getName, schema.getDoc, schema.getNamespace, schema.isError, newFields.asJava)
+    }
+  }
+
 
   private def getProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, isKey: Boolean,
-                                  expression: Expression, schemaRegistryConfig: Map[String, String]): ToAvroConfig = {
+                                  schema: Schema, schemaRegistryConfig: Map[String, String]): ToAvroConfig = {
     val schemaManager = SchemaManagerFactory.create(schemaRegistryConfig)
     val topic = getTopic(configuration, configKeys)
     val namingStrategy = getNamingStrategy(configuration, configKeys)
     val schemaId = namingStrategy match {
       case TopicNameStrategy =>
-        val schema = toAvroType(expression.dataType, expression.nullable)
         val subject = SchemaSubject.usingTopicNameStrategy(topic, isKey)
         schemaManager.register(subject, schema)
       case RecordNameStrategy =>
-        val schema = toAvroType(expression.dataType, expression.nullable, getRecordName(configuration, configKeys),
-          getRecordNamespace(configuration, configKeys))
         val subject = SchemaSubject.usingRecordNameStrategy(schema)
         schemaManager.register(subject, schema)
       case TopicRecordNameStrategy =>
-        val schema = toAvroType(expression.dataType, expression.nullable, getRecordName(configuration, configKeys),
-          getRecordNamespace(configuration, configKeys))
         val subject = SchemaSubject.usingTopicRecordNameStrategy(topic, schema)
         schemaManager.register(subject, schema)
       case _ => throw new IllegalArgumentException("Naming strategy must be one of topic.name, record.name or topic.record.name")

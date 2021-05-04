@@ -93,12 +93,14 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
 
   def getKeyAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, Map())
+    AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
 
   def getValueAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, expression, schemaRegistryConfig)
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, Map())
+    AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
 }
 
