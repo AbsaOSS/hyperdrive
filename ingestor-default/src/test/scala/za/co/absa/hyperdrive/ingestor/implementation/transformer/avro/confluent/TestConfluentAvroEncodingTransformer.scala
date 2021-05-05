@@ -15,13 +15,22 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.commons.configuration2.BaseConfiguration
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
+import org.apache.spark.sql.functions.{array, lit, map, struct}
 import org.apache.spark.sql.streaming.Trigger
+import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType, StructField, StructType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
+import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
@@ -31,11 +40,11 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
 
   private val topic = "topic"
   private val SchemaRegistryURL = "http://localhost:8081"
-
+  private var mockSchemaRegistryClient: MockSchemaRegistryClient = _
   behavior of ConfluentAvroEncodingTransformer.getClass.getSimpleName
 
   before {
-    val mockSchemaRegistryClient = new HyperdriveMockSchemaRegistryClient()
+    mockSchemaRegistryClient = new HyperdriveMockSchemaRegistryClient()
     SchemaManagerFactory.resetSRClientInstance()
     SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL), mockSchemaRegistryClient)
   }
@@ -52,7 +61,7 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
     encoder.withKey shouldBe false
   }
 
-  it should "encode the values" in {
+  "transform" should "encode the values" in {
     // given
     import spark.implicits._
     val queryName = "dummyQuery"
@@ -82,5 +91,79 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
     outputDf.count() shouldBe 100
     val byteArrays = outputDf.select("value").map(_ (0).asInstanceOf[Array[Byte]]).collect()
     byteArrays.distinct.length shouldBe byteArrays.length
+  }
+
+  it should "register a schema with optional fields" in {
+    // given
+    val schema = StructType(Seq(
+        StructField("key__col1", IntegerType, nullable = true),
+        StructField("col2", StringType, nullable = true),
+        StructField("col3", StructType(
+          Seq(StructField("subCol1", StringType, nullable = true))
+        ), nullable = true)
+      )
+    )
+    HyperdriveContext.put(HyperdriveContextKeys.keyColumnPrefix, "key__")
+    HyperdriveContext.put(HyperdriveContextKeys.keyColumnNames, Seq("col1"))
+    val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(schema))
+
+    val config = new BaseConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty(KafkaStreamWriter.KEY_TOPIC, topic)
+    config.addProperty(KEY_SCHEMA_REGISTRY_URL, SchemaRegistryURL)
+    config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
+    config.addProperty(KEY_PRODUCE_KEYS, "true")
+    config.addProperty(KEY_KEY_OPTIONAL_FIELDS, "col1")
+    config.addProperty(KEY_VALUE_OPTIONAL_FIELDS, "col2, col3, col3.subCol1")
+    val encoder = ConfluentAvroEncodingTransformer(config)
+
+    val expectedKeySchemaString = {
+      raw"""{
+           |  "type" : "record",
+           |  "name" : "topLevelRecord",
+           |  "fields" : [ {
+           |    "name" : "col1",
+           |    "type" : [ "null", "int" ],
+           |    "default" : null
+           |  } ]
+           |}
+           |""".stripMargin
+    }
+    val expectedKeySchema = AvroSchemaUtils.parse(expectedKeySchemaString)
+
+    val expectedValueSchemaString =
+      raw"""{
+           |  "type" : "record",
+           |  "name" : "topLevelRecord",
+           |  "fields" : [ {
+           |    "name" : "col2",
+           |    "type" : [ "null", "string" ],
+           |    "default" : null
+           |  }, {
+           |    "name" : "col3",
+           |    "type" : [ "null", {
+           |      "type" : "record",
+           |      "name" : "col3",
+           |      "namespace" : "topLevelRecord",
+           |      "fields" : [ {
+           |        "name" : "subCol1",
+           |        "type" : [ "null", "string" ],
+           |        "default" : null
+           |      } ]
+           |    } ],
+           |    "default" : null
+           |  } ]
+           |}
+           |""".stripMargin
+    val expectedValueSchema = AvroSchemaUtils.parse(expectedValueSchemaString)
+
+    // when
+    encoder.transform(memoryStream.toDF())
+
+    // then
+    val keySchema = mockSchemaRegistryClient.getLatestSchemaMetadata(s"$topic-key")
+    keySchema.getSchema shouldBe expectedKeySchema.toString
+    val valueSchema = mockSchemaRegistryClient.getLatestSchemaMetadata(s"$topic-value")
+    valueSchema.getSchema shouldBe expectedValueSchema.toString
   }
 }

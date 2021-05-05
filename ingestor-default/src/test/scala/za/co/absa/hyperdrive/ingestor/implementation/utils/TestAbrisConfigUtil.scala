@@ -126,24 +126,25 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
     val expectedSchemaString =
       raw"""{
-     "type": "record",
-     "name": "topLevelRecord",
-     "fields":[
-         {"name": "col1", "type": ["int", "null"], "default": 42 },
-         {"name": "col2", "type": "string"},
-         {"name": "col3", "type":
-            {"type": "record", "name": "col3", "namespace": "topLevelRecord", "fields":[
-              {"name": "subcol1", "type": ["null", "int"], "default": null}]}},
-         {"name": "col4", "type":
-            { "type": "array", "items":
-                { "type": "record", "name": "col4", "namespace": "topLevelRecord", "fields":[
-                    {"name": "subcol1", "type": ["null", "boolean"], "default": null}]}}},
-         {"name": "col5", "type":
-            { "type":"map", "values":
-                { "type": "record", "name": "col5", "namespace":"topLevelRecord", "fields":[
-                    {"name":"valuecol1","type":["null","string"], "default": null}]}}}
-     ]
-    }"""
+           | "type": "record",
+           | "name": "topLevelRecord",
+           | "fields":[
+           |     {"name": "col1", "type": ["int", "null"], "default": 42 },
+           |     {"name": "col2", "type": "string"},
+           |     {"name": "col3", "type":
+           |        {"type": "record", "name": "col3", "namespace": "topLevelRecord", "fields":[
+           |          {"name": "subcol1", "type": ["null", "int"], "default": null}]}},
+           |     {"name": "col4", "type":
+           |        { "type": "array", "items":
+           |            { "type": "record", "name": "col4", "namespace": "topLevelRecord", "fields":[
+           |                {"name": "subcol1", "type": ["null", "boolean"], "default": null}]}}},
+           |     {"name": "col5", "type":
+           |        { "type":"map", "values":
+           |            { "type": "record", "name": "col5", "namespace":"topLevelRecord", "fields":[
+           |                {"name":"valuecol1","type":["null","string"], "default": null}]}}}
+           | ]
+           |}
+           |""".stripMargin
     val expectedSchema = AvroSchemaUtils.parse(expectedSchemaString)
 
     val schema = AbrisConfigUtil.generateSchema(config, ProducerConfigKeys, expression, Map(

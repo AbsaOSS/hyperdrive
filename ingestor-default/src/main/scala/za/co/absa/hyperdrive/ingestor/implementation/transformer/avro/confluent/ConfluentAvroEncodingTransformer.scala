@@ -15,6 +15,7 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
+import org.apache.avro.JsonProperties
 import org.apache.commons.configuration2.Configuration
 import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.DataFrame
@@ -74,6 +75,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
 }
 
 object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with ConfluentAvroEncodingTransformerAttributes {
+  private val logger = LogManager.getLogger
 
   object AbrisConfigKeys extends AbrisProducerConfigKeys {
     override val topic: String = KEY_TOPIC
@@ -93,13 +95,22 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
 
   def getKeyAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, Map())
+    val newDefaultValues = ConfigUtils.getSeqOrNone(KEY_KEY_OPTIONAL_FIELDS, config)
+      .map(optionalFields => optionalFields.map(_ -> JsonProperties.NULL_VALUE).toMap)
+      .getOrElse(Map())
+
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues)
+    logger.info(s"Generated key schema\n${schema.toString(true)}")
     AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
 
   def getValueAvroConfig(config: Configuration, expression: Expression): ToAvroConfig = {
     val schemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config)
-    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, Map())
+    val newDefaultValues = ConfigUtils.getSeqOrNone(KEY_VALUE_OPTIONAL_FIELDS, config)
+      .map(optionalFields => optionalFields.map(_ -> JsonProperties.NULL_VALUE).toMap)
+      .getOrElse(Map())
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues)
+    logger.info(s"Generated value schema\n${schema.toString(true)}")
     AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
 }
