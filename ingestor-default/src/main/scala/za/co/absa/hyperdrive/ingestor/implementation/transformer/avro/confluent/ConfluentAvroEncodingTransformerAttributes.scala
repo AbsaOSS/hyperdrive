@@ -21,11 +21,13 @@ trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes 
   val KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY = "value.schema.naming.strategy"
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME = "value.schema.record.name"
   val KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE = "value.schema.record.namespace"
+  val KEY_VALUE_OPTIONAL_FIELDS = "value.optional.fields"
 
   val KEY_PRODUCE_KEYS = "produce.keys"
   val KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY = "key.schema.naming.strategy"
   val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME = "key.schema.record.name"
   val KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE = "key.schema.record.namespace"
+  val KEY_KEY_OPTIONAL_FIELDS = "key.optional.fields"
 
   override def getName: String = "Confluent Avro Stream Encoder"
 
@@ -40,12 +42,14 @@ trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes 
       Some("Record name for naming strategies record.name or topic.record.name"), required = false),
     KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE -> PropertyMetadata("Value-Record namespace",
       Some("Record namespace for naming strategies record.name or topic.record.name"), required = false),
+    KEY_VALUE_OPTIONAL_FIELDS -> PropertyMetadata("Value-Record optional fields", Some("Comma-separated list of nullable value columns that should get default value null in the avro schema"), required = false),
 
     KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY -> PropertyMetadata("Key-Schema naming strategy",
       Some("Subject name strategy of Schema Registry. Must be one of \"topic.name\", \"record.name\" or \"topic.record.name\""), required = false),
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false),
-    KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE -> PropertyMetadata("Basic auth user info file", Some("Text file containing one line in the form <username>:<password> for basic auth in schema registry"), required = false)
+    KEY_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_FILE -> PropertyMetadata("Basic auth user info file", Some("Text file containing one line in the form <username>:<password> for basic auth in schema registry"), required = false),
+    KEY_KEY_OPTIONAL_FIELDS -> PropertyMetadata("Key-Record optional fields", Some("Comma-separated list of nullable key columns that should get default value null in the avro schema"), required = false)
   )
 
   override def getExtraConfigurationPrefix: Option[String] = Some(KEY_SCHEMA_REGISTRY_EXTRA_CONFS_ROOT)
