@@ -18,7 +18,7 @@
     <parent>
         <artifactId>hyperdrive_2.12</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>4.3.1-SNAPSHOT</version>
+        <version>4.4.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
