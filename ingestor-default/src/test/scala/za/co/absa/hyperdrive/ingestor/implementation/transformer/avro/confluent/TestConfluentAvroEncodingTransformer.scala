@@ -21,9 +21,9 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
-import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.functions.{array, lit, map, struct}
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType, StructField, StructType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
@@ -63,19 +63,11 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
 
   "transform" should "encode the values" in {
     // given
-    val schemaCatalyst = new StructType()
-      .add("offset", LongType, nullable = true)
-      .add("partition", IntegerType, nullable = true)
+    import spark.implicits._
     val queryName = "dummyQuery"
-    val offsets = (1 to 100).map(_ => 42L)
-    val partitions = (1 to 100).map(_ % 5)
-
-    val rows = offsets.zip(partitions).map(a => Row(a._1, a._2))
-    val input = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(schemaCatalyst))
-    input.addData(rows)
+    val input = MemoryStream[Int](1, spark.sqlContext)
+    input.addData(1 to 100)
     val df = input.toDF()
-      .filter(col("offset") ===  lit(42))
-    df.printSchema()
 
     // when
     val config = new BaseConfiguration()
