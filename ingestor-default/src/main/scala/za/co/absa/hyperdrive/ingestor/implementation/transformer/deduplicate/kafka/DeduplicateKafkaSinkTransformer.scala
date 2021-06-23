@@ -209,11 +209,11 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
     logger.info(s"Going to create DeduplicateKafkaSinkTransformer with: readerTopic=$readerTopic," +
       s"readerBrokers=$readerBrokers, " +
       s"readerExtraOptions=${filterKeysContaining(readerExtraOptions, exclusionToken = "password")}, " +
-      s"decoderSchemaRegistryConfig=$decoderSchemaRegistryConfig, " +
+      s"decoderSchemaRegistryConfig=${filterKeysContaining(decoderSchemaRegistryConfig, "basic.auth")}, " +
       s"writerTopic=$writerTopic, " +
       s"writerBrokers=$writerBrokers, " +
       s"writerExtraOptions=${filterKeysContaining(writerExtraOptions, exclusionToken = "password")}, " +
-      s"encoderSchemaRegistryConfig=$encoderSchemaRegistryConfig, " +
+      s"encoderSchemaRegistryConfig=${filterKeysContaining(encoderSchemaRegistryConfig, "basic.auth")}, " +
       s"checkpointLocation=$checkpointLocation, " +
       s"sourceIdColumns=$sourceIdColumns, " +
       s"destinationIdColumns=$destinationIdColumns, " +
