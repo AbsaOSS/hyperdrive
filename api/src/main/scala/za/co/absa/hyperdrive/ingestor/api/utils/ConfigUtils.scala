@@ -112,4 +112,6 @@ object ConfigUtils {
       case (key: String, _) => key
     }
   }
+
+  def filterKeysContaining(map: Map[String, String], exclusionToken: String): Map[String, String] = map.filterKeys(!_.contains(exclusionToken))
 }

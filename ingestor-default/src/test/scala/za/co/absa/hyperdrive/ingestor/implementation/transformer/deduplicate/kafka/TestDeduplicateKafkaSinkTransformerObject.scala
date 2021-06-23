@@ -28,8 +28,8 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWri
 class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
   behavior of DeduplicateKafkaSinkTransformer.getClass.getSimpleName
 
-  private val readerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
-  private val writerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl" // copied from DeduplicateKafkaSinkTransformer
+  private val decoderPrefix = "deduplicateKafkaSinkTransformer.decoder" // copied from DeduplicateKafkaSinkTransformer
+  private val encoderPrefix = "deduplicateKafkaSinkTransformer.encoder" // copied from DeduplicateKafkaSinkTransformer
 
   private val dummySourceRegistry = "http://sourceRegistry:8081"
   private val dummyDestinationRegistry = "http://destinationRegistry:8081"
@@ -45,16 +45,17 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     transformer.readerTopic shouldBe "readerTopic"
     transformer.readerBrokers shouldBe "http://readerBrokers:9092"
     transformer.readerExtraOptions should contain theSameElementsAs Map(
-      "kafka.security.protocol" -> "SASL_PLAINTEXT",
-      "failOnDataLoss" -> "false"
+      "security.protocol" -> "SASL_PLAINTEXT"
     )
-    transformer.readerSchemaRegistryUrl shouldBe dummySourceRegistry
+    transformer.decoderSchemaRegistryConfig("schema.registry.url") shouldBe dummySourceRegistry
+    transformer.decoderSchemaRegistryConfig("some.extra.config") shouldBe "someDecoderExtraConfig"
     transformer.writerTopic shouldBe "writerTopic"
     transformer.writerBrokers shouldBe "http://writerBrokers:9092"
     transformer.writerExtraOptions shouldBe Map(
-      "kafka.sasl.mechanism" -> "GSSAPI"
+      "sasl.mechanism" -> "GSSAPI"
     )
-    transformer.writerSchemaRegistryUrl shouldBe dummyDestinationRegistry
+    transformer.encoderSchemaRegistryConfig("schema.registry.url") shouldBe dummyDestinationRegistry
+    transformer.encoderSchemaRegistryConfig("some.extra.config") shouldBe "someEncoderExtraConfig"
 
     transformer.checkpointLocation shouldBe "/tmp/checkpoint"
     transformer.sourceIdColumnNames should contain theSameElementsInOrderAs Seq("offset", "partition")
@@ -103,20 +104,22 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
 
   it should "throw an exception if the reader schema registry config is missing" in {
     val config = getLocalConfig()
-    config.clearProperty(readerSchemaRegistryUrlKey)
+    import scala.collection.JavaConverters._
+    config.getKeys(decoderPrefix).asScala.foreach(config.clearProperty)
 
     val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
 
-    exception.getMessage should include(readerSchemaRegistryUrlKey)
+    exception.getMessage should include("schema.registry.url")
   }
 
   it should "throw an exception if the writer schema registry config is missing" in {
     val config = getLocalConfig()
-    config.clearProperty(writerSchemaRegistryUrlKey)
+    import scala.collection.JavaConverters._
+    config.getKeys(encoderPrefix).asScala.foreach(config.clearProperty)
 
     val exception = the[Exception] thrownBy DeduplicateKafkaSinkTransformer(config)
 
-    exception.getMessage should include(writerSchemaRegistryUrlKey)
+    exception.getMessage should include("schema.registry.url")
   }
 
 
@@ -128,6 +131,7 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     config.addProperty("component.transformer.id.0", "decoder")
     config.addProperty("component.transformer.class.decoder", classOf[ConfluentAvroDecodingTransformer].getCanonicalName)
     config.addProperty(s"transformer.decoder.${ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL}", dummySourceRegistry)
+    config.addProperty(s"transformer.decoder.schema.registry.options.some.key", "schema.registry.extra.value")
 
     config.addProperty("component.transformer.id.1", "encoder")
     config.addProperty("component.transformer.class.encoder", classOf[ConfluentAvroEncodingTransformer].getCanonicalName)
@@ -142,8 +146,9 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
       "reader.option.kafka.option1" -> "reader.option.kafka.option1",
       "reader.option.kafka.option2" -> "reader.option.kafka.option2",
       "writer.kafka.option.option3" -> "writer.kafka.option.option3",
-      s"transformer.decoder.${ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL}" -> "deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl",
-      s"transformer.encoder.${ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL}" -> "deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl",
+      s"transformer.decoder.${ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL}" -> "deduplicateKafkaSinkTransformer.decoder.schema.registry.url",
+      s"transformer.decoder.schema.registry.options.some.key" -> "deduplicateKafkaSinkTransformer.decoder.schema.registry.options.some.key",
+      s"transformer.encoder.${ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL}" -> "deduplicateKafkaSinkTransformer.encoder.schema.registry.url",
       KafkaStreamReader.KEY_TOPIC -> KafkaStreamReader.KEY_TOPIC,
       KafkaStreamReader.KEY_BROKERS -> KafkaStreamReader.KEY_BROKERS,
       KafkaStreamWriter.KEY_TOPIC -> KafkaStreamWriter.KEY_TOPIC,
@@ -158,13 +163,16 @@ class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
     config.addProperty(KafkaStreamReader.KEY_BROKERS, "http://readerBrokers:9092")
     config.addProperty("reader.option.kafka.security.protocol", "SASL_PLAINTEXT")
     config.addProperty("reader.option.failOnDataLoss", false)
-    config.addProperty(readerSchemaRegistryUrlKey, dummySourceRegistry)
+    config.addProperty(s"$decoderPrefix.irrelevant.key", "irrelevant value")
+    config.addProperty(s"$decoderPrefix.schema.registry.url", dummySourceRegistry)
+    config.addProperty(s"$decoderPrefix.schema.registry.options.some.extra.config", "someDecoderExtraConfig")
 
     config.addProperty(KafkaStreamWriter.KEY_TOPIC, "writerTopic")
     config.addProperty(KafkaStreamWriter.KEY_BROKERS, "http://writerBrokers:9092")
     config.addProperty("writer.kafka.option.kafka.sasl.mechanism", "GSSAPI")
     config.addProperty("component.transformer.class.encoder", classOf[ConfluentAvroEncodingTransformer].getCanonicalName)
-    config.addProperty(writerSchemaRegistryUrlKey, dummyDestinationRegistry)
+    config.addProperty(s"$encoderPrefix.schema.registry.url", dummyDestinationRegistry)
+    config.addProperty(s"$encoderPrefix.schema.registry.options.some.extra.config", "someEncoderExtraConfig")
 
     config.addProperty(StreamWriterCommonAttributes.keyCheckpointBaseLocation, "/tmp/checkpoint")
 
