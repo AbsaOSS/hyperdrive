@@ -106,16 +106,20 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info(s"Latest source offsets by partition for ${readerTopic}: { ${offsetsToString(offsets)} }" )
 
   private def offsetsToString(offsets: Option[Map[TopicPartition, Long]]) = {
-    offsets.map(_.toSeq
+    offsets.flatMap(_.toSeq
       .sortBy{ case (tp, _) => tp.partition()}
-      .map{ case (tp, offset) => s"${tp.partition()}: $offset"}.reduce(_ + ", " + _)).getOrElse("-")
+      .map{ case (tp, offset) => s"${tp.partition()}: $offset"}
+      .reduceOption(_ + ", " + _))
+      .getOrElse("-")
   }
 
   private def logCurrentPositions(consumer: KafkaConsumer[GenericRecord, GenericRecord]): Unit = {
     val sourcePartitions = KafkaUtil.getTopicPartitions(consumer, readerTopic)
     val currentPositions = sourcePartitions
       .sortBy(_.partition())
-      .map { tp => s"${tp.partition()}: ${consumer.position(tp)}"}.reduce(_ + ", " + _)
+      .map { tp => s"${tp.partition()}: ${consumer.position(tp)}"}
+      .reduceOption(_ + ", " + _)
+      .getOrElse("No positions available.")
     logger.info(s"Reset source offsets by partition to { ${currentPositions} }")
   }
 
@@ -125,8 +129,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
       .mapValues(_.map(_._2))
       .toSeq
       .sortBy(_._1)
-    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduce(_ + ", " + _)
-    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduce(_ + ", " + _)
+    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduceOption(_ + ", " + _).getOrElse("No offsets available")
+    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduceOption(_ + ", " + _).getOrElse("No offsets available")
     logger.info(s"Consumed ${latestSinkRecords.size} sink records. First three offsets by partition: { ${firstOffsets} }. Last three offsets: { ${lastOffsets} }")
   }
 
