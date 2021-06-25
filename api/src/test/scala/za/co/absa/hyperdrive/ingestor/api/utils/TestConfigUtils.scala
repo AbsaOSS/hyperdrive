@@ -340,4 +340,17 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
     prefix shouldBe None
   }
+
+  "filterConfigKeys" should "filter out config keys" in {
+    val map = Map(
+      "some.sensitive.key" -> "sensitive value",
+      "other.sensitive.key" -> "other sensitive value",
+      "normal.key" -> "normal value"
+    )
+
+    val filteredMap = ConfigUtils.filterKeysContaining(map, "sensitive")
+
+    filteredMap.size shouldBe 1
+    filteredMap("normal.key") shouldBe "normal value"
+  }
 }

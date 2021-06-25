@@ -19,7 +19,7 @@ import java.time.Duration
 import java.util.{Properties, UUID}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{ConfluentAvroDecodingTransformer, ConfluentAvroEncodingTransformer}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.KafkaUtil
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AvroUtil, KafkaUtil, SchemaRegistryConfigUtil}
 import org.apache.avro.generic.GenericRecord
 import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.Path
@@ -30,11 +30,10 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.functions.{col, lit, not, struct}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getPropertySubset, getSeqOrThrow}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{filterKeysContaining, getOrThrow, getPropertySubset, getSeqOrThrow}
 import za.co.absa.hyperdrive.ingestor.api.utils.StreamWriterUtil
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-import za.co.absa.hyperdrive.ingestor.implementation.utils.AvroUtil
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 
 
@@ -42,11 +41,11 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   val readerTopic: String,
   val readerBrokers: String,
   val readerExtraOptions: Map[String, String],
-  val readerSchemaRegistryUrl: String,
+  val decoderSchemaRegistryConfig: Map[String, String],
   val writerTopic: String,
   val writerBrokers: String,
   val writerExtraOptions: Map[String, String],
-  val writerSchemaRegistryUrl: String,
+  val encoderSchemaRegistryConfig: Map[String, String],
   val checkpointLocation: String,
   val sourceIdColumnNames: Seq[String],
   val destinationIdColumnNames: Seq[String],
@@ -71,7 +70,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   private def deduplicateDataFrame(dataFrame: DataFrame, offsetLog: OffsetSeqLog, commitLog: CommitLog) = {
     logger.info("Deduplicate rows after retry")
     implicit val kafkaConsumerTimeoutImpl: Duration = kafkaConsumerTimeout
-    val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, readerSchemaRegistryUrl)
+    val sourceConsumer = createConsumer(readerBrokers, readerExtraOptions, decoderSchemaRegistryConfig)
     val latestCommittedOffsets = KafkaUtil.getLatestCommittedOffset(offsetLog, commitLog)
     logCommittedOffsets(latestCommittedOffsets)
 
@@ -85,7 +84,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
       consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset))).getOrElse(Seq())
     val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
 
-    val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, writerSchemaRegistryUrl)
+    val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, encoderSchemaRegistryConfig)
     val sinkTopicPartitions = KafkaUtil.getTopicPartitions(sinkConsumer, writerTopic)
     val recordsPerPartition = sinkTopicPartitions.map(p => p -> sourceRecords.size.toLong).toMap
     val latestSinkRecords = consumeAndClose(sinkConsumer, consumer =>
@@ -107,16 +106,20 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info(s"Latest source offsets by partition for ${readerTopic}: { ${offsetsToString(offsets)} }" )
 
   private def offsetsToString(offsets: Option[Map[TopicPartition, Long]]) = {
-    offsets.map(_.toSeq
+    offsets.flatMap(_.toSeq
       .sortBy{ case (tp, _) => tp.partition()}
-      .map{ case (tp, offset) => s"${tp.partition()}: $offset"}.reduce(_ + ", " + _)).getOrElse("-")
+      .map{ case (tp, offset) => s"${tp.partition()}: $offset"}
+      .reduceOption(_ + ", " + _))
+      .getOrElse("-")
   }
 
   private def logCurrentPositions(consumer: KafkaConsumer[GenericRecord, GenericRecord]): Unit = {
     val sourcePartitions = KafkaUtil.getTopicPartitions(consumer, readerTopic)
     val currentPositions = sourcePartitions
       .sortBy(_.partition())
-      .map { tp => s"${tp.partition()}: ${consumer.position(tp)}"}.reduce(_ + ", " + _)
+      .map { tp => s"${tp.partition()}: ${consumer.position(tp)}"}
+      .reduceOption(_ + ", " + _)
+      .getOrElse("No positions available.")
     logger.info(s"Reset source offsets by partition to { ${currentPositions} }")
   }
 
@@ -126,8 +129,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
       .mapValues(_.map(_._2))
       .toSeq
       .sortBy(_._1)
-    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduce(_ + ", " + _)
-    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduce(_ + ", " + _)
+    val firstOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.take(3)}"}.reduceOption(_ + ", " + _).getOrElse("No offsets available")
+    val lastOffsets = offsetsByPartition.map { case (partition, offsets) => s"$partition: ${offsets.takeRight(3)}"}.reduceOption(_ + ", " + _).getOrElse("No offsets available")
     logger.info(s"Consumed ${latestSinkRecords.size} sink records. First three offsets by partition: { ${firstOffsets} }. Last three offsets: { ${lastOffsets} }")
   }
 
@@ -153,7 +156,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     }
   }
 
-  private def createConsumer(brokers: String, extraOptions: Map[String, String], schemaRegistryUrl: String) = {
+  private def createConsumer(brokers: String, extraOptions: Map[String, String], decoderSchemaRegistryConfig: Map[String, String]) = {
     val props = new Properties()
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers)
     props.put(ConsumerConfig.CLIENT_ID_CONFIG, s"hyperdrive_consumer_${UUID.randomUUID().toString}")
@@ -161,7 +164,9 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     extraOptions.foreach {
       case (key, value) => props.put(key, value)
     }
-    props.put("schema.registry.url", schemaRegistryUrl)
+    decoderSchemaRegistryConfig.foreach {
+      case (key, value) => props.put(key, value)
+    }
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     new KafkaConsumer[GenericRecord, GenericRecord](props)
@@ -169,22 +174,27 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 }
 
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
+  private val logger = LogManager.getLogger()
 
   private val DefaultKafkaConsumerTimeoutSeconds = 120L
 
-  private val readerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.readerSchemaRegistryUrl"
-  private val writerSchemaRegistryUrlKey = "deduplicateKafkaSinkTransformer.writerSchemaRegistryUrl"
+  private val localDecoderPrefix = "deduplicateKafkaSinkTransformer.decoder"
+  private val localEncoderPrefix = "deduplicateKafkaSinkTransformer.encoder"
 
   override def apply(config: Configuration): StreamTransformer = {
     val readerTopic = getOrThrow(KafkaStreamReader.KEY_TOPIC, config)
     val readerBrokers = getOrThrow(KafkaStreamReader.KEY_BROKERS, config)
-    val readerExtraOptions = KafkaStreamReader.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
-    val readerSchemaRegistryUrl = getOrThrow(readerSchemaRegistryUrlKey, config)
+    val readerExtraOptions = KafkaStreamReader.getExtraConfigurationPrefix
+      .map(prefix => getPropertySubset(config, s"${prefix}.kafka"))
+      .getOrElse(Map())
+    val decoderSchemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config.subset(localDecoderPrefix))
 
     val writerTopic = getOrThrow(KafkaStreamWriter.KEY_TOPIC, config)
     val writerBrokers = getOrThrow(KafkaStreamWriter.KEY_BROKERS, config)
-    val writerExtraOptions = KafkaStreamWriter.getExtraConfigurationPrefix.map(getPropertySubset(config, _)).getOrElse(Map())
-    val writerSchemaRegistryUrl = getOrThrow(writerSchemaRegistryUrlKey, config)
+    val writerExtraOptions = KafkaStreamWriter.getExtraConfigurationPrefix
+      .map(prefix => getPropertySubset(config, s"${prefix}.kafka"))
+      .getOrElse(Map())
+    val encoderSchemaRegistryConfig = SchemaRegistryConfigUtil.getSchemaRegistryConfig(config.subset(localEncoderPrefix))
 
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
 
@@ -196,9 +206,22 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
     }
 
     val kafkaConsumerTimeout = Duration.ofSeconds(config.getLong(KafkaConsumerTimeout, DefaultKafkaConsumerTimeoutSeconds))
+    logger.info(s"Going to create DeduplicateKafkaSinkTransformer with: readerTopic=$readerTopic," +
+      s"readerBrokers=$readerBrokers, " +
+      s"readerExtraOptions=${filterKeysContaining(readerExtraOptions, exclusionToken = "password")}, " +
+      s"decoderSchemaRegistryConfig=${filterKeysContaining(decoderSchemaRegistryConfig, "basic.auth")}, " +
+      s"writerTopic=$writerTopic, " +
+      s"writerBrokers=$writerBrokers, " +
+      s"writerExtraOptions=${filterKeysContaining(writerExtraOptions, exclusionToken = "password")}, " +
+      s"encoderSchemaRegistryConfig=${filterKeysContaining(encoderSchemaRegistryConfig, "basic.auth")}, " +
+      s"checkpointLocation=$checkpointLocation, " +
+      s"sourceIdColumns=$sourceIdColumns, " +
+      s"destinationIdColumns=$destinationIdColumns, " +
+      s"kafkaConsumerTimeout=$kafkaConsumerTimeout"
+    )
 
-    new DeduplicateKafkaSinkTransformer(readerTopic, readerBrokers, readerExtraOptions, readerSchemaRegistryUrl,
-      writerTopic, writerBrokers, writerExtraOptions, writerSchemaRegistryUrl,
+    new DeduplicateKafkaSinkTransformer(readerTopic, readerBrokers, readerExtraOptions, decoderSchemaRegistryConfig,
+      writerTopic, writerBrokers, writerExtraOptions, encoderSchemaRegistryConfig,
       checkpointLocation, sourceIdColumns, destinationIdColumns, kafkaConsumerTimeout)
   }
 
@@ -208,6 +231,7 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
       KafkaStreamReader.getExtraConfigurationPrefix.map(globalConfig.getKeys(_).asScala.toSeq).getOrElse(Seq())
     val writerExtraOptionsKeys =
       KafkaStreamWriter.getExtraConfigurationPrefix.map(globalConfig.getKeys(_).asScala.toSeq).getOrElse(Seq())
+
     val keys = readerExtraOptionsKeys ++ writerExtraOptionsKeys ++
       Seq(
         KafkaStreamReader.KEY_TOPIC,
@@ -218,24 +242,22 @@ object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with Ded
       )
     val oneToOneMappings = keys.map(e => e -> e).toMap
 
-    val readerSchemaRegistryUrlGlobalKey = getSchemaRegistryUrlKey(globalConfig, classOf[ConfluentAvroDecodingTransformer],
-      ConfluentAvroDecodingTransformer.KEY_SCHEMA_REGISTRY_URL)
-    val writerSchemaRegistryUrlGlobalKey = getSchemaRegistryUrlKey(globalConfig, classOf[ConfluentAvroEncodingTransformer],
-      ConfluentAvroEncodingTransformer.KEY_SCHEMA_REGISTRY_URL)
+    val globalDecoderPrefix = getTransformerPrefix(globalConfig, classOf[ConfluentAvroDecodingTransformer])
+    val globalEncoderPrefix = getTransformerPrefix(globalConfig, classOf[ConfluentAvroEncodingTransformer])
+    val decoderKeys = globalConfig.getKeys(globalDecoderPrefix).asScala.toSeq
+    val encoderKeys = globalConfig.getKeys(globalEncoderPrefix).asScala.toSeq
+    val decoderMapping = decoderKeys.map(key => key -> key.replace(globalDecoderPrefix, localDecoderPrefix)).toMap
+    val encoderMapping = encoderKeys.map(key => key -> key.replace(globalEncoderPrefix, localEncoderPrefix)).toMap
 
-    oneToOneMappings ++ Map(
-      readerSchemaRegistryUrlGlobalKey -> readerSchemaRegistryUrlKey,
-      writerSchemaRegistryUrlGlobalKey -> writerSchemaRegistryUrlKey
-    )
+    oneToOneMappings ++ decoderMapping ++ encoderMapping
   }
 
-  private def getSchemaRegistryUrlKey[T <: StreamTransformer](config: Configuration, transformerClass: Class[T], transformerKey: String) = {
+  private def getTransformerPrefix[T <: StreamTransformer](config: Configuration, transformerClass: Class[T]) = {
     val prefix = ConfigUtils.getTransformerPrefix(config, transformerClass).getOrElse(throw new IllegalArgumentException(
       s"Could not find transformer configuration for ${transformerClass.getCanonicalName}, but it is required"))
 
-    s"${StreamTransformerFactory.TransformerKeyPrefix}.${prefix}.${transformerKey}"
+    s"${StreamTransformerFactory.TransformerKeyPrefix}.${prefix}"
   }
-
 }
 
 

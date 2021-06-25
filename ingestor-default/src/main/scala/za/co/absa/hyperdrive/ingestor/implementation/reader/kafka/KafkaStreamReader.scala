@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import java.net.URI
-
 import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.FileSystem
 import org.apache.commons.lang3.StringUtils
@@ -25,7 +24,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrThrow, getSeqOrThrow}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{filterKeysContaining, getOrThrow, getSeqOrThrow}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 private[reader] object KafkaStreamReaderProps {
@@ -133,6 +132,4 @@ object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttri
   }
 
   private def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, getExtraConfigurationPrefix.get)
-
-  private def filterKeysContaining(map: Map[String, String], exclusionToken: String) = map.filterKeys(!_.contains(exclusionToken))
 }
