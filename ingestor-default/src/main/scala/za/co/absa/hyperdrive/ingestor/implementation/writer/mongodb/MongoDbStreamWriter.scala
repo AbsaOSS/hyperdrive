@@ -34,9 +34,12 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    val options = extraConfOptions ++
+
+    val options = (
       database.map(db => ("spark.mongodb.output.database", db)) ++
-      collection.map(c => ("spark.mongodb.output.collection", c))
+      collection.map(c => ("spark.mongodb.output.collection", c)) ++
+      extraConfOptions
+    ).toMap
 
     logger.info(s"Writing to $uri")
     if (options.nonEmpty) {

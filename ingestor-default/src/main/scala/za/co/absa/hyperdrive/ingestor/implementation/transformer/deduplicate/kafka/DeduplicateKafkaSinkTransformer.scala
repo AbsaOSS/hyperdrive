@@ -161,14 +161,14 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers)
     props.put(ConsumerConfig.CLIENT_ID_CONFIG, s"hyperdrive_consumer_${UUID.randomUUID().toString}")
     props.put(ConsumerConfig.GROUP_ID_CONFIG, s"hyperdrive_group_${UUID.randomUUID().toString}")
-    extraOptions.foreach {
-      case (key, value) => props.put(key, value)
-    }
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     decoderSchemaRegistryConfig.foreach {
       case (key, value) => props.put(key, value)
     }
-    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
-    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
+    extraOptions.foreach {
+      case (key, value) => props.put(key, value)
+    }
     new KafkaConsumer[GenericRecord, GenericRecord](props)
   }
 }
