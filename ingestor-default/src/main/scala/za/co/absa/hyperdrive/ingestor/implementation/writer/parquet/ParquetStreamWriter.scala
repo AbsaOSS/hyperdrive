@@ -59,8 +59,8 @@ private[writer] class ParquetStreamWriter(destination: String, trigger: Trigger,
       .trigger(trigger)
       .format(source = "parquet")
       .outputMode(OutputMode.Append())
-      .options(extraConfOptions)
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
+      .options(extraConfOptions)
       .start(destination)
   }
 

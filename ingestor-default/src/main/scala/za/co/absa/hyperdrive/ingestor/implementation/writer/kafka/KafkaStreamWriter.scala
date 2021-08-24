@@ -32,11 +32,11 @@ private[writer] class KafkaStreamWriter(topic: String,
   def write(dataFrame: DataFrame): StreamingQuery = {
     dataFrame
       .writeStream
-      .options(extraOptions)
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
       .trigger(trigger)
       .option("topic", topic)
       .option("kafka.bootstrap.servers", brokers)
+      .options(extraOptions)
       .format("kafka")
       .start()
   }
