@@ -112,7 +112,7 @@
 
         <!-- Spark versions -->
         <spark_2.version>2.4.3</spark_2.version>
-        <spark_3.version>3.0.1</spark_3.version>
+        <spark_3.version>3.1.2</spark_3.version>
         <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
         <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
         <spark_2.mongodb.driver.version>2.7.0</spark_2.mongodb.driver.version>
