@@ -85,10 +85,11 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     executeTestCase(deduplicatorConfig, recordIdsV1, recordIdsV2, kafkaSchemaRegistryWrapper, destinationTopic)
 
     val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-    val records = getAllMessages(consumer, destinationTopic, pruningFn)
-//    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-//    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
+    val valueFieldNames = getValueSchema(consumer, destinationTopic).getFields.asScala.map(_.name())
+    val consumer2 = createConsumer(kafkaSchemaRegistryWrapper)
+    val records = getAllMessages(consumer2, destinationTopic, pruningFn)
     val actualRecordIds = records.flatMap(_.data.map(_.asInstanceOf[Int]))
+    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
     actualRecordIds.distinct.size shouldBe actualRecordIds.size
     actualRecordIds should contain theSameElementsAs recordIdsV1 ++ recordIdsV2
   }
@@ -102,10 +103,11 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     executeTestCase(Map(), recordIdsV1, recordIdsV2, kafkaSchemaRegistryWrapper, destinationTopic)
 
     val consumer = createConsumer(kafkaSchemaRegistryWrapper)
-    val records = getAllMessages(consumer, destinationTopic, pruningFn)
-//    val valueFieldNames = records.head.value().getSchema.getFields.asScala.map(_.name())
-//    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
+    val valueFieldNames = getValueSchema(consumer, destinationTopic).getFields.asScala.map(_.name())
+    val consumer2 = createConsumer(kafkaSchemaRegistryWrapper)
+    val records = getAllMessages(consumer2, destinationTopic, pruningFn)
     val actualRecordIds = records.flatMap(_.data)
+    valueFieldNames should contain theSameElementsAs List("record_id", "value_field", "hyperdrive_id")
     actualRecordIds.distinct.size should be < actualRecordIds.size
   }
 
@@ -269,6 +271,11 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
     kafkaSchemaRegistryWrapper.createConsumer(props)
+  }
+
+  private def getValueSchema(consumer: KafkaConsumer[GenericRecord, GenericRecord], topic: String) = {
+    consumer.subscribe(Seq(topic).asJava)
+    consumer.poll(Duration.ofSeconds(10L)).asScala.head.value().getSchema
   }
 
   private def getAllMessages[K, V](consumer: KafkaConsumer[K, V], topic: String, pruningFn: ConsumerRecord[K, V] => PrunedConsumerRecord) = {
