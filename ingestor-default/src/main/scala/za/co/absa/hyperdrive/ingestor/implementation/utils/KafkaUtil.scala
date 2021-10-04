@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
 import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffsetProvider
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.PrunedConsumerRecord
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -29,19 +30,20 @@ import scala.collection.mutable
 private[hyperdrive] object KafkaUtil {
   private val logger = LogManager.getLogger
 
-  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecords: Map[TopicPartition, Long])
-    (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
+  def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecords: Map[TopicPartition, Long],
+                                                  pruningFn: ConsumerRecord[K, V] => PrunedConsumerRecord)
+    (implicit kafkaConsumerTimeout: Duration): Seq[PrunedConsumerRecord] = {
     consumer.assign(numberOfRecords.keySet.asJava)
     val endOffsets = consumer.endOffsets(numberOfRecords.keySet.asJava).asScala.mapValues(Long2long)
     val topicPartitions = endOffsets.keySet
 
-    var records: Seq[ConsumerRecord[K, V]] = Seq()
+    var records: Seq[PrunedConsumerRecord] = Seq()
     val offsetLowerBounds = mutable.Map(endOffsets.toSeq: _*)
     import scala.util.control.Breaks._
     breakable {
       while (true) {
         val recordSizes = records
-          .groupBy(r => new TopicPartition(r.topic(), r.partition()))
+          .groupBy(r => new TopicPartition(r.topic, r.partition))
           .mapValues(records => records.size)
         val unfinishedPartitions = topicPartitions.filter(p => recordSizes.getOrElse(p, 0) < numberOfRecords(p) && offsetLowerBounds(p) != 0)
         if (unfinishedPartitions.isEmpty) {
@@ -54,15 +56,16 @@ private[hyperdrive] object KafkaUtil {
         offsetLowerBounds.foreach {
           case (partition, offset) => consumer.seek(partition, offset)
         }
-        records = getMessagesAtLeastToOffset(consumer, endOffsets.toMap)
+        records = getMessagesAtLeastToOffset(consumer, endOffsets.toMap, pruningFn)
       }
     }
 
     records
   }
 
-  def getMessagesAtLeastToOffset[K, V](consumer: KafkaConsumer[K, V], toOffsets: Map[TopicPartition, Long])
-                                      (implicit kafkaConsumerTimeout: Duration): Seq[ConsumerRecord[K, V]] = {
+  def getMessagesAtLeastToOffset[K, V](consumer: KafkaConsumer[K, V], toOffsets: Map[TopicPartition, Long],
+                                       pruningFn: ConsumerRecord[K, V] => PrunedConsumerRecord)
+                                      (implicit kafkaConsumerTimeout: Duration): Seq[PrunedConsumerRecord] = {
     consumer.assign(toOffsets.keySet.asJava)
     val endOffsets = consumer.endOffsets(toOffsets.keys.toSeq.asJava).asScala
     endOffsets.foreach { case (topicPartition, offset) =>
@@ -74,11 +77,11 @@ private[hyperdrive] object KafkaUtil {
     }
 
     import scala.util.control.Breaks._
-    var records: Seq[ConsumerRecord[K, V]] = mutable.Seq()
+    var records: Seq[PrunedConsumerRecord] = mutable.Seq()
     breakable {
       while (true) {
         val newRecords = consumer.poll(kafkaConsumerTimeout).asScala.toSeq
-        records ++= newRecords
+        records ++= newRecords.map(pruningFn)
         if (newRecords.isEmpty || offsetsHaveBeenReached(consumer, toOffsets)) {
           break()
         }
