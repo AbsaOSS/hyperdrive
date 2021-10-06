@@ -91,8 +91,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
       KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition, pruneRecord(destinationIdColumnNames)))
     logConsumedSinkRecords(latestSinkRecords)
 
-    val publishedIds: Seq[Seq[Any]] = latestSinkRecords.map(_.data)
-    val duplicatedIds: Seq[Seq[Any]] = sourceIds.intersect(publishedIds)
+    val publishedIds = latestSinkRecords.map(_.data)
+    val duplicatedIds = sourceIds.intersect(publishedIds)
     logDuplicatedIds(duplicatedIds)
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
     val idColumns = sourceIdColumnNames.map(col)
