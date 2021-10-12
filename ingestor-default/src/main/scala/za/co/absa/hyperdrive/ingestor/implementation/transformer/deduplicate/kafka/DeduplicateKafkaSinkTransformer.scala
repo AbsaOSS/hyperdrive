@@ -81,17 +81,17 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logOffsets(latestOffsetsOpt)
 
     val sourceRecords = latestOffsetsOpt.map(latestOffset => consumeAndClose(sourceConsumer,
-      consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset))).getOrElse(Seq())
-    val sourceIds = sourceRecords.map(extractIdFieldsFromRecord(_, sourceIdColumnNames))
+      consumer => KafkaUtil.getMessagesAtLeastToOffset(consumer, latestOffset, pruneRecord(sourceIdColumnNames)))).getOrElse(Seq())
+    val sourceIds = sourceRecords.map(_.data)
 
     val sinkConsumer = createConsumer(writerBrokers, writerExtraOptions, encoderSchemaRegistryConfig)
     val sinkTopicPartitions = KafkaUtil.getTopicPartitions(sinkConsumer, writerTopic)
     val recordsPerPartition = sinkTopicPartitions.map(p => p -> sourceRecords.size.toLong).toMap
     val latestSinkRecords = consumeAndClose(sinkConsumer, consumer =>
-      KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition))
+      KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition, pruneRecord(destinationIdColumnNames)))
     logConsumedSinkRecords(latestSinkRecords)
 
-    val publishedIds = latestSinkRecords.map(extractIdFieldsFromRecord(_, destinationIdColumnNames))
+    val publishedIds = latestSinkRecords.map(_.data)
     val duplicatedIds = sourceIds.intersect(publishedIds)
     logDuplicatedIds(duplicatedIds)
     val duplicatedIdsLit = duplicatedIds.map(duplicatedId => struct(duplicatedId.map(lit): _*))
@@ -123,8 +123,8 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info(s"Reset source offsets by partition to { ${currentPositions} }")
   }
 
-  private def logConsumedSinkRecords(latestSinkRecords: Seq[ConsumerRecord[GenericRecord, GenericRecord]]): Unit = {
-    val offsetsByPartition = latestSinkRecords.map(r => r.partition() -> r.offset())
+  private def logConsumedSinkRecords(latestSinkRecords: Seq[PrunedConsumerRecord]): Unit = {
+    val offsetsByPartition = latestSinkRecords.map(r => r.partition -> r.offset)
       .groupBy(_._1)
       .mapValues(_.map(_._2))
       .toSeq
@@ -138,11 +138,18 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
     logger.info(s"Found ${duplicatedIds.size} duplicated ids. First three: ${duplicatedIds.take(3)}.")
   }
 
-  private def extractIdFieldsFromRecord(record: ConsumerRecord[GenericRecord, GenericRecord], idColumnNames: Seq[String]): Seq[Any] = {
-    idColumnNames.map(idColumnName =>
-      AvroUtil.getFromConsumerRecord(record, idColumnName)
-        .getOrElse(throw new IllegalArgumentException(s"Could not find value for field $idColumnName"))
-    )
+  private def pruneRecord(idColumnNames: Seq[String]): ConsumerRecord[GenericRecord, GenericRecord] => PrunedConsumerRecord = {
+    record: ConsumerRecord[GenericRecord, GenericRecord] =>
+      val prunedPayload = idColumnNames.map(idColumnName =>
+        AvroUtil.getFromConsumerRecord(record, idColumnName)
+          .getOrElse(throw new IllegalArgumentException(s"Could not find value for field $idColumnName"))
+      )
+      PrunedConsumerRecord(
+        record.topic(),
+        record.partition(),
+        record.offset(),
+        prunedPayload
+      )
   }
 
   private def consumeAndClose[T](consumer: KafkaConsumer[GenericRecord, GenericRecord], consume: KafkaConsumer[GenericRecord, GenericRecord] => T) = {

@@ -19,7 +19,6 @@ import java.time.Duration
 import java.util
 import java.util.UUID.randomUUID
 import java.util.{Collections, Properties}
-
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
@@ -28,6 +27,7 @@ import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializ
 import org.scalatest.{AppendedClues, BeforeAndAfter, FlatSpec, Matchers}
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.utility.DockerImageName
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.PrunedConsumerRecord
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -39,6 +39,12 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
   private val kafkaInsufficientTimeout = Duration.ofMillis(1L)
   private val topic = "test-topic"
   private val maxPollRecords = 10
+  private val pruningFn = (r: ConsumerRecord[String, String]) => PrunedConsumerRecord(
+    r.topic(),
+    r.partition(),
+    r.offset(),
+    Seq(r.value())
+  )
 
   before{
     kafka.start()
@@ -62,10 +68,10 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets, pruningFn)
 
     // then
-    val actualMessages = records.map(_.value()).toList.sorted
+    val actualMessages = records.map(_.data.head.asInstanceOf[String]).toList.sorted
     actualMessages should contain theSameElementsAs messages
   }
 
@@ -99,10 +105,10 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
-    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+    val records = KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets, pruningFn)
 
     // then
-    val actualMessages = records.map(_.value()).toList.sorted
+    val actualMessages = records.map(_.data.head.asInstanceOf[String]).toList.sorted
     actualMessages should contain allElementsOf messages
 
     // cleanup
@@ -118,7 +124,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, Map(new TopicPartition(topic, 0) -> 0))
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, Map(new TopicPartition(topic, 0) -> 0), pruningFn)
 
     // then
     exception.getMessage should include ("Subscription to topics, partitions and pattern are mutually exclusive")
@@ -140,7 +146,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets, pruningFn)
 
     // then
     exception.getMessage should include ("Not all expected messages were consumed")
@@ -160,7 +166,7 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets)
+    val exception = the[Exception] thrownBy KafkaUtil.getMessagesAtLeastToOffset(consumer, offsets, pruningFn)
 
     // then
     exception.getMessage should include ("Requested consumption")
@@ -209,8 +215,8 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
     val topicPartitions = KafkaUtil.getTopicPartitions(consumer, topic)
     val recordsPerPartition = topicPartitions.map(p => p -> 4L).toMap
-    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition)
-    val values = actualRecords.map(_.value())
+    val actualRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition, pruningFn)
+    val values = actualRecords.map(_.data.head.asInstanceOf[String])
 
     values.size should be >= 12
     values should contain allElementsOf Seq("msg_103", "msg_102", "msg_101", "msg_100", "msg_99", "msg_97", "msg_95",
@@ -231,10 +237,10 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
     // when
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
     val recordsPerPartition = topicPartitions.map(t => t -> 1000L).toMap
-    val records = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition)
+    val records = KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, recordsPerPartition, pruningFn)
 
     // then
-    val actualMessages = records.map(_.value()).toList.sorted
+    val actualMessages = records.map(_.data.head.asInstanceOf[String]).toList.sorted
     actualMessages should contain theSameElementsAs messages
   }
 
@@ -248,7 +254,8 @@ class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter
 
     val consumer = createConsumer(kafka)
     implicit val kafkaConsumerTimeout: Duration = kafkaInsufficientTimeout
-    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer, Map(new TopicPartition(topic, 0) -> 10))
+    val result = the[Exception] thrownBy KafkaUtil.getAtLeastNLatestRecordsFromPartition(consumer,
+      Map(new TopicPartition(topic, 0) -> 10), pruningFn)
     result.getMessage should include("increasing the consumer timeout")
   }
 
