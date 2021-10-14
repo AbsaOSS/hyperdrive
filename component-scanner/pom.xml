@@ -18,7 +18,7 @@
     <parent>
         <artifactId>parent-conf_2.12</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>4.4.2-SNAPSHOT</version>
+        <version>4.5.1</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>api_${scala.compat.version}</artifactId>
-            <version>4.4.2-SNAPSHOT</version>
+            <version>4.5.1</version>
         </dependency>
 
         <!--Spark-->
