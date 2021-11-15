@@ -28,6 +28,7 @@ import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
@@ -78,8 +79,10 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
 
   before {
     MockSchemaRegistryClient = new MockSchemaRegistryClient()
+
     SchemaManagerFactory.resetSRClientInstance()
-    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL), MockSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL),
+      new ConfluentMockRegistryClient(MockSchemaRegistryClient))
   }
 
   "transform" should "decode the value-dataframe" in {
