@@ -20,10 +20,10 @@ import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.{Command, MongodExecutable, MongodStarter}
 import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 
 object EmbeddedMongoDbSingleton {
-  private val log = LogManager.getLogger
+  private val log = LoggerFactory.getLogger(this.getClass)
 
   lazy val embeddedMongoDb: (MongodExecutable, Int) = startEmbeddedMongoDb()
 

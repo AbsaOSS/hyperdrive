@@ -19,7 +19,7 @@ import java.net.URI
 import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.FileSystem
 import org.apache.commons.lang3.StringUtils
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
@@ -47,7 +47,7 @@ private[reader] class KafkaStreamReader(
   val topic: String, val brokers: String, val checkpointLocation: String, val extraConfs: Map[String, String]) extends StreamReader {
   import KafkaStreamReaderProps._
 
-  private val logger = LogManager.getLogger()
+  private val logger = LoggerFactory.getLogger(this.getClass)()
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException(s"Invalid topic: '$topic'")
@@ -109,7 +109,7 @@ private[reader] class KafkaStreamReader(
 }
 
 object KafkaStreamReader extends StreamReaderFactory with KafkaStreamReaderAttributes {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def apply(conf: Configuration): StreamReader = {
     val topic = getTopic(conf)

@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 import java.time.Duration
 import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
 import za.co.absa.hyperdrive.compatibility.provider.CompatibleOffsetProvider
@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 private[hyperdrive] object KafkaUtil {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def getAtLeastNLatestRecordsFromPartition[K, V](consumer: KafkaConsumer[K, V], numberOfRecords: Map[TopicPartition, Long],
                                                   pruningFn: ConsumerRecord[K, V] => PrunedConsumerRecord)

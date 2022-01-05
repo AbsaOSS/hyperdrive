@@ -25,7 +25,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.common.TopicPartition
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.execution.streaming.{CommitLog, OffsetSeqLog}
 import org.apache.spark.sql.functions.{col, lit, not, struct}
@@ -51,7 +51,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
   val destinationIdColumnNames: Seq[String],
   val kafkaConsumerTimeout: Duration
 ) extends StreamTransformer {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def transform(dataFrame: DataFrame): DataFrame = {
     val spark = dataFrame.sparkSession
@@ -181,7 +181,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 }
 
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
-  private val logger = LogManager.getLogger()
+  private val logger = LoggerFactory.getLogger(this.getClass)()
 
   private val DefaultKafkaConsumerTimeoutSeconds = 120L
 

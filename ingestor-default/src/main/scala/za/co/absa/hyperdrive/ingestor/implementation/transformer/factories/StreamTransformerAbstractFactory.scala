@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.factories
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
@@ -33,7 +33,7 @@ import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
  */
 object StreamTransformerAbstractFactory {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
    * For each transformer, the configuration is assumed to contain property keys according to the following example

@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.functions.{lit, to_date}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
@@ -72,7 +72,7 @@ object AddDateVersionTransformer extends StreamTransformerFactory with AddDateVe
     val reportDate = getReportDateString(config)
     val destinationDirectory = getDestinationDirectory(config)
 
-    LogManager.getLogger.info(s"Going to create AddDateVersionTransformer instance")
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create AddDateVersionTransformer instance")
 
     new AddDateVersionTransformer(reportDate, destinationDirectory)
   }

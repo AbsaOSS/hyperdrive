@@ -18,7 +18,7 @@
 package ${package}.writer.mycomponent
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.StreamingQuery
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterFactoryProvider}
@@ -34,7 +34,7 @@ private[writer] class MyStreamWriterImpl(val destination: String) extends Stream
 }
 
 object MyStreamWriterImpl extends StreamWriterFactory with MyStreamWriterImplAttributes {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def apply(conf: Configuration): StreamWriter = {
     logger.info("Building MyStreamWriterImpl")

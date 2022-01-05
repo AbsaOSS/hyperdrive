@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.driver
 import java.util.UUID
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.SparkSession
 import za.co.absa.hyperdrive.driver.TerminationMethodEnum.{AwaitTermination, ProcessAllAvailable, TerminationMethod}
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
@@ -39,7 +39,7 @@ class SparkIngestor(val spark: SparkSession,
                     val awaitTerminationTimeout: Option[Long],
                     val conf: Configuration) {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
    * This method performs the ingestion according to the components it receives.
@@ -100,7 +100,7 @@ class SparkIngestor(val spark: SparkSession,
 
 object SparkIngestor extends SparkIngestorAttributes {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(classOf[SparkIngestor])
 
   def apply(conf: Configuration): SparkIngestor = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)

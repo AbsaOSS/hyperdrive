@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.kafka
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils._
@@ -44,7 +44,7 @@ private[writer] class KafkaStreamWriter(topic: String,
 
 object KafkaStreamWriter extends StreamWriterFactory with KafkaStreamWriterAttributes {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def apply(configuration: Configuration): StreamWriter = {
     logger.info(s"Building ${KafkaStreamWriter.getClass.getCanonicalName}")

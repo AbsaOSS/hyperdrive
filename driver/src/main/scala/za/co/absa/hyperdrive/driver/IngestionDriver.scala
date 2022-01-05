@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.Strea
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 
 private[driver] class IngestionDriver {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
 
   def ingest(configuration: Configuration): Unit = {

@@ -19,7 +19,7 @@ import java.net.URLClassLoader
 import java.nio.file.{Files, Path}
 import java.util.ServiceLoader
 
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
@@ -37,7 +37,7 @@ case class ComponentDescriptor(attributes: HasComponentAttributes,
                                jarPath: Path)
 
 object ComponentScanner {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private val jarSuffix = ".jar"
 
   def getComponents(baseDirectory: Path): Try[ComponentDescriptors] = getComponents(List(baseDirectory))

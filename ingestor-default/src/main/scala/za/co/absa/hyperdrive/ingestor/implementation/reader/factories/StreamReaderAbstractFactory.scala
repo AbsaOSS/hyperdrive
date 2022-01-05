@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.factories
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
@@ -27,7 +27,7 @@ import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
   */
 object StreamReaderAbstractFactory {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
   val componentConfigKey = "component.reader"
 
   def build(config: Configuration): StreamReader = {

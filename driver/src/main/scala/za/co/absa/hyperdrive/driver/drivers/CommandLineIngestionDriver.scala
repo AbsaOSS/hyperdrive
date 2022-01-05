@@ -19,13 +19,13 @@ import org.apache.commons.configuration2.builder.BasicConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 object CommandLineIngestionDriver extends IngestionDriver {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(CommandLineIngestionDriver.getClass)
   private val PropertyDelimiter = "="
 
   def main(args: Array[String]): Unit = {

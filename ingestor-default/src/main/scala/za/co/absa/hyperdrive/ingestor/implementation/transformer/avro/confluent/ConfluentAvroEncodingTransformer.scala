@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.JsonProperties
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.struct
@@ -36,7 +36,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
   val withKey: Boolean)
   extends StreamTransformer {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def transform(dataFrame: DataFrame): DataFrame = {
     if (withKey) {
@@ -75,7 +75,7 @@ private[transformer] class ConfluentAvroEncodingTransformer(
 }
 
 object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with ConfluentAvroEncodingTransformerAttributes {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   object AbrisConfigKeys extends AbrisProducerConfigKeys {
     override val topic: String = KEY_TOPIC
