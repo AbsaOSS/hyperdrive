@@ -47,7 +47,7 @@ private[reader] class KafkaStreamReader(
   val topic: String, val brokers: String, val checkpointLocation: String, val extraConfs: Map[String, String]) extends StreamReader {
   import KafkaStreamReaderProps._
 
-  private val logger = LoggerFactory.getLogger(this.getClass)()
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   if (StringUtils.isBlank(topic)) {
     throw new IllegalArgumentException(s"Invalid topic: '$topic'")

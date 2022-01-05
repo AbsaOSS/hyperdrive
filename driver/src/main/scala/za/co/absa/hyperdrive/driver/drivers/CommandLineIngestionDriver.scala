@@ -25,7 +25,7 @@ import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 object CommandLineIngestionDriver extends IngestionDriver {
 
-  private val logger = LoggerFactory.getLogger(CommandLineIngestionDriver.getClass)
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private val PropertyDelimiter = "="
 
   def main(args: Array[String]): Unit = {

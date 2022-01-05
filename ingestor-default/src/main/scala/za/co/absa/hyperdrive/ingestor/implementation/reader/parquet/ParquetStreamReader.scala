@@ -31,7 +31,7 @@ private[reader] class ParquetStreamReader(
   val path: String,
   val extraConfs: Map[String, String]) extends StreamReader {
 
-  private val logger = LoggerFactory.getLogger(this.getClass)()
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def read(spark: SparkSession): DataFrame = {
 

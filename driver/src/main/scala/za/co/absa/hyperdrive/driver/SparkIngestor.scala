@@ -100,7 +100,7 @@ class SparkIngestor(val spark: SparkSession,
 
 object SparkIngestor extends SparkIngestorAttributes {
 
-  private val logger = LoggerFactory.getLogger(classOf[SparkIngestor])
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(conf: Configuration): SparkIngestor = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)

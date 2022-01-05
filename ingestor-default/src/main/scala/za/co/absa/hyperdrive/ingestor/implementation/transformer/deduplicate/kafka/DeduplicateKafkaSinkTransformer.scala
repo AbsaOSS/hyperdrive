@@ -181,7 +181,7 @@ private[transformer] class DeduplicateKafkaSinkTransformer(
 }
 
 object DeduplicateKafkaSinkTransformer extends StreamTransformerFactory with DeduplicateKafkaSinkTransformerAttributes {
-  private val logger = LoggerFactory.getLogger(this.getClass)()
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val DefaultKafkaConsumerTimeoutSeconds = 120L
 
