@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.{getFromSchemaString, getSchemaId, getSchemaRegistryConf}
@@ -81,7 +82,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
   before {
     mockSchemaRegistryClient = new HyperdriveMockSchemaRegistryClient()
     SchemaManagerFactory.resetSRClientInstance()
-    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummySchemaRegistryUrl), mockSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummySchemaRegistryUrl),
+      new ConfluentMockRegistryClient(mockSchemaRegistryClient))
   }
 
   "generateSchema" should "generate a schema with topic name strategy" in {

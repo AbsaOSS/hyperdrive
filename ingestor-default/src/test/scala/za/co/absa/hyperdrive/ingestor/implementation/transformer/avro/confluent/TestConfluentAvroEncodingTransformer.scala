@@ -21,12 +21,12 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
-import org.apache.spark.sql.functions.{array, lit, map, struct}
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.commons.spark.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
@@ -46,7 +46,8 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
   before {
     mockSchemaRegistryClient = new HyperdriveMockSchemaRegistryClient()
     SchemaManagerFactory.resetSRClientInstance()
-    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL), mockSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> SchemaRegistryURL),
+      new ConfluentMockRegistryClient(mockSchemaRegistryClient))
   }
 
   it should "create avro stream encoder" in {
