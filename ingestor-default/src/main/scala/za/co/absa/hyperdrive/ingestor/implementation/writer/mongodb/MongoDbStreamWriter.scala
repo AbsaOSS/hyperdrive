@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.mongodb
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -28,7 +28,7 @@ private[writer] class MongoDbStreamWriter(trigger: Trigger,
                                           database: Option[String],
                                           collection: Option[String],
                                           val extraConfOptions: Map[String, String]) extends StreamWriter {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
   if (!uri.toLowerCase.startsWith("mongodb://")) {
     throw new IllegalArgumentException(s"Invalid MongoDB URI: '$uri'. It should start with 'mongodb://'.")
   }
@@ -88,7 +88,7 @@ object MongoDbStreamWriter extends StreamWriterFactory with MongoDbStreamWriterA
     }
       .mkString(", ", ", ", "")
 
-    LogManager.getLogger.info(s"Going to create MongoDbStreamWriter instance using: " +
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create MongoDbStreamWriter instance using: " +
       s"trigger='$trigger', checkpointLocation='$checkpointLocation', url='$uri'$dbOptions, extra options='$extraOptions'")
 
     new MongoDbStreamWriter(trigger, checkpointLocation, uri, database, collection, extraOptions)

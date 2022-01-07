@@ -19,7 +19,7 @@ import java.util.Properties
 
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.containers.{GenericContainer, KafkaContainer, Network}
 import org.testcontainers.utility.DockerImageName
@@ -27,7 +27,7 @@ import org.testcontainers.utility.DockerImageName
 case class SchemaRegistryContainer(dockerImageName: String) extends GenericContainer[SchemaRegistryContainer](dockerImageName)
 
 class KafkaSchemaRegistryWrapper {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val confluentPlatformVersion = "5.3.1" // should be same as kafka.avro.serializer.version property in pom file
   private val schemaRegistryPort = 8081

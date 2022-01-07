@@ -18,7 +18,7 @@
 package ${package}.transformer.mycomponent
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
@@ -33,7 +33,7 @@ private[transformer] class MyStreamTransformerImpl() extends StreamTransformer {
 }
 
 object MyStreamTransformerImpl extends StreamTransformerFactory with MyStreamTransformerImplAttributes {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def apply(conf: Configuration): StreamTransformer = {
     logger.info("Building MyStreamTransformerImpl")

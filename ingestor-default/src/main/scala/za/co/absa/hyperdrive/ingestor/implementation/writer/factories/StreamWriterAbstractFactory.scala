@@ -16,13 +16,13 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.factories
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 
 object StreamWriterAbstractFactory {
 
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   val componentConfigKey = "component.writer"
 

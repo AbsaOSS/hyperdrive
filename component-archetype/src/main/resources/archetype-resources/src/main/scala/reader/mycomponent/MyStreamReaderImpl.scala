@@ -18,7 +18,7 @@
 package ${package}.reader.mycomponent
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReader, StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
@@ -33,7 +33,7 @@ private[reader] class MyStreamReaderImpl() extends StreamReader {
 }
 
 object MyStreamReaderImpl extends StreamReaderFactory with MyStreamReaderImplAttributes {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   override def apply(conf: Configuration): StreamReader = {
     logger.info("Building MyStreamReaderImpl")

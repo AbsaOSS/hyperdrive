@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 import java.util.UUID
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.RandomStringUtils
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, DataFrame}
@@ -127,7 +127,7 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     }
     val keepColumns = ConfigUtils.getSeqOrNone(KEY_KEEP_COLUMNS, config).getOrElse(Seq())
     val disableNullabilityPreservation = ConfigUtils.getOptionalBoolean(KEY_DISABLE_NULLABILITY_PRESERVATION, config).getOrElse(false)
-    LogManager.getLogger.info(
+    LoggerFactory.getLogger(this.getClass).info(
       s"Going to create ConfluentAvroDecodingTransformer instance using " +
         s"value avro config='$valueAvroConfig', key avro config='$keyAvroConfigOpt', keepColumns='$keepColumns'")
 

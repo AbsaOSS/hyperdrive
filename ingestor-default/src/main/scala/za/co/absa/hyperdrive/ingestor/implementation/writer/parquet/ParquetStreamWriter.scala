@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -31,7 +31,7 @@ private[writer] class ParquetStreamWriter(destination: String, trigger: Trigger,
                                           partitionColumns: Option[Seq[String]],
                                           doMetadataCheck: Boolean,
                                           val extraConfOptions: Map[String, String]) extends StreamWriter {
-  private val logger = LogManager.getLogger
+  private val logger = LoggerFactory.getLogger(this.getClass)
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid PARQUET destination: '$destination'")
   }
@@ -77,7 +77,7 @@ object ParquetStreamWriter extends StreamWriterFactory with ParquetStreamWriterA
     val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config)
     val extraOptions = getExtraOptions(config)
 
-    LogManager.getLogger.info(s"Going to create ParquetStreamWriter instance using: " +
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create ParquetStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
     new ParquetStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, doMetadataCheck, extraOptions)

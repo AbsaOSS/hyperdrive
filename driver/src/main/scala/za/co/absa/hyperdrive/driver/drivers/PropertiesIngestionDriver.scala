@@ -16,36 +16,33 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import java.nio.file.{Files, Paths}
-
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
-import org.apache.logging.log4j.LogManager
+import org.apache.spark.internal.Logging
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
 /**
   * This driver launches ingestion by loading the configurations from a properties file.
   */
-object PropertiesIngestionDriver extends IngestionDriver {
-
-  private val logger = LogManager.getLogger
+object PropertiesIngestionDriver extends IngestionDriver with Logging {
 
   def main(args: Array[String]): Unit = {
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
       throw new IllegalArgumentException("No properties file supplied.")
     }
-    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
+    logInfo(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
     if (isInvalid(propertiesFile.get)) {
       throw new IllegalArgumentException(s"Invalid properties file: '${propertiesFile.get}'.")
     }
 
-    logger.info(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
+    logInfo(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
     val configurations = loadConfiguration(propertiesFile.get)
-    logger.info(s"Configurations loaded. Going to invoke ingestion: [$configurations]")
+    logInfo(s"Configurations loaded. Going to invoke ingestion: [$configurations]")
     ingest(configurations)
   }
 
@@ -63,7 +60,7 @@ object PropertiesIngestionDriver extends IngestionDriver {
       case v if v == 0 => None
       case v =>
         if (v > 1) {
-          logger.warn(s"Expected only properties file path, but got extra parameters. Returning first as the path. All parameters = [${args.mkString(",")}]")
+          logWarning(s"Expected only properties file path, but got extra parameters. Returning first as the path. All parameters = [${args.mkString(",")}]")
         }
         Some(args(0))
     }

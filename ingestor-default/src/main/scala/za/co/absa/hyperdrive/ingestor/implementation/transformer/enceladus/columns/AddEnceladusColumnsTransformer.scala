@@ -19,7 +19,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{lit, to_date, typedLit}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
@@ -49,7 +49,7 @@ object AddEnceladusColumnsTransformer extends StreamTransformerFactory with AddE
   def apply(config: Configuration): StreamTransformer = {
     val reportDate = getReportDateString(config)
 
-    LogManager.getLogger.info(s"Going to create AddEnceladusColumnsTransformer instance")
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create AddEnceladusColumnsTransformer instance")
 
     new AddEnceladusColumnsTransformer(reportDate)
   }

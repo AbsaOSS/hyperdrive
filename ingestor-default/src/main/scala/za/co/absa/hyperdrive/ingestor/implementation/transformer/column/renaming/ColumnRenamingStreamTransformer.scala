@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.renaming
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.DataFrame
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 
@@ -43,7 +43,7 @@ object ColumnRenamingStreamTransformer extends StreamTransformerFactory with Col
   override def apply(config: Configuration): StreamTransformer = {
     val columnsFrom = config.getStringArray(KEY_COLUMNS_FROM)
     val columnsTo = config.getStringArray(KEY_COLUMNS_TO)
-    LogManager.getLogger.info(s"Going to create ColumnRenamingStreamTransformer using: " +
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create ColumnRenamingStreamTransformer using: " +
       s"columnsFrom='${columnsFrom.mkString(",")}', columnsTo='${columnsTo.mkString(",")}'")
     new ColumnRenamingStreamTransformer(columnsFrom, columnsTo)
   }

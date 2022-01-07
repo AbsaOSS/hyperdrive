@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.logging.log4j.LogManager
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
@@ -93,7 +93,7 @@ object ColumnCopyStreamTransformer extends StreamTransformerFactory with ColumnC
   override def apply(config: Configuration): StreamTransformer = {
     val columnsFrom = ConfigUtils.getSeqOrThrow(KEY_COLUMNS_FROM, config)
     val columnsTo = ConfigUtils.getSeqOrThrow(KEY_COLUMNS_TO, config)
-    LogManager.getLogger.info(s"Going to create ColumnRenamingStreamTransformer using: " +
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create ColumnRenamingStreamTransformer using: " +
       s"columnsFrom='${columnsFrom.mkString(",")}', columnsTo='${columnsTo.mkString(",")}'")
     new ColumnCopyStreamTransformer(columnsFrom, columnsTo)
   }

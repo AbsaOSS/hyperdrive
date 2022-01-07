@@ -19,13 +19,12 @@ import org.apache.commons.configuration2.builder.BasicConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
-import org.apache.logging.log4j.LogManager
+import org.apache.spark.internal.Logging
 import za.co.absa.hyperdrive.driver.IngestionDriver
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
-object CommandLineIngestionDriver extends IngestionDriver {
+object CommandLineIngestionDriver extends IngestionDriver with Logging {
 
-  private val logger = LogManager.getLogger
   private val PropertyDelimiter = "="
 
   def main(args: Array[String]): Unit = {
@@ -33,11 +32,11 @@ object CommandLineIngestionDriver extends IngestionDriver {
       throw new IllegalArgumentException("No configuration provided.")
     }
 
-    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
+    logInfo(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
-    logger.info(s"Going to load ${args.length} configurations from command line.")
+    logInfo(s"Going to load ${args.length} configurations from command line.")
     val configuration = parseConfiguration(args)
-    logger.info("Configuration loaded. Going to invoke ingestion.")
+    logInfo("Configuration loaded. Going to invoke ingestion.")
     ingest(configuration)
   }
 
