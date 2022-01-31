@@ -1,0 +1,145 @@
+{
+  "name": "name",
+  "namespace": "topLevelNamespace",
+  "type": "record",
+  "fields": [
+    {
+      "default": "",
+      "name": "defaultStringField",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    {
+      "default": null,
+      "name": "defaultNullField",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "decimalBytes",
+      "type": {
+        "logicalType": "decimal",
+        "precision": 23,
+        "scale": 3,
+        "type": "bytes"
+      }
+    },
+    {
+      "name": "decimalFixed",
+      "type":
+        {
+          "logicalType": "decimal",
+          "precision": 23,
+          "scale": 3,
+          "size": 10,
+          "name": "fixed",
+          "namespace": "topLevelNamespace.name.decimalFixed",
+          "type": "fixed"
+        }
+    },
+    {
+      "name": "binaryBytes",
+      "type": "bytes"
+    },
+    {
+      "name": "binaryFixed",
+      "type":
+        {
+          "size": 10,
+          "name": "fixed",
+          "namespace": "topLevelNamespace.name.binaryFixed",
+          "type": "fixed"
+        }
+    },
+    {
+      "name": "timestampMillis",
+      "type":
+        {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+    },
+    {
+      "name": "timestampMicros",
+      "type":
+        {
+          "logicalType": "timestamp-micros",
+          "type": "long"
+        }
+    },
+    {
+      "name": "timestampMillisArray",
+      "type": {
+        "type": "array",
+        "items": {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+      }
+    },
+    {
+      "name": "timestampMillisMap",
+      "type": {
+        "type": "map",
+        "values": {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+      }
+    },
+    {
+      "name": "nullableRecord",
+      "type": [
+        "null",
+        {
+          "name": "nullableRecord",
+          "namespace": "topLevelNamespace.name",
+          "type": "record",
+          "fields": [
+            {
+              "name": "theArray",
+              "type": {
+                "type": "array",
+                "items": {
+                  "name": "theArray",
+                  "namespace": "topLevelNamespace.name.nullableRecord",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "nullableString",
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    {
+                      "name": "nullableDecimal",
+                      "type": [
+                        "null",
+                        {
+                          "type": "bytes",
+                          "logicalType": "decimal",
+                          "precision": 4,
+                          "scale": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "stringWithDefault",
+              "default": "unk",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

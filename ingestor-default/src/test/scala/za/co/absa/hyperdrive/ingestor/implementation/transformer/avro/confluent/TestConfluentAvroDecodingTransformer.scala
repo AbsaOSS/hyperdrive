@@ -20,6 +20,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.avro.generic.GenericData
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, DynamicCombinedConfiguration}
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.Trigger
@@ -323,6 +324,7 @@ class TestConfluentAvroDecodingTransformer extends FlatSpec with Matchers with B
     config.addProperty(KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
     config.addProperty(KEY_SCHEMA_REGISTRY_KEY_SCHEMA_ID, SchemaRegistryValueSchemaId)
     config.addProperty(KEY_SCHEMA_REGISTRY_KEY_NAMING_STRATEGY, AbrisConfigUtil.TopicNameStrategy)
+    config.addProperty(KEY_USE_ADVANCED_SCHEMA_CONVERSION, "true")
 
     val decoder = ConfluentAvroDecodingTransformer(config).asInstanceOf[ConfluentAvroDecodingTransformer]
 

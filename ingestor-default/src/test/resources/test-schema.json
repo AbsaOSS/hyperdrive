@@ -1,0 +1,178 @@
+{
+  "name": "name",
+  "namespace": "namespace",
+  "type": "record",
+  "fields": [
+    {
+      "default": 0,
+      "doc": "fieldWithInvalidLogicalType documentation",
+      "name": "fieldWithInvalidLogicalType",
+      "type": [
+        {
+          "logicalType": "DECIMAL",
+          "precision": 7,
+          "scale": 0,
+          "type": "int"
+        },
+        "null"
+      ]
+    },
+    {
+      "default": "",
+      "name": "fieldWithProps",
+      "type": [
+        {
+          "dbColumnName": "UDS_START_DELETE_ROOT",
+          "length": 4,
+          "logicalType": "CHARACTER",
+          "type": "string"
+        },
+        "null"
+      ]
+    },
+    {
+      "default": null,
+      "name": "defaultNullField",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "decimalBytes",
+      "type": [
+        {
+          "logicalType": "decimal",
+          "precision": 23,
+          "scale": 3,
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "decimalFixed",
+      "type": [
+        {
+          "logicalType": "decimal",
+          "precision": 23,
+          "scale": 3,
+          "size": 10,
+          "name": "decimalFixedName",
+          "namespace": "someNamespace",
+          "type": "fixed"
+        }
+      ]
+    },
+    {
+      "name": "binaryBytes",
+      "type": [
+        {
+          "precision": 23,
+          "scale": 3,
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "binaryFixed",
+      "type": [
+        {
+          "precision": 23,
+          "scale": 3,
+          "size": 10,
+          "name": "binaryFixedName",
+          "namespace": "someNamespace",
+          "type": "fixed"
+        }
+      ]
+    },
+    {
+      "name": "timestampMillis",
+      "type": [
+        {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+      ]
+    },
+    {
+      "name": "timestampMicros",
+      "type": [
+        {
+          "logicalType": "timestamp-micros",
+          "type": "long"
+        }
+      ]
+    },
+    {
+      "name": "timestampMillisArray",
+      "type": {
+        "type": "array",
+        "items": {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+      }
+    },
+    {
+      "name": "timestampMillisMap",
+      "type": {
+        "type": "map",
+        "values": {
+          "logicalType": "timestamp-millis",
+          "type": "long"
+        }
+      }
+    },
+    {
+      "name": "nullableRecord",
+      "type": [
+        "null",
+        {
+          "name": "theRecord",
+          "namespace": "level.one",
+          "type": "record",
+          "fields": [
+            {
+              "name": "theArray",
+              "type": {
+                "type": "array",
+                "items": {
+                  "name": "theRecord",
+                  "namespace": "level.two",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "nullableString",
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    {
+                      "name": "nullableDecimal",
+                      "type": [
+                        "null",
+                        {
+                          "type": "bytes",
+                          "logicalType": "decimal",
+                          "precision": 4,
+                          "scale": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "stringWithDefault",
+              "default": "unknown",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
