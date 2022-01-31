@@ -48,7 +48,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--ABRiS-->
-        <abris.version>5.0.0</abris.version>
+        <abris.version>5.0.1-SNAPSHOT</abris.version>
 
         <!--Scala-->
         <scalatest.version>3.0.5</scalatest.version>

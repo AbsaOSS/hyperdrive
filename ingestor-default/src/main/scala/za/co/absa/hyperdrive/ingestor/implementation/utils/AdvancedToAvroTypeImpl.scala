@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 ABSA Group Limited
  *
@@ -15,16 +16,11 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
-private[hyperdrive] trait AbrisConfigKeys {
-  val topic: String
-  val namingStrategy: String
-  val recordName: String
-  val recordNamespace: String
-}
+import org.apache.avro.Schema
+import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import org.apache.spark.sql.types.DataType
 
-private[hyperdrive] trait AbrisConsumerConfigKeys extends AbrisConfigKeys {
-  val schemaId: String
-  val useAdvancedSchemaConversion: String
+object AdvancedToAvroTypeImpl extends ToAvroTypeImplProvider {
+  override def apply(catalystType: DataType, nullable: Boolean, recordName: String, nameSpace: String): Schema =
+    CustomSchemaConverters.toAvroType(catalystType, None, nullable, None, recordName, nameSpace)
 }
-
-private[hyperdrive] trait AbrisProducerConfigKeys extends AbrisConfigKeys

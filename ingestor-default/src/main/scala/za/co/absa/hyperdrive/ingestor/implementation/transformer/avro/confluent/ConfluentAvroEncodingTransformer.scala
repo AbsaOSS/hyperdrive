@@ -28,7 +28,7 @@ import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, Stream
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{getKeyAvroConfig, getValueAvroConfig}
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisProducerConfigKeys, SchemaRegistryConfigUtil}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisProducerConfigKeys, AdvancedToAvroTypeImpl, DefaultToAvroTypeImpl, SchemaRegistryConfigUtil}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter.KEY_TOPIC
 
 private[transformer] class ConfluentAvroEncodingTransformer(
@@ -99,7 +99,8 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
       .map(optionalFields => optionalFields.map(_ -> JsonProperties.NULL_VALUE).toMap)
       .getOrElse(Map())
 
-    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues)
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues,
+      getAvroTypeImplProvider(config))
     logger.info(s"Generated key schema\n${schema.toString(true)}")
     AbrisConfigUtil.getKeyProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
@@ -109,10 +110,17 @@ object ConfluentAvroEncodingTransformer extends StreamTransformerFactory with Co
     val newDefaultValues = ConfigUtils.getSeqOrNone(KEY_VALUE_OPTIONAL_FIELDS, config)
       .map(optionalFields => optionalFields.map(_ -> JsonProperties.NULL_VALUE).toMap)
       .getOrElse(Map())
-    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues)
+    val schema = AbrisConfigUtil.generateSchema(config, AbrisConfigKeys, expression, newDefaultValues,
+      getAvroTypeImplProvider(config))
     logger.info(s"Generated value schema\n${schema.toString(true)}")
     AbrisConfigUtil.getValueProducerSettings(config, AbrisConfigKeys, schema, schemaRegistryConfig)
   }
+
+  private def getAvroTypeImplProvider(config: Configuration) =
+    ConfigUtils.getOptionalBoolean(KEY_USE_ADVANCED_SCHEMA_CONVERSION, config)
+      .filter(x => x)
+      .map(_ => AdvancedToAvroTypeImpl)
+      .getOrElse(DefaultToAvroTypeImpl)
 }
 
 
