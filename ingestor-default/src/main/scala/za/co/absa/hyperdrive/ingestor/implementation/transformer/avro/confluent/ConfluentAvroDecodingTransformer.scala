@@ -30,7 +30,7 @@ import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigKeys, AbrisConfigUtil, AbrisConsumerConfigKeys, CustomSchemaConverters, SchemaRegistryConfigUtil}
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigKeys, AbrisConfigUtil, AbrisConsumerConfigKeys, SchemaRegistryConfigUtil}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,

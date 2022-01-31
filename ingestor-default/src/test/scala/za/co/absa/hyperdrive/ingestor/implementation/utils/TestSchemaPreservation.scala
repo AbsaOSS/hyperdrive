@@ -17,10 +17,10 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import org.apache.avro.Schema
-import org.apache.spark.sql.avro.SchemaConverters
 import org.scalatest.{FlatSpec, Matchers}
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, AdvancedSparkToAvroConverter}
 
-import scala.io.{BufferedSource, Source}
+import scala.io.Source
 
 class TestSchemaPreservation extends FlatSpec with Matchers {
   private def getSchemaString(name: String, namespace: String) = {
@@ -41,8 +41,8 @@ class TestSchemaPreservation extends FlatSpec with Matchers {
     val bufferedSource = Source.fromInputStream(stream)
     val schema = try bufferedSource.getLines().mkString finally bufferedSource.close()
     val avroSchema = new Schema.Parser().parse(schema)
-    val catalystSchema = CustomSchemaConverters.toSqlType(avroSchema)
-    val avroSchema2 = CustomSchemaConverters.toAvroType(catalystSchema, None, false, None,"name", "topLevelNamespace")
+    val catalystSchema = new AdvancedAvroToSparkConverter().toSqlType(avroSchema)
+    val avroSchema2 = AdvancedSparkToAvroConverter(catalystSchema,  nullable = false, "name", "topLevelNamespace")
 
     println(avroSchema2.toString(true))
     avroSchema2 shouldBe avroSchema

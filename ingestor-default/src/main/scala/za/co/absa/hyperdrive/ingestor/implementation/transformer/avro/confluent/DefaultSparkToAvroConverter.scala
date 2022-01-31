@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.Schema
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 import org.apache.spark.sql.types.DataType
 
-object AdvancedToAvroTypeImpl extends ToAvroTypeImplProvider {
+object DefaultSparkToAvroConverter extends SparkToAvroConverter {
   override def apply(catalystType: DataType, nullable: Boolean, recordName: String, nameSpace: String): Schema =
-    CustomSchemaConverters.toAvroType(catalystType, None, nullable, None, recordName, nameSpace)
+    toAvroType(catalystType, nullable, recordName, nameSpace)
 }

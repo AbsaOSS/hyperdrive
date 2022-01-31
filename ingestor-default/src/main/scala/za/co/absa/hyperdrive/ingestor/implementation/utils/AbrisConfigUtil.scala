@@ -22,7 +22,8 @@ import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.SchemaSubject
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig, ToAvroConfig}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.{getOrNone, getOrThrow}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, DefaultSparkToAvroConverter, SparkToAvroConverter}
 
 private[hyperdrive] object AbrisConfigUtil {
   val TopicNameStrategy = "topic.name"
@@ -63,7 +64,7 @@ private[hyperdrive] object AbrisConfigUtil {
 
     val fromAvroConfig = fromSchemaRegisteringConfigFragment.usingSchemaRegistry(schemaRegistryConfig)
     if (getUseAdvancedSchemaConversion(configuration, configKeys)) {
-      fromAvroConfig.withSchemaConverter(CustomSchemaConverters.toSqlType)
+      fromAvroConfig.withSchemaConverter(AdvancedAvroToSparkConverter.name)
     } else {
       fromAvroConfig
     }
@@ -109,7 +110,7 @@ private[hyperdrive] object AbrisConfigUtil {
    */
   def generateSchema(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
                      newDefaultValues: Map[String, Object],
-                     toAvroTypeImplProvider: ToAvroTypeImplProvider = DefaultToAvroTypeImpl): Schema = {
+                     toAvroTypeImplProvider: SparkToAvroConverter = DefaultSparkToAvroConverter): Schema = {
     val namingStrategy = getNamingStrategy(configuration, configKeys)
     val initialSchema = namingStrategy match {
       case TopicNameStrategy => toAvroTypeImplProvider(expression.dataType, expression.nullable)

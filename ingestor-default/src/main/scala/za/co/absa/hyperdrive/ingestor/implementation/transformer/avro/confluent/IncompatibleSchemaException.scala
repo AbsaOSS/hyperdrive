@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-import org.apache.avro.Schema
-import org.apache.spark.sql.types.DataType
-
-trait ToAvroTypeImplProvider {
-  def apply(
-    catalystType: DataType,
-    nullable: Boolean = false,
-    recordName: String = "topLevelRecord",
-    nameSpace: String = "")
-  : Schema
-}
+class IncompatibleSchemaException(msg: String, ex: Throwable = null) extends Exception(msg, ex)
