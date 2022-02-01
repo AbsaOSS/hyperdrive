@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.Schema
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, AdvancedSparkToAvroConverter}
 
 import scala.io.Source
 

@@ -120,6 +120,7 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
       schema
     }
   }
+  // scalastyle:on
 
   private def getDecimalFixedType(d: DecimalType, avroSchema: Option[Schema], nameSpace: String, recordName: String) = {
     val avroType = LogicalTypes.decimal(d.precision, d.scale)
@@ -136,4 +137,3 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
     }
   }
 }
-// scalastyle:on

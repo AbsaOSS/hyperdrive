@@ -110,11 +110,11 @@ private[hyperdrive] object AbrisConfigUtil {
    */
   def generateSchema(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
                      newDefaultValues: Map[String, Object],
-                     toAvroTypeImplProvider: SparkToAvroConverter = DefaultSparkToAvroConverter): Schema = {
+                     sparkToAvroConverter: SparkToAvroConverter = DefaultSparkToAvroConverter): Schema = {
     val namingStrategy = getNamingStrategy(configuration, configKeys)
     val initialSchema = namingStrategy match {
-      case TopicNameStrategy => toAvroTypeImplProvider(expression.dataType, expression.nullable)
-      case x if x == RecordNameStrategy || x == TopicRecordNameStrategy => toAvroTypeImplProvider(expression.dataType,
+      case TopicNameStrategy => sparkToAvroConverter(expression.dataType, expression.nullable)
+      case x if x == RecordNameStrategy || x == TopicRecordNameStrategy => sparkToAvroConverter(expression.dataType,
         expression.nullable, getRecordName(configuration, configKeys), getRecordNamespace(configuration, configKeys))
       case _ => throw new IllegalArgumentException("Naming strategy must be one of topic.name, record.name or topic.record.name")
     }

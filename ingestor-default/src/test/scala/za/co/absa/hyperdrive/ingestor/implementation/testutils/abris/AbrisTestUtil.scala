@@ -27,13 +27,14 @@ object AbrisTestUtil {
     }
   }
 
-  def getFromSchemaString(fromAvroConfig: FromAvroConfig): String = {
+  def getFromSchemaString(fromAvroConfig: FromAvroConfig): String = getAbrisConfig(fromAvroConfig)("readerSchema").asInstanceOf[String]
+
+  def getAbrisConfig(fromAvroConfig: FromAvroConfig): Map[String, Any] = {
     from_avro(lit(1), fromAvroConfig).expr.productElement(1) match {
-      case abrisConfig: Map[String, Any] => abrisConfig("readerSchema").asInstanceOf[String]
+      case abrisConfig: Map[String, Any] => abrisConfig
       case _ => throw new IllegalArgumentException("Test internal exception. Either the product index or the type of FromAvroConfig.abrisConfig is wrong")
     }
   }
-
   def getToSchemaString(toAvroConfig: ToAvroConfig): String =
     getAbrisConfig(toAvroConfig)("schema").asInstanceOf[String]
 

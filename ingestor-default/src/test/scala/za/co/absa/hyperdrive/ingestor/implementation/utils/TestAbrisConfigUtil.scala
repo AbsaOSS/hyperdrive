@@ -19,14 +19,15 @@ import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.avro.JsonProperties
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{BooleanType, IntegerType, StringType}
+import org.apache.spark.sql.types.{BooleanType, IntegerType, MetadataBuilder, StringType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
-import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.{getFromSchemaString, getSchemaId, getSchemaRegistryConf}
+import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.{getAbrisConfig, getFromSchemaString, getSchemaId, getSchemaRegistryConf}
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, AdvancedSparkToAvroConverter, SparkMetadataKeys}
 
 class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
@@ -161,6 +162,29 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     schema shouldBe expectedSchema
   }
 
+  it should "generate a schema with advanced spark avro conversion" in {
+    val config = createBaseConfiguration
+    config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
+
+    val dummyExpr = struct(lit(null).cast(IntegerType).as("col1", new MetadataBuilder()
+      .putString(SparkMetadataKeys.DefaultValueKey, "42").build())).expr
+    val expectedSchemaString = raw"""{
+           |  "type" : "record",
+           |  "name" : "topLevelRecord",
+           |  "fields" : [ {
+           |    "name" : "col1",
+           |    "type" : [ "int", "null" ],
+           |    "default" : 42
+           |  } ]
+           |}
+           |""".stripMargin.filterNot(_.isWhitespace)
+
+    val schema = AbrisConfigUtil.generateSchema(config, ProducerConfigKeys, dummyExpr, Map(),
+      AdvancedSparkToAvroConverter)
+
+    schema.toString shouldBe expectedSchemaString
+  }
+
   "getKeyProducerSettings" should "return settings and register subject with topic name strategy" in {
     // given
     val config = createBaseConfiguration
@@ -233,6 +257,8 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     config.addProperty(keySchemaRegistrySchemaId, latestSchema)
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
     config.addProperty(keySchemaRegistryUrl, dummySchemaRegistryUrl)
+    config.addProperty(keyUseAdvancedSchemaConversion, "true")
+
     val schemaRegistryConfig = createBaseSchemaRegistryConfig
 
     // when
@@ -240,6 +266,7 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
 
     // then
     getFromSchemaString(settings) shouldBe dummyTopicNameSchema.toString
+    getAbrisConfig(settings)("schemaConverter") shouldBe AdvancedAvroToSparkConverter.name
     getSchemaRegistryConf(settings).get shouldBe Map("schema.registry.url" -> dummySchemaRegistryUrl)
   }
 
