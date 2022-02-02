@@ -20,6 +20,7 @@ import org.apache.avro.LogicalTypes.TimestampMillis
 import org.apache.avro.Schema.Type._
 import org.apache.avro.util.internal.JacksonUtils
 import org.apache.avro.{JsonProperties, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types.Decimal.minBytesForPrecision
 import org.apache.spark.sql.types._
 import org.codehaus.jackson.map.ObjectMapper
@@ -47,19 +48,22 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
     val builder = SchemaBuilder.builder()
 
     val schema = catalystType match {
-      case BooleanType => builder.booleanType()
-      case ByteType | ShortType | IntegerType => builder.intType()
-      case LongType => builder.longType()
-      case DateType =>
-        LogicalTypes.date().addToSchema(builder.intType())
+      case BooleanType
+           | ByteType
+           | ShortType
+           | IntegerType
+           | LongType
+           | DateType
+           | FloatType
+           | DoubleType
+           | StringType
+      // nullability is handled later in this method, thus pass nullable = false
+      => SchemaConverters.toAvroType(catalystType, nullable = false, recordName, nameSpace)
       case TimestampType => avroSchema match {
         case Some(schema) if schema.getLogicalType.isInstanceOf[TimestampMillis] =>
           LogicalTypes.timestampMillis().addToSchema(builder.longType())
         case _ => LogicalTypes.timestampMicros().addToSchema(builder.longType())
       }
-      case FloatType => builder.floatType()
-      case DoubleType => builder.doubleType()
-      case StringType => builder.stringType()
       case d: DecimalType => avroSchema match {
         case Some(schema) if schema.getType == BYTES =>
           val avroType = LogicalTypes.decimal(d.precision, d.scale)
@@ -68,11 +72,7 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
       }
       case BinaryType => avroSchema match {
         case Some(schema) if schema.getType == FIXED =>
-          // Need to avoid naming conflict for the fixed fields
-          val name = nameSpace match {
-            case "" => s"$recordName.fixed"
-            case _ => s"$nameSpace.$recordName.fixed"
-          }
+          val name = getFixedName(recordName, nameSpace)
           builder
             .fixed(name)
             .size(schema.getFixedSize)
@@ -90,7 +90,8 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
         st.foreach { f =>
           val schema = Try(f.metadata.getString(PrimitiveTypeKey)).toOption
             .map(schema => new Schema.Parser().parse(schema))
-          val defaultValueOpt = Try(f.metadata.getString(DefaultValueKey)).flatMap(defaultJsonString => Try {
+          val defaultValueOpt = Try(f.metadata.getString(DefaultValueKey))
+            .flatMap(defaultJsonString => Try {
             val jsonNode = objectMapper.readTree(defaultJsonString)
             JacksonUtils.toObject(jsonNode)
           }).toOption
@@ -103,7 +104,6 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
               fieldsAssembler.name(f.name).`type`(fieldAvroType).withDefault(null)
             case _ => fieldsAssembler.name(f.name).`type`(fieldAvroType).noDefault()
           }
-
         }
         fieldsAssembler.endRecord()
 
@@ -115,25 +115,29 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
         case Some(value) if !value.isInstanceOf[JsonProperties.Null] => Schema.createUnion(schema, nullSchema)
         case _ => Schema.createUnion(nullSchema, schema)
       }
-
     } else {
       schema
     }
   }
-  // scalastyle:on
 
+  // scalastyle:on
   private def getDecimalFixedType(d: DecimalType, avroSchema: Option[Schema], nameSpace: String, recordName: String) = {
     val avroType = LogicalTypes.decimal(d.precision, d.scale)
-    avroSchema.map(schema =>
-      avroType.addToSchema(SchemaBuilder.fixed(schema.getName).namespace(schema.getNamespace).size(schema.getFixedSize))
-    ).getOrElse {
-      val fixedSize = minBytesForPrecision(d.precision)
-      // Need to avoid naming conflict for the fixed fields
-      val name = nameSpace match {
-        case "" => s"$recordName.fixed"
-        case _ => s"$nameSpace.$recordName.fixed"
-      }
-      avroType.addToSchema(SchemaBuilder.fixed(name).size(fixedSize))
+    val name = getFixedName(recordName, nameSpace)
+    val minBytes = minBytesForPrecision(d.precision)
+    val size = avroSchema.map { schema =>
+      if (schema.getFixedSize > minBytes) schema.getFixedSize else minBytes
+    }.getOrElse {
+      minBytes
+    }
+    avroType.addToSchema(SchemaBuilder.fixed(name).size(size))
+  }
+
+  private def getFixedName(recordName: String, nameSpace: String) = {
+    // Need to avoid naming conflict for the fixed fields
+    nameSpace match {
+      case "" => s"$recordName.fixed"
+      case _ => s"$nameSpace.$recordName.fixed"
     }
   }
 }

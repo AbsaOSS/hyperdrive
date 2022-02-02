@@ -166,8 +166,12 @@ class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
     val config = createBaseConfiguration
     config.addProperty(keySchemaRegistryNamingStrategy, AbrisConfigUtil.TopicNameStrategy)
 
-    val dummyExpr = struct(lit(null).cast(IntegerType).as("col1", new MetadataBuilder()
-      .putString(SparkMetadataKeys.DefaultValueKey, "42").build())).expr
+    val nullValue = null
+    val dummyExpr = struct(
+      lit(nullValue)
+        .cast(IntegerType)
+        .as("col1", new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "42").build())
+    ).expr
     val expectedSchemaString = raw"""{
            |  "type" : "record",
            |  "name" : "topLevelRecord",
