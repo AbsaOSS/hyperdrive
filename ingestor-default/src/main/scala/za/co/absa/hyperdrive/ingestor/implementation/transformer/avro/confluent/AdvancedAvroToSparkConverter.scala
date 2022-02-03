@@ -20,9 +20,11 @@ import org.apache.avro.LogicalTypes.{Date, Decimal, TimestampMicros, TimestampMi
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 import org.apache.avro.util.internal.JacksonUtils
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
 import org.codehaus.jackson.map.ObjectMapper
 import za.co.absa.abris.avro.sql.SchemaConverter
+
 import java.io.ByteArrayOutputStream
 import scala.collection.JavaConverters._
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys._
@@ -43,27 +45,17 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
 
   def toSqlTypeHelper(avroSchema: Schema, existingRecordNames: Set[String]): SchemaType = {
     avroSchema.getType match {
-      case INT => avroSchema.getLogicalType match {
-        case _: Date => SchemaType(DateType, nullable = false, Option(avroSchema))
-        case _ => SchemaType(IntegerType, nullable = false, Option(avroSchema))
-      }
-      case STRING => SchemaType(StringType, nullable = false, Option(avroSchema))
-      case BOOLEAN => SchemaType(BooleanType, nullable = false, Option(avroSchema))
-      case BYTES | FIXED => avroSchema.getLogicalType match {
-        // For FIXED type, if the precision requires more bytes than fixed size, the logical
-        // type will be null, which is handled by Avro library.
-        case d: Decimal => SchemaType(DecimalType(d.getPrecision, d.getScale), nullable = false, Option(avroSchema))
-        case _ => SchemaType(BinaryType, nullable = false, Option(avroSchema))
-      }
-
-      case DOUBLE => SchemaType(DoubleType, nullable = false, Option(avroSchema))
-      case FLOAT => SchemaType(FloatType, nullable = false, Option(avroSchema))
-      case LONG => avroSchema.getLogicalType match {
-        case _: TimestampMillis | _: TimestampMicros => SchemaType(TimestampType, nullable = false, Option(avroSchema))
-        case _ => SchemaType(LongType, nullable = false, Option(avroSchema))
-      }
-
-      case ENUM => SchemaType(StringType, nullable = false, Option(avroSchema))
+      case INT
+           | STRING
+           | BOOLEAN
+           | BYTES
+           | FIXED
+           | DOUBLE
+           | FLOAT
+           | LONG
+           | ENUM =>
+        val originalSchemaType = SchemaConverters.toSqlType(avroSchema)
+        SchemaType(originalSchemaType.dataType, originalSchemaType.nullable, Option(avroSchema))
 
       case RECORD =>
         if (existingRecordNames.contains(avroSchema.getFullName)) {
@@ -107,7 +99,8 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
         val schemaType = toSqlTypeHelper(avroSchema.getValueType, existingRecordNames)
         SchemaType(
           MapType(StringType, schemaType.dataType, valueContainsNull = schemaType.nullable),
-          nullable = false, schemaType.primitiveType)
+          nullable = false,
+          schemaType.primitiveType)
 
       case UNION =>
         if (avroSchema.getTypes.asScala.exists(_.getType == NULL)) {
@@ -123,9 +116,9 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
           case Seq(t1) =>
             toSqlTypeHelper(avroSchema.getTypes.get(0), existingRecordNames)
           case Seq(t1, t2) if Set(t1, t2) == Set(INT, LONG) =>
-            SchemaType(LongType, nullable = false, None)
+            SchemaType(LongType, nullable = false, Option(avroSchema))
           case Seq(t1, t2) if Set(t1, t2) == Set(FLOAT, DOUBLE) =>
-            SchemaType(DoubleType, nullable = false, None)
+            SchemaType(DoubleType, nullable = false, Option(avroSchema))
           case _ =>
             // Convert complex unions to struct types where field names are member0, member1, etc.
             // This is consistent with the behavior when converting between Avro and Parquet.

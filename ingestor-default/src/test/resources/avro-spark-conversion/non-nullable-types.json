@@ -4,43 +4,37 @@
   "namespace" : "nameSpace",
   "fields" : [ {
     "name" : "booleanCol",
-    "type" : [ "null", "boolean" ]
-  }, {
-    "name" : "byteCol",
-    "type" : [ "null", "int" ]
-  }, {
-    "name" : "shortCol",
-    "type" : [ "null", "int" ]
+    "type" : "boolean"
   }, {
     "name" : "intCol",
-    "type" : [ "null", "int" ]
+    "type" : "int"
   }, {
     "name" : "longCol",
-    "type" : [ "null", "long" ]
+    "type" : "long"
   }, {
     "name" : "dateCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "int",
       "logicalType" : "date"
-    } ]
+    }
   }, {
     "name" : "floatCol",
-    "type" : [ "null", "float" ]
+    "type" : "float"
   }, {
     "name" : "doubleCol",
-    "type" : [ "null", "double" ]
+    "type" : "double"
   }, {
     "name" : "stringCol",
-    "type" : [ "null", "string" ]
+    "type" : "string"
   }, {
     "name" : "timestampCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "long",
       "logicalType" : "timestamp-micros"
-    } ]
+    }
   }, {
     "name" : "decimalCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "fixed",
       "name" : "fixed",
       "namespace" : "nameSpace.recordName.decimalCol",
@@ -48,38 +42,32 @@
       "logicalType" : "decimal",
       "precision" : 10,
       "scale" : 3
-    } ]
+    }
   }, {
     "name" : "binaryCol",
-    "type" : [ "null", "bytes" ]
+    "type" : "bytes"
   }, {
     "name" : "arrayCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "array",
-      "items" : [ "null", "string" ]
-    } ]
+      "items" : "string"
+    }
   }, {
     "name" : "mapCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "map",
-      "values" : [ "null", "string" ]
-    } ]
+      "values" : "string"
+    }
   }, {
     "name" : "nestedCol",
-    "type" : [ "null", {
+    "type" : {
       "type" : "record",
       "name" : "nestedCol",
       "namespace" : "nameSpace.recordName",
       "fields" : [ {
         "name" : "stringCol",
-        "type" : [ "null", "string" ]
-      }, {
-        "name" : "arrayCol",
-        "type" : [ "null", {
-          "type" : "array",
-          "items" : [ "null", "string" ]
-        } ]
+        "type" : "string"
       } ]
-    } ]
+    }
   } ]
 }

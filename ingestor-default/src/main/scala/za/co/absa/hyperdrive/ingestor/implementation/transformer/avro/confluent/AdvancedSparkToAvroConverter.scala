@@ -80,10 +80,10 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
       }
       case ArrayType(et, containsNull) =>
         builder.array()
-          .items(toAvroType(et, avroSchema, containsNull, None, recordName, nameSpace))
+          .items(toAvroType(et, avroSchema, containsNull, defaultValue, recordName, nameSpace))
       case MapType(StringType, vt, valueContainsNull) =>
         builder.map()
-          .values(toAvroType(vt, avroSchema, valueContainsNull, None, recordName, nameSpace))
+          .values(toAvroType(vt, avroSchema, valueContainsNull, defaultValue, recordName, nameSpace))
       case st: StructType =>
         val childNameSpace = if (nameSpace != "") s"$nameSpace.$recordName" else recordName
         val fieldsAssembler = builder.record(recordName).namespace(nameSpace).fields()

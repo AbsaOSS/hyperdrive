@@ -13,11 +13,27 @@
     "name" : "arrayCol",
     "type" : [ {
       "type" : "array",
-      "items" : [ "null", "string" ]
+      "items" : [ "string", "null" ]
+    }, "null" ],
+    "default" : [ "value1", "value2" ]
+  }, {
+    "name" : "arrayNonNullCol",
+    "type" : [ {
+      "type" : "array",
+      "items" : "string"
     }, "null" ],
     "default" : [ "value1", "value2" ]
   }, {
     "name" : "mapCol",
+    "type" : [ {
+      "type" : "map",
+      "values" : [ "string", "null" ]
+    }, "null" ],
+    "default" : {
+      "value1" : "value2"
+    }
+  }, {
+    "name" : "mapNonNullCol",
     "type" : [ {
       "type" : "map",
       "values" : "string"

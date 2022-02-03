@@ -65,7 +65,10 @@ class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
       StructField("binaryCol", BinaryType),
       StructField("arrayCol", ArrayType(StringType)),
       StructField("mapCol", MapType(StringType, StringType)),
-      StructField("nestedCol", StructType(Seq(StructField("stringCol", StringType))))
+      StructField("nestedCol", StructType(Seq(
+        StructField("stringCol", StringType),
+        StructField("arrayCol", ArrayType(StringType, containsNull = true))
+      )))
     ))
 
     val expectedSchema = getAvroSchemaFromJson("avro-spark-conversion/nullable-types-nulls-first.json")
@@ -82,7 +85,11 @@ class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
         metadata = new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "null").build()),
       StructField("arrayCol", ArrayType(StringType),
         metadata = new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "[\"value1\", \"value2\"]").build()),
-      StructField("mapCol", MapType(StringType, StringType, valueContainsNull = false),
+      StructField("arrayNonNullCol", ArrayType(StringType, containsNull = false),
+        metadata = new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "[\"value1\", \"value2\"]").build()),
+      StructField("mapCol", MapType(StringType, StringType),
+        metadata = new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "{\"value1\": \"value2\"}").build()),
+      StructField("mapNonNullCol", MapType(StringType, StringType, valueContainsNull = false),
         metadata = new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "{\"value1\": \"value2\"}").build()),
       StructField("nestedCol", StructType(Seq(
         StructField(
@@ -94,6 +101,8 @@ class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
 
     val expectedSchema = getAvroSchemaFromJson("avro-spark-conversion/types-with-defaults.json")
     val avroSchema = AdvancedSparkToAvroConverter(schema)
+
+    println(avroSchema.toString(true))
 
     avroSchema shouldBe expectedSchema
   }
