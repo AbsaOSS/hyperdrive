@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 ABSA Group Limited
  *
@@ -16,7 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-import org.apache.avro.LogicalTypes.{Date, Decimal, TimestampMicros, TimestampMillis}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 import org.apache.avro.util.internal.JacksonUtils
@@ -24,10 +22,10 @@ import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
 import org.codehaus.jackson.map.ObjectMapper
 import za.co.absa.abris.avro.sql.SchemaConverter
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys._
 
 import java.io.ByteArrayOutputStream
 import scala.collection.JavaConverters._
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys._
 
 // scalastyle:off
 class AdvancedAvroToSparkConverter extends SchemaConverter {
