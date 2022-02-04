@@ -19,7 +19,7 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 import org.apache.avro.Schema
 import org.apache.spark.sql.types._
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys.{DefaultValueKey, PrimitiveTypeKey}
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys.{DefaultValueKey, AvroTypeKey}
 
 import scala.io.Source
 
@@ -57,32 +57,32 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
 
     val expectedSchema = StructType(Seq(
       StructField("booleanCol", BooleanType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"boolean\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"boolean\"").build()),
       StructField("intCol", IntegerType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"int\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"int\"").build()),
       StructField("longCol", LongType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"long\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"long\"").build()),
       StructField("dateCol", DateType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, dateType).build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, dateType).build()),
       StructField("floatCol", FloatType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"float\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"float\"").build()),
       StructField("doubleCol", DoubleType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"double\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"double\"").build()),
       StructField("stringCol", StringType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"string\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"string\"").build()),
       StructField("timestampCol", TimestampType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, timestampType).build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, timestampType).build()),
       StructField("decimalCol", new DecimalType(10, 3), nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, decimalType).build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, decimalType).build()),
       StructField("binaryCol", BinaryType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"bytes\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"bytes\"").build()),
       StructField("arrayCol", ArrayType(StringType, containsNull = false), nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"string\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"string\"").build()),
       StructField("mapCol", MapType(StringType, StringType, valueContainsNull = false), nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"string\"").build()),
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "\"string\"").build()),
       StructField("nestedCol", StructType(Seq(
           StructField("stringCol", StringType, nullable = false,
-            metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "\"string\"").build()))),
+            metadata = new MetadataBuilder().putString(AvroTypeKey, "\"string\"").build()))),
         nullable = false)
     ))
 
@@ -125,32 +125,32 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
       StructField("stringCol", StringType,
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "\"abcd\"")
-          .putString(PrimitiveTypeKey, "\"string\"")
+          .putString(AvroTypeKey, "\"string\"")
           .build()),
       StructField("intCol", IntegerType,
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "null")
-          .putString(PrimitiveTypeKey, "\"int\"")
+          .putString(AvroTypeKey, "\"int\"")
           .build()),
       StructField("arrayCol", ArrayType(StringType),
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "[\"value1\",\"value2\"]")
-          .putString(PrimitiveTypeKey, "\"string\"")
+          .putString(AvroTypeKey, "\"string\"")
           .build()),
       StructField("arrayNonNullCol", ArrayType(StringType, containsNull = false),
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "[\"value1\",\"value2\"]")
-          .putString(PrimitiveTypeKey, "\"string\"")
+          .putString(AvroTypeKey, "\"string\"")
           .build()),
       StructField("mapCol", MapType(StringType, StringType),
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "{\"value1\":\"value2\"}")
-          .putString(PrimitiveTypeKey, "\"string\"")
+          .putString(AvroTypeKey, "\"string\"")
           .build()),
       StructField("mapNonNullCol", MapType(StringType, StringType, valueContainsNull = false),
         metadata = new MetadataBuilder()
           .putString(DefaultValueKey, "{\"value1\":\"value2\"}")
-          .putString(PrimitiveTypeKey, "\"string\"")
+          .putString(AvroTypeKey, "\"string\"")
           .build()),
       StructField("nestedCol", StructType(Seq(
         StructField(
@@ -158,7 +158,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
           StringType,
           metadata = new MetadataBuilder()
             .putString(DefaultValueKey, "\"xyz\"")
-            .putString(PrimitiveTypeKey, "\"string\"")
+            .putString(AvroTypeKey, "\"string\"")
             .build()
         ))))
     ))
@@ -186,7 +186,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
     val avroSchema = new Schema.Parser().parse(avroSchemaString)
     val expectedSchema = StructType(Seq(
       StructField("complexCol", LongType, nullable = false,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "[\"int\",\"long\"]").build())
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "[\"int\",\"long\"]").build())
     ))
 
     val schema = underTest.toSqlType(avroSchema)
@@ -212,7 +212,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
     val avroSchema = new Schema.Parser().parse(avroSchemaString)
     val expectedSchema = StructType(Seq(
       StructField("complexCol", DoubleType,
-        metadata = new MetadataBuilder().putString(PrimitiveTypeKey, "[\"float\",\"double\"]").build())
+        metadata = new MetadataBuilder().putString(AvroTypeKey, "[\"float\",\"double\"]").build())
     ))
 
     val schema = underTest.toSqlType(avroSchema)
@@ -243,7 +243,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
           BooleanType,
           nullable = false,
           metadata = new MetadataBuilder()
-            .putString(PrimitiveTypeKey, "\"boolean\"")
+            .putString(AvroTypeKey, "\"boolean\"")
             .build()
         ),
         StructField(
@@ -251,7 +251,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
           IntegerType,
           nullable = false,
           metadata = new MetadataBuilder()
-            .putString(PrimitiveTypeKey, "\"int\"")
+            .putString(AvroTypeKey, "\"int\"")
             .build()
         ),
         StructField(
@@ -259,7 +259,7 @@ class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
           DoubleType,
           nullable = false,
           metadata = new MetadataBuilder()
-            .putString(PrimitiveTypeKey, "\"double\"")
+            .putString(AvroTypeKey, "\"double\"")
             .build()
         )
       )))

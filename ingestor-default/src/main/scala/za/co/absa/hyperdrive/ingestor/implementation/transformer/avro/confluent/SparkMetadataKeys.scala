@@ -17,6 +17,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 object SparkMetadataKeys {
-  val PrimitiveTypeKey = "primitiveType"
-  val DefaultValueKey = "default"
+  val AvroTypeKey = "avroType"
+  val DefaultValueKey = "avroDefault"
 }

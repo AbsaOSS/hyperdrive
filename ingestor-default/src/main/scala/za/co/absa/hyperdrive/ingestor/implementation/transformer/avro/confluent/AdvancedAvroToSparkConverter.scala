@@ -34,7 +34,7 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
   override val shortName: String = AdvancedAvroToSparkConverter.name
   private lazy val objectMapper = new ObjectMapper()
 
-  case class SchemaType(dataType: DataType, nullable: Boolean, primitiveType: Option[Schema])
+  case class SchemaType(dataType: DataType, nullable: Boolean, avroType: Option[Schema])
 
   /**
    * This function takes an avro schema and returns a sql schema.
@@ -79,9 +79,9 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
           }
 
           val schemaType = toSqlTypeHelper(f.schema(), newRecordNames)
-          schemaType.primitiveType
+          schemaType.avroType
             .map(_.toString)
-            .map(schema => metadataBuilderWithDefault.putString(PrimitiveTypeKey, schema).build())
+            .map(schema => metadataBuilderWithDefault.putString(AvroTypeKey, schema).build())
             .map(metadata => StructField(f.name, schemaType.dataType, schemaType.nullable, metadata))
             .getOrElse(StructField(f.name, schemaType.dataType, schemaType.nullable, metadataBuilderWithDefault.build()))
         }
@@ -93,14 +93,14 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
         SchemaType(
           ArrayType(schemaType.dataType, containsNull = schemaType.nullable),
           nullable = false,
-          schemaType.primitiveType)
+          schemaType.avroType)
 
       case MAP =>
         val schemaType = toSqlTypeHelper(avroSchema.getValueType, existingRecordNames)
         SchemaType(
           MapType(StringType, schemaType.dataType, valueContainsNull = schemaType.nullable),
           nullable = false,
-          schemaType.primitiveType)
+          schemaType.avroType)
 
       case UNION =>
         if (avroSchema.getTypes.asScala.exists(_.getType == NULL)) {
@@ -125,9 +125,9 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
             val fields = avroSchema.getTypes.asScala.zipWithIndex.map {
               case (s, i) =>
                 val schemaType = toSqlTypeHelper(s, existingRecordNames)
-                schemaType.primitiveType
+                schemaType.avroType
                   .map(_.toString)
-                  .map(schema => new MetadataBuilder().putString(PrimitiveTypeKey, schema).build())
+                  .map(schema => new MetadataBuilder().putString(AvroTypeKey, schema).build())
                   .map(metadata => StructField(s"member$i", schemaType.dataType, schemaType.nullable, metadata))
                    // All fields are nullable because only one of them is set at a time
                   .getOrElse(StructField(s"member$i", schemaType.dataType, nullable = true))

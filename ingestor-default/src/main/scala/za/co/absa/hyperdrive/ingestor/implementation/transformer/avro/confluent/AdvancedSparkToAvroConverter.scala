@@ -88,7 +88,7 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
         val childNameSpace = if (nameSpace != "") s"$nameSpace.$recordName" else recordName
         val fieldsAssembler = builder.record(recordName).namespace(nameSpace).fields()
         st.foreach { f =>
-          val schema = Try(f.metadata.getString(PrimitiveTypeKey)).toOption
+          val schema = Try(f.metadata.getString(AvroTypeKey)).toOption
             .map(schema => new Schema.Parser().parse(schema))
           val defaultValueOpt = Try(f.metadata.getString(DefaultValueKey))
             .flatMap(defaultJsonString => Try {

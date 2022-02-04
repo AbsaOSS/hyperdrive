@@ -111,11 +111,11 @@ class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
     val schema = StructType(Seq(
       StructField("timestampMillis", TimestampType,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, raw"""{"type":"long","logicalType":"timestamp-millis"}""")
+          .putString(SparkMetadataKeys.AvroTypeKey, raw"""{"type":"long","logicalType":"timestamp-millis"}""")
           .build()),
       StructField("timestampMicros", TimestampType,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, raw"""{"type":"long","logicalType":"timestamp-micros"}""")
+          .putString(SparkMetadataKeys.AvroTypeKey, raw"""{"type":"long","logicalType":"timestamp-micros"}""")
           .build()),
       StructField("timestampMicrosNoMetadata", TimestampType)
     ))
@@ -146,20 +146,20 @@ class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
     val schema = StructType(Seq(
       StructField("decimalBytes", decimalType, nullable = false,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, raw"""{"type":"bytes","logicalType":"decimal"}""")
+          .putString(SparkMetadataKeys.AvroTypeKey, raw"""{"type":"bytes","logicalType":"decimal"}""")
           .build()),
       StructField("decimalFixed", decimalType, nullable = false,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, decimalFixedSchema)
+          .putString(SparkMetadataKeys.AvroTypeKey, decimalFixedSchema)
           .build()),
       StructField("decimalNoMetadata", decimalType, nullable = false),
       StructField("binaryBytes", BinaryType, nullable = false,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, raw"""{"type":"bytes"}""")
+          .putString(SparkMetadataKeys.AvroTypeKey, raw"""{"type":"bytes"}""")
           .build()),
       StructField("binaryFixed", BinaryType, nullable = false,
         metadata = new MetadataBuilder()
-          .putString(SparkMetadataKeys.PrimitiveTypeKey, binaryFixedSchema)
+          .putString(SparkMetadataKeys.AvroTypeKey, binaryFixedSchema)
           .build()),
       StructField("binaryNoMetadata", BinaryType, nullable = false)
     ))

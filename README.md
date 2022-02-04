@@ -123,9 +123,9 @@ If no file exists, the reader will fail.
 
 Any additional properties can be added with the prefix `reader.parquet.options.`. See [Spark Structured Streaming Documentation](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#input-sources)
 
-##### ConfluentAvroStreamDecodingTransformer
-The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
-**Caution**: The `ConfluentAvroStreamDecodingTransformer` requires the property `reader.kafka.topic` to be set.
+##### ConfluentAvroDecodingTransformer
+The `ConfluentAvroDecodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+**Caution**: The `ConfluentAvroDecodingTransformer` requires the property `reader.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
@@ -142,14 +142,15 @@ The `ConfluentAvroStreamDecodingTransformer` is built on [ABRiS](https://github.
 | `transformer.{transformer-id}.keep.columns` | No | Comma-separated list of columns to keep (e.g. offset, partition) |
 | `transformer.{transformer-id}.disable.nullability.preservation` | No | Set to true to ignore fix [#137](https://github.com/AbsaOSS/hyperdrive/issues/137) and to keep the same behaviour as for versions prior to and including v3.2.2. Default value: `false` |
 | `transformer.{transformer-id}.schema.registry.basic.auth.user.info.file` | No | A path to a text file, that contains one line in the form `<username>:<password>`. It will be passed as `basic.auth.user.info` to the schema registry config |
+| `transformer.{transformer-id}.use.advanced.schema.conversion` | No | Set to true to convert the avro schema using [AdvancedAvroToSparkConverter](https://github.com/AbsaOSS/hyperdrive/blob/develop/ingestor-default/src/main/scala/za/co/absa/hyperdrive/ingestor/implementation/transformer/avro/confluent/AdvancedAvroToSparkConverter.scala), which puts default value and underlying avro type to struct field metadata. Default false |
 
 For detailed information on the subject name strategy, please take a look at the [Schema Registry Documentation](https://docs.confluent.io/current/schema-registry/).
 
 Any additional properties for the schema registry config can be added with the prefix `transformer.{transformer-id}.schema.registry.options.`
 
-##### ConfluentAvroStreamEncodingTransformer
-The `ConfluentAvroStreamEncodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
-**Caution**: The `ConfluentAvroStreamEncodingTransformer` requires the property `writer.kafka.topic` to be set.
+##### ConfluentAvroEncodingTransformer
+The `ConfluentAvroEncodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
+**Caution**: The `ConfluentAvroEncodingTransformer` requires the property `writer.kafka.topic` to be set.
 
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
@@ -164,6 +165,7 @@ The `ConfluentAvroStreamEncodingTransformer` is built on [ABRiS](https://github.
 | `transformer.{transformer-id}.key.schema.record.namespace` | Yes for key naming strategies `record.name` and `topic.record.name` | Namespace of the record. |
 | `transformer.{transformer-id}.key.optional.fields` | No | Comma-separated list of nullable key columns that should get default value null in the avro schema. Nested columns' names should be concatenated with the dot (`.`) |
 | `transformer.{transformer-id}.schema.registry.basic.auth.user.info.file` | No | A path to a text file, that contains one line in the form `<username>:<password>`. It will be passed as `basic.auth.user.info` to the schema registry config |
+| `transformer.{transformer-id}.use.advanced.schema.conversion` | No | Set to true to convert the avro schema using [AdvancedSparkToAvroConverter](https://github.com/AbsaOSS/hyperdrive/blob/develop/ingestor-default/src/main/scala/za/co/absa/hyperdrive/ingestor/implementation/transformer/avro/confluent/AdvancedSparkToAvroConverter.scala), which reads default value and underlying avro type from struct field metadata. Default false |
 
 Any additional properties for the schema registry config can be added with the prefix `transformer.{transformer-id}.schema.registry.options.`
 
