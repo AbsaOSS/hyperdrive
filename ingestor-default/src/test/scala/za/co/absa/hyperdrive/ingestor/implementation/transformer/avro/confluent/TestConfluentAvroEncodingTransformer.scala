@@ -173,7 +173,9 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
       StructField("col1", IntegerType, nullable = true,
         new MetadataBuilder().putString(SparkMetadataKeys.DefaultValueKey, "42").build()))
     )
-    val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(schema))
+
+    import scala.collection.JavaConverters._
+    val df = spark.createDataFrame(Seq[Row]().asJava, schema)
 
     val config = new BaseConfiguration()
     config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
@@ -197,7 +199,7 @@ class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with B
     }
 
     // when
-    encoder.transform(memoryStream.toDF())
+    encoder.transform(df)
 
     // then
     val schemaMetadata = mockSchemaRegistryClient.getLatestSchemaMetadata(s"$topic-value")
