@@ -112,12 +112,13 @@
 
         <!-- Spark versions -->
         <spark_2.version>2.4.3</spark_2.version>
-        <spark_3.version>3.1.2</spark_3.version>
+        <spark_3.version>3.2.1</spark_3.version>
         <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
+        <hadoop_2.version>2.6.5</hadoop_2.version>
         <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
         <spark_2.mongodb.driver.version>2.7.0</spark_2.mongodb.driver.version>
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
-
+        <hadoop_3.version>3.3.1</hadoop_3.version>
         <!-- Default versions -->
         <spark.compat.version />
         <spark.version />
@@ -180,6 +181,7 @@
                 <spark.version>${spark_2.version}</spark.version>
                 <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
+                <hadoop.version>${hadoop_2.version}</hadoop.version> <!-- same as Spark -->
             </properties>
             <modules>
                 <module>compatibility_spark-2</module>
@@ -193,6 +195,7 @@
                 <spark.version>${spark_3.version}</spark.version>
                 <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
+                <hadoop.version>${hadoop_3.version}</hadoop.version> <!-- same as Spark -->
             </properties>
             <modules>
                 <module>compatibility_spark-3</module>
