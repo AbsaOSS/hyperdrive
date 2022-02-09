@@ -39,16 +39,12 @@
 
     <properties>
         <!--Enforced versions-->
-        <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
         <commons.text.version>1.8</commons.text.version>
         <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <!--ABRiS-->
-        <abris.version>5.1.1</abris.version>
 
         <!--Scala-->
         <scalatest.version>3.0.5</scalatest.version>
@@ -61,7 +57,7 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
-        <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
+        <confluent.version>6.2.1</confluent.version> <!--Same as Abris uses-->
 
         <embedded.mongo.version>2.1.2</embedded.mongo.version>
 
@@ -87,11 +83,6 @@
 
     <dependencies>
         <!--Enforced dependency versions-->
-        <!--Avro-->
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
@@ -100,6 +91,14 @@
             <groupId>com.thoughtworks.paranamer</groupId>
             <artifactId>paranamer</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.12.3</version>
+            <scope>test</scope>
+        </dependency>
+
         <!--END Enforced dependency versions-->
 
         <!--Spark-->
@@ -139,12 +138,6 @@
 
         <dependencies>
             <!--Enforced dependency versions-->
-            <!--Avro-->
-            <dependency>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro</artifactId>
-                <version>${avro.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
@@ -269,7 +262,7 @@
                 <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
-                <version>${kafka.avro.serializer.version}</version>
+                <version>${confluent.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>

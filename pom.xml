@@ -112,13 +112,18 @@
 
         <!-- Spark versions -->
         <spark_2.version>2.4.3</spark_2.version>
-        <spark_3.version>3.2.1</spark_3.version>
+        <spark_3.version>3.2.0</spark_3.version>
         <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
         <hadoop_2.version>2.6.5</hadoop_2.version>
         <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
         <spark_2.mongodb.driver.version>2.7.0</spark_2.mongodb.driver.version>
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
         <hadoop_3.version>3.3.1</hadoop_3.version>
+
+        <!-- ABRiS versions -->
+        <abris_spark_24.version>5.1.1</abris_spark_24.version>
+        <abris_spark_32.version>6.1.1</abris_spark_32.version>
+
         <!-- Default versions -->
         <spark.compat.version />
         <spark.version />
@@ -173,15 +178,13 @@
         </profile>
         <profile>
             <id>spark-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <spark.compat.version>spark-2</spark.compat.version>
                 <spark.version>${spark_2.version}</spark.version>
                 <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
                 <hadoop.version>${hadoop_2.version}</hadoop.version> <!-- same as Spark -->
+                <abris.version>${abris_spark_24.version}</abris.version>
             </properties>
             <modules>
                 <module>compatibility_spark-2</module>
@@ -190,12 +193,16 @@
         </profile>
         <profile>
             <id>spark-3</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <spark.compat.version>spark-3</spark.compat.version>
                 <spark.version>${spark_3.version}</spark.version>
                 <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
                 <hadoop.version>${hadoop_3.version}</hadoop.version> <!-- same as Spark -->
+                <abris.version>${abris_spark_32.version}</abris.version>
             </properties>
             <modules>
                 <module>compatibility_spark-3</module>

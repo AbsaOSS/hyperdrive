@@ -20,7 +20,7 @@ import org.apache.avro.util.Utf8
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 
-import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
 
 private[hyperdrive] object AvroUtil {
 
@@ -49,14 +49,19 @@ private[hyperdrive] object AvroUtil {
   private def getFromGenericRecordNullSafe(record: GenericRecord, keys: Seq[String]) =
     Option(record).flatMap(getFromGenericRecord(_, keys))
 
-  @tailrec
   private def getFromGenericRecord(record: GenericRecord, keys: Seq[String]): Option[Any] = keys match {
-    case key :: Nil => Option(record.get(key))
+    case key :: Nil => getValueSafely(() => record.get(key))
     case head :: tail =>
-      val value = record.get(head)
-      value match {
+      getValueSafely(() => record.get(head)).flatMap {
         case genericRecord: GenericRecord => getFromGenericRecord(genericRecord, tail)
         case _ => None
       }
+  }
+
+  private def getValueSafely[T](fn: () => T): Option[T] = {
+    Try(fn.apply()) match {
+      case Success(value) => Option(value)
+      case Failure(_) => None
+    }
   }
 }
