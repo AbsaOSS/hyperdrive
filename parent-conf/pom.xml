@@ -192,16 +192,19 @@
                 <scope>provided</scope>
                 <exclusions>
                     <exclusion>
+                        <!-- Excluded because version >= 1.10.1 is required for Spark 3.2.0-->
                         <groupId>org.apache.avro</groupId>
                         <artifactId>avro</artifactId>
                     </exclusion>
                     <exclusion>
+                        <!-- Excluded because version >= 2.12.0 is required for Spark 3.2.0 -->
                         <groupId>com.fasterxml.jackson.core</groupId>
                         <artifactId>jackson-databind</artifactId>
                     </exclusion>
                     <exclusion>
+                        <!-- Excluded because version >= 4.1.68.Final is required for Spark 3.2.0 -->
                         <groupId>io.netty</groupId>
-                        <artifactId>netty-handler</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
 
@@ -270,12 +273,26 @@
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
                 <version>${confluent.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- Excluded because version >= 2.12.0 is required for Spark 3.2.0 -->
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers.kafka.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <!-- Excluded because version >= 2.12.0 is required for Spark 3.2.0 -->
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
