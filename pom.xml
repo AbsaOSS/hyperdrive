@@ -178,6 +178,9 @@
         </profile>
         <profile>
             <id>spark-2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <spark.compat.version>spark-2</spark.compat.version>
                 <spark.version>${spark_2.version}</spark.version>
@@ -193,9 +196,6 @@
         </profile>
         <profile>
             <id>spark-3</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <spark.compat.version>spark-3</spark.compat.version>
                 <spark.version>${spark_3.version}</spark.version>
