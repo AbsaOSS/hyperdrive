@@ -29,8 +29,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-
       - name: License check
-        run: mvn clean validate -Plicense-check,spark-2,spark-3,scala-2.12
+        run: mvn clean validate --no-transfer-progress -Plicense-check,spark-2,spark-3,scala-2.12
       - name: Switch scala version
-        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
+        run: mvn scala-cross-build:change-version --no-transfer-progress -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
       - name: Build and run tests
-        run: mvn clean verify -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests
+        run: mvn clean verify --no-transfer-progress -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests
