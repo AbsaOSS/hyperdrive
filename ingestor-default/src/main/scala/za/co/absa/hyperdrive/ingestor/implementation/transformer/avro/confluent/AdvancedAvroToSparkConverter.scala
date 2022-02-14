@@ -43,18 +43,6 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
 
   def toSqlTypeHelper(avroSchema: Schema, existingRecordNames: Set[String]): SchemaType = {
     avroSchema.getType match {
-      case INT
-           | STRING
-           | BOOLEAN
-           | BYTES
-           | FIXED
-           | DOUBLE
-           | FLOAT
-           | LONG
-           | ENUM =>
-        val originalSchemaType = SchemaConverters.toSqlType(avroSchema)
-        SchemaType(originalSchemaType.dataType, originalSchemaType.nullable, Option(avroSchema))
-
       case RECORD =>
         if (existingRecordNames.contains(avroSchema.getFullName)) {
           throw new IncompatibleSchemaException(s"""
@@ -134,7 +122,9 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
             SchemaType(StructType(fields), nullable = false, None)
         }
 
-      case other => throw new IncompatibleSchemaException(s"Unsupported type $other")
+      case _ =>
+        val originalSchemaType = SchemaConverters.toSqlType(avroSchema)
+        SchemaType(originalSchemaType.dataType, originalSchemaType.nullable, Option(avroSchema))
     }
   }
 }

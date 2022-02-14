@@ -47,17 +47,6 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
     val builder = SchemaBuilder.builder()
 
     val schema = catalystType match {
-      case BooleanType
-           | ByteType
-           | ShortType
-           | IntegerType
-           | LongType
-           | DateType
-           | FloatType
-           | DoubleType
-           | StringType
-      // nullability is handled later in this method, thus pass nullable = false
-      => SchemaConverters.toAvroType(catalystType, nullable = false, recordName, nameSpace)
       case TimestampType => avroSchema match {
         case Some(schema) if schema.getLogicalType.isInstanceOf[TimestampMillis] =>
           LogicalTypes.timestampMillis().addToSchema(builder.longType())
@@ -106,8 +95,8 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
         }
         fieldsAssembler.endRecord()
 
-      // This should never happen.
-      case other => throw new IncompatibleSchemaException(s"Unexpected type $other.")
+      // nullability is handled later in this method, thus pass nullable = false
+      case _ => SchemaConverters.toAvroType(catalystType, nullable = false, recordName, nameSpace)
     }
     if (nullable) {
       defaultValue match {

@@ -148,6 +148,9 @@ For detailed information on the subject name strategy, please take a look at the
 
 Any additional properties for the schema registry config can be added with the prefix `transformer.{transformer-id}.schema.registry.options.`
 
+Note: `use.advanced.schema.conversion` only works with a patched version of Spark, due to bug [SPARK-34805](https://issues.apache.org/jira/browse/SPARK-34805). 
+For the latest version of Spark, the patch is available in https://github.com/apache/spark/pull/35270. For other versions of Spark, the changes need to be cherry-picked and built locally.
+
 ##### ConfluentAvroEncodingTransformer
 The `ConfluentAvroEncodingTransformer` is built on [ABRiS](https://github.com/AbsaOSS/ABRiS). More details about the configuration properties can be found there.
 **Caution**: The `ConfluentAvroEncodingTransformer` requires the property `writer.kafka.topic` to be set.
