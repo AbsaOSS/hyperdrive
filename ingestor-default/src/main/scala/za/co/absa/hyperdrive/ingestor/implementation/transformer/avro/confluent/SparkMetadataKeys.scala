@@ -13,18 +13,9 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.utils
+package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-private[hyperdrive] trait AbrisConfigKeys {
-  val topic: String
-  val namingStrategy: String
-  val recordName: String
-  val recordNamespace: String
+object SparkMetadataKeys {
+  val AvroTypeKey = "avroType"
+  val DefaultValueKey = "avroDefault"
 }
-
-private[hyperdrive] trait AbrisConsumerConfigKeys extends AbrisConfigKeys {
-  val schemaId: String
-  val useAdvancedSchemaConversion: String
-}
-
-private[hyperdrive] trait AbrisProducerConfigKeys extends AbrisConfigKeys

@@ -1,0 +1,49 @@
+{
+  "type" : "record",
+  "name" : "topLevelRecord",
+  "fields" : [ {
+    "name" : "decimalBytes",
+    "type" : {
+      "type" : "bytes",
+      "logicalType" : "decimal",
+      "precision" : 8,
+      "scale" : 3
+    }
+  }, {
+    "name" : "decimalFixed",
+    "type" : {
+      "type" : "fixed",
+      "name" : "fixed",
+      "namespace" : "topLevelRecord.decimalFixed",
+      "size" : 10,
+      "logicalType" : "decimal",
+      "precision" : 8,
+      "scale" : 3
+    }
+  }, {
+    "name" : "decimalNoMetadata",
+    "type" : {
+      "type" : "fixed",
+      "name" : "fixed",
+      "namespace" : "topLevelRecord.decimalNoMetadata",
+      "size" : 4,
+      "logicalType" : "decimal",
+      "precision" : 8,
+      "scale" : 3
+    }
+  }, {
+    "name" : "binaryBytes",
+    "type" : "bytes"
+  }, {
+    "name" : "binaryFixed",
+    "type" : {
+      "type" : "fixed",
+      "name" : "fixed",
+      "namespace" : "topLevelRecord.binaryFixed",
+      "size" : 10
+    }
+  }, {
+    "name" : "binaryNoMetadata",
+    "type" : "bytes"
+  } ]
+}

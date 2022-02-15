@@ -283,6 +283,7 @@
                                 <exclude>**/CODEOWNERS</exclude>
                                 <exclude>.editorconfig</exclude>
                                 <exclude>**/*.MockMaker</exclude>
+                                <exclude>**/*.json</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

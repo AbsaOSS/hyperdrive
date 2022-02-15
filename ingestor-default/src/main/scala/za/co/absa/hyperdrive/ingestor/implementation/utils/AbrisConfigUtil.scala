@@ -17,12 +17,13 @@ package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import org.apache.avro.{JsonProperties, Schema}
 import org.apache.commons.configuration2.Configuration
-import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 import org.apache.spark.sql.catalyst.expressions.Expression
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.SchemaSubject
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig, ToAvroConfig}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, DefaultSparkToAvroConverter, SparkToAvroConverter}
 
 private[hyperdrive] object AbrisConfigUtil {
   val TopicNameStrategy = "topic.name"
@@ -61,7 +62,12 @@ private[hyperdrive] object AbrisConfigUtil {
       fromConfluentAvroConfigFragment.downloadReaderSchemaById(schemaId.toInt)
     }
 
-    fromSchemaRegisteringConfigFragment.usingSchemaRegistry(schemaRegistryConfig)
+    val fromAvroConfig = fromSchemaRegisteringConfigFragment.usingSchemaRegistry(schemaRegistryConfig)
+    if (getUseAdvancedSchemaConversion(configuration, configKeys)) {
+      fromAvroConfig.withSchemaConverter(AdvancedAvroToSparkConverter.name)
+    } else {
+      fromAvroConfig
+    }
   }
 
   def getKeyProducerSettings(configuration: Configuration, configKeys: AbrisProducerConfigKeys, schema: Schema,
@@ -103,11 +109,12 @@ private[hyperdrive] object AbrisConfigUtil {
    * using the dot (.), e.g. "parent.childField.subChildField". Note that dots in avro field names are not allowed.
    */
   def generateSchema(configuration: Configuration, configKeys: AbrisProducerConfigKeys, expression: Expression,
-                     newDefaultValues: Map[String, Object]): Schema = {
+                     newDefaultValues: Map[String, Object],
+                     sparkToAvroConverter: SparkToAvroConverter = DefaultSparkToAvroConverter): Schema = {
     val namingStrategy = getNamingStrategy(configuration, configKeys)
     val initialSchema = namingStrategy match {
-      case TopicNameStrategy => toAvroType(expression.dataType, expression.nullable)
-      case x if x == RecordNameStrategy || x == TopicRecordNameStrategy => toAvroType(expression.dataType,
+      case TopicNameStrategy => sparkToAvroConverter(expression.dataType, expression.nullable)
+      case x if x == RecordNameStrategy || x == TopicRecordNameStrategy => sparkToAvroConverter(expression.dataType,
         expression.nullable, getRecordName(configuration, configKeys), getRecordNamespace(configuration, configKeys))
       case _ => throw new IllegalArgumentException("Naming strategy must be one of topic.name, record.name or topic.record.name")
     }
@@ -179,4 +186,8 @@ private[hyperdrive] object AbrisConfigUtil {
 
   private def getRecordNamespace(configuration: Configuration, configKeys: AbrisConfigKeys) =
     getOrThrow(configKeys.recordNamespace, configuration, errorMessage = s"Record namespace not specified for value. Is '${configKeys.recordNamespace}' configured?")
+
+  private def getUseAdvancedSchemaConversion(configuration: Configuration, configKeys: AbrisConsumerConfigKeys) = {
+    ConfigUtils.getOptionalBoolean(configKeys.useAdvancedSchemaConversion, configuration).getOrElse(false)
+  }
 }

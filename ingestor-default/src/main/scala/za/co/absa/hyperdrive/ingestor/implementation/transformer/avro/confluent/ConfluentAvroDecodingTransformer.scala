@@ -113,6 +113,7 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME
     override val recordNamespace: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAMESPACE
+    override val useAdvancedSchemaConversion: String = KEY_USE_ADVANCED_SCHEMA_CONVERSION
   }
 
   override def apply(config: Configuration): StreamTransformer = {

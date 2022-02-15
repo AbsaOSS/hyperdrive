@@ -1,0 +1,85 @@
+{
+  "type" : "record",
+  "name" : "recordName",
+  "namespace" : "nameSpace",
+  "fields" : [ {
+    "name" : "booleanCol",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "byteCol",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "shortCol",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "intCol",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "longCol",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "dateCol",
+    "type" : [ "null", {
+      "type" : "int",
+      "logicalType" : "date"
+    } ]
+  }, {
+    "name" : "floatCol",
+    "type" : [ "null", "float" ]
+  }, {
+    "name" : "doubleCol",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "stringCol",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "timestampCol",
+    "type" : [ "null", {
+      "type" : "long",
+      "logicalType" : "timestamp-micros"
+    } ]
+  }, {
+    "name" : "decimalCol",
+    "type" : [ "null", {
+      "type" : "fixed",
+      "name" : "fixed",
+      "namespace" : "nameSpace.recordName.decimalCol",
+      "size" : 5,
+      "logicalType" : "decimal",
+      "precision" : 10,
+      "scale" : 3
+    } ]
+  }, {
+    "name" : "binaryCol",
+    "type" : [ "null", "bytes" ]
+  }, {
+    "name" : "arrayCol",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "mapCol",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "nestedCol",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "nestedCol",
+      "namespace" : "nameSpace.recordName",
+      "fields" : [ {
+        "name" : "stringCol",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "arrayCol",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ]
+      } ]
+    } ]
+  } ]
+}

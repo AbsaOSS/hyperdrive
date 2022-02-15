@@ -1,0 +1,57 @@
+{
+  "type" : "record",
+  "name" : "topLevelRecord",
+  "fields" : [ {
+    "name" : "stringCol",
+    "type" : [ "string", "null" ],
+    "default" : "abcd"
+  }, {
+    "name" : "intCol",
+    "type" : [ "null", "int" ],
+    "default" : null
+  }, {
+    "name" : "arrayCol",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ],
+    "default" : [ "value1", "value2" ]
+  }, {
+    "name" : "arrayNonNullCol",
+    "type" : [ {
+      "type" : "array",
+      "items" : "string"
+    }, "null" ],
+    "default" : [ "value1", "value2" ]
+  }, {
+    "name" : "mapCol",
+    "type" : [ {
+      "type" : "map",
+      "values" : [ "string", "null" ]
+    }, "null" ],
+    "default" : {
+      "value1" : "value2"
+    }
+  }, {
+    "name" : "mapNonNullCol",
+    "type" : [ {
+      "type" : "map",
+      "values" : "string"
+    }, "null" ],
+    "default" : {
+      "value1" : "value2"
+    }
+  }, {
+    "name" : "nestedCol",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "nestedCol",
+      "namespace" : "topLevelRecord",
+      "fields" : [ {
+        "name" : "stringCol",
+        "type" : [ "string", "null" ],
+        "default" : "xyz"
+      } ]
+    } ]
+  } ]
+}
