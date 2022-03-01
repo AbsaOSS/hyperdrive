@@ -22,7 +22,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 

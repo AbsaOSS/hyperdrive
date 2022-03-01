@@ -25,7 +25,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, Produce
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 /**
  * This e2e test requires a Docker installation on the executing machine.

@@ -20,7 +20,7 @@ import org.apache.spark.sql.execution.streaming._
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 class TestKafkaUtil extends FlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
   private var baseDir: TempDirectory = _

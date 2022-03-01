@@ -31,7 +31,7 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.getSchemaRegistryConf
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._

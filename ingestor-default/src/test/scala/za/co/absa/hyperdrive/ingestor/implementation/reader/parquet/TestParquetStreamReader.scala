@@ -21,7 +21,7 @@ import org.apache.spark.sql.SaveMode
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers with SparkTestBase with BeforeAndAfterEach {
   behavior of "ParquetStreamReader"

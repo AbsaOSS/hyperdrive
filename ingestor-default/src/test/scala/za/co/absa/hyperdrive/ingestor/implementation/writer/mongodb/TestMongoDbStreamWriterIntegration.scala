@@ -19,7 +19,7 @@ import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.DataFrame
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterCommonAttributes}
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb.ScalaMongoImplicits
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.MemoryStreamFixture
