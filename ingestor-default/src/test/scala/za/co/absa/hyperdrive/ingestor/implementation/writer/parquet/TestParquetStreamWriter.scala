@@ -24,7 +24,7 @@ import org.mockito.Mockito._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 class TestParquetStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
 

@@ -23,7 +23,7 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{OutputMode, Trigger}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.commons.spark.SparkTestBase
+import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
