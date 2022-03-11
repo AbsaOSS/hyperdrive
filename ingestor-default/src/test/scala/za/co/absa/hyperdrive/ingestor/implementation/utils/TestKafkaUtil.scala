@@ -19,9 +19,10 @@ import org.apache.kafka.clients.consumer.{ConsumerRecord, ConsumerRecords, Kafka
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.sql.execution.streaming._
 import org.apache.spark.sql.kafka010.KafkaSourceOffsetProxy
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.{eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.{times, verify, when}
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.mockito.MockitoSugar.mock
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
@@ -29,6 +30,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kaf
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 import java.time.Duration
+import java.util
 
 class TestKafkaUtil extends FlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
   private var baseDir: TempDirectory = _
@@ -187,11 +189,15 @@ class TestKafkaUtil extends FlatSpec with Matchers with BeforeAndAfter with Spar
       .asJava
     val records = new ConsumerRecords(Map(topicPartition0 -> records0, topicPartition1 -> records1).asJava)
 
-    when(mockKafkaConsumer.endOffsets(any())).thenAnswer(_ => endOffsets)
-    when(mockKafkaConsumer.beginningOffsets(any())).thenAnswer(_ => beginningOffsets)
-    when(mockKafkaConsumer.poll(any[Duration])).thenAnswer(_ => records)
-    when(mockKafkaConsumer.position(eqTo(topicPartition0))).thenAnswer(_ => endOffset0)
-    when(mockKafkaConsumer.position(eqTo(topicPartition1))).thenAnswer(_ => endOffset1)
+    when(mockKafkaConsumer.endOffsets(any())).thenAnswer(new Answer[java.util.Map[TopicPartition, Long]] {
+      override def answer(invocation: InvocationOnMock): util.Map[TopicPartition, Long] = endOffsets
+    })
+    when(mockKafkaConsumer.beginningOffsets(any())).thenAnswer(new Answer[java.util.Map[TopicPartition, Long]] {
+      override def answer(invocation: InvocationOnMock): util.Map[TopicPartition, Long] = beginningOffsets
+    })
+    when(mockKafkaConsumer.poll(any[Duration])).thenReturn(records)
+    when(mockKafkaConsumer.position(eqTo(topicPartition0))).thenReturn(endOffset0)
+    when(mockKafkaConsumer.position(eqTo(topicPartition1))).thenReturn(endOffset1)
 
     implicit val kafkaConsumerTimeout: Duration = kafkaSufficientTimeout
     val consumerRecords = KafkaUtil.getAtLeastNLatestRecordsFromPartition(mockKafkaConsumer, numberOfRecords, pruningFn)
