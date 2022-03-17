@@ -45,7 +45,9 @@ private[hyperdrive] object KafkaUtil {
         val recordSizes = records
           .groupBy(r => new TopicPartition(r.topic, r.partition))
           .mapValues(records => records.size)
-        val unfinishedPartitions = topicPartitions.filter(p => recordSizes.getOrElse(p, 0) < numberOfRecords(p) && offsetLowerBounds(p) != 0)
+        val beginningOffsets = consumer.beginningOffsets(topicPartitions.asJava).asScala
+        val unfinishedPartitions = topicPartitions.filter(p =>
+          recordSizes.getOrElse(p, 0) < numberOfRecords(p) && offsetLowerBounds(p) > beginningOffsets(p))
         if (unfinishedPartitions.isEmpty) {
           break()
         }
