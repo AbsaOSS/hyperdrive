@@ -19,7 +19,7 @@
     <parent>
         <artifactId>parent-conf_2.12</artifactId>
         <groupId>za.co.absa.hyperdrive</groupId>
-        <version>4.6.0</version>
+        <version>4.6.1-SNAPSHOT</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
