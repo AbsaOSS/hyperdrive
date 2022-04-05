@@ -112,7 +112,7 @@
 
         <!-- Spark versions -->
         <spark_2.version>2.4.3</spark_2.version>
-        <spark_3.version>3.2.0</spark_3.version>
+        <spark_3.version>3.2.1</spark_3.version>
         <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
         <hadoop_2.version>2.6.5</hadoop_2.version>
         <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
@@ -122,7 +122,7 @@
 
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
-        <abris_spark_32.version>6.1.1</abris_spark_32.version>
+        <abris_spark_32.version>6.2.0</abris_spark_32.version>
 
         <!-- Default versions -->
         <spark.compat.version />
@@ -220,6 +220,14 @@
                 <hadoop.version>${hadoop_3.version}</hadoop.version> <!-- same as Spark -->
                 <abris.version>${abris_spark_32.version}</abris.version>
             </properties>
+            <dependencies>
+                <!-- For some reason, this dependency is not transitively included in spark-core -->
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client-api</artifactId>
+                    <version>3.3.1</version>
+                </dependency>
+            </dependencies>
             <dependencyManagement>
                 <dependencies>
                     <dependency>

@@ -43,13 +43,6 @@
             <artifactId>compatibility-provider_${scala.compat.version}</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        <!-- Hadoop -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-        </dependency>
-
         <!--ABRiS-->
         <dependency>
             <groupId>io.confluent</groupId>
