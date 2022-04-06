@@ -21,4 +21,6 @@ import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
 trait CompatibleSparkUtil {
   def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex
   def hasMetadata(spark: SparkSession, destination: String): Boolean
+  def jsonStringToObject(jsonString: String): Object
+  def objectToJsonString(obj: Object): Option[String]
 }

@@ -17,20 +17,17 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
-import org.apache.avro.util.internal.JacksonUtils
 import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
-import org.codehaus.jackson.map.ObjectMapper
 import za.co.absa.abris.avro.sql.SchemaConverter
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys._
 
-import java.io.ByteArrayOutputStream
 import scala.collection.JavaConverters._
 
 // scalastyle:off
 class AdvancedAvroToSparkConverter extends SchemaConverter {
   override val shortName: String = AdvancedAvroToSparkConverter.name
-  private lazy val objectMapper = new ObjectMapper()
 
   case class SchemaType(dataType: DataType, nullable: Boolean, avroType: Option[Schema])
 
@@ -53,14 +50,9 @@ class AdvancedAvroToSparkConverter extends SchemaConverter {
         val newRecordNames = existingRecordNames + avroSchema.getFullName
         val fields = avroSchema.getFields.asScala.map { f =>
           val metadataBuilder = new MetadataBuilder()
-          val defaultJsonOpt = Option(JacksonUtils.toJsonNode(f.defaultVal()))
+          val defaultJsonOpt = CompatibleSparkUtilProvider.objectToJsonString(f.defaultVal())
           val metadataBuilderWithDefault = defaultJsonOpt match {
-            case Some(defaultJson) =>
-              val baos = new ByteArrayOutputStream()
-              objectMapper.writeValue(baos, defaultJson)
-              val r = metadataBuilder.putString(DefaultValueKey, baos.toString)
-              baos.close()
-              r
+            case Some(defaultJson) => metadataBuilder.putString(DefaultValueKey, defaultJson)
             case None => metadataBuilder
           }
 

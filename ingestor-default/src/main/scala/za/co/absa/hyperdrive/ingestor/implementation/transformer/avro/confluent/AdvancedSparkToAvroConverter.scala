@@ -17,12 +17,11 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.LogicalTypes.TimestampMillis
 import org.apache.avro.Schema.Type._
-import org.apache.avro.util.internal.JacksonUtils
 import org.apache.avro.{JsonProperties, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types.Decimal.minBytesForPrecision
 import org.apache.spark.sql.types._
-import org.codehaus.jackson.map.ObjectMapper
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
 
 import java.util.Objects
 import scala.util.Try
@@ -30,7 +29,6 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.
 
 object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
   private lazy val nullSchema = Schema.create(Schema.Type.NULL)
-  private lazy val objectMapper = new ObjectMapper()
 
   override def apply(catalystType: DataType, nullable: Boolean, recordName: String, nameSpace: String): Schema =
     toAvroType(catalystType, None, nullable, None, recordName, nameSpace)
@@ -80,8 +78,7 @@ object AdvancedSparkToAvroConverter extends SparkToAvroConverter {
             .map(schema => new Schema.Parser().parse(schema))
           val defaultValueOpt = Try(f.metadata.getString(DefaultValueKey))
             .flatMap(defaultJsonString => Try {
-            val jsonNode = objectMapper.readTree(defaultJsonString)
-            JacksonUtils.toObject(jsonNode)
+            CompatibleSparkUtilProvider.jsonStringToObject(defaultJsonString)
           }).toOption
           val fieldAvroType =
             toAvroType(f.dataType, schema, f.nullable, defaultValueOpt, f.name, childNameSpace)
