@@ -57,7 +57,6 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
-        <confluent.version>6.2.1</confluent.version> <!--Same as Abris uses-->
 
         <embedded.mongo.version>2.1.2</embedded.mongo.version>
 

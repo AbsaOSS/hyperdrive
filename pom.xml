@@ -123,6 +123,8 @@
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
         <abris_spark_32.version>6.2.0</abris_spark_32.version>
+        <confluent_abris_5.version>5.3.4</confluent_abris_5.version>
+        <confluent_abris_6.version>6.2.1</confluent_abris_6.version>
 
         <!-- Default versions -->
         <spark.compat.version />
@@ -188,6 +190,7 @@
                 <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
                 <hadoop.version>${hadoop_2.version}</hadoop.version> <!-- same as Spark -->
                 <abris.version>${abris_spark_24.version}</abris.version>
+                <confluent.version>${confluent_abris_5.version}</confluent.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -219,6 +222,7 @@
                 <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
                 <hadoop.version>${hadoop_3.version}</hadoop.version> <!-- same as Spark -->
                 <abris.version>${abris_spark_32.version}</abris.version>
+                <confluent.version>${confluent_abris_6.version}</confluent.version>
             </properties>
             <dependencies>
                 <!-- For some reason, this dependency is not transitively included in spark-core -->
