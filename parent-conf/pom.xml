@@ -39,7 +39,6 @@
 
     <properties>
         <!--Enforced versions-->
-        <commons.text.version>1.8</commons.text.version>
         <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
@@ -81,11 +80,6 @@
     </properties>
 
     <dependencies>
-        <!--Enforced dependency versions-->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.thoughtworks.paranamer</groupId>
             <artifactId>paranamer</artifactId>
@@ -129,11 +123,6 @@
 
         <dependencies>
             <!--Enforced dependency versions-->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-text</artifactId>
-                <version>${commons.text.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.thoughtworks.paranamer</groupId>
                 <artifactId>paranamer</artifactId>
@@ -183,6 +172,12 @@
                 <artifactId>spark-core_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-text</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--Kafka-->
@@ -190,6 +185,12 @@
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client-runtime</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- MongoDb Spark connector -->
