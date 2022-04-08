@@ -227,6 +227,7 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client-api</artifactId>
                     <version>${hadoop_3.version}</version>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
             <dependencyManagement>
