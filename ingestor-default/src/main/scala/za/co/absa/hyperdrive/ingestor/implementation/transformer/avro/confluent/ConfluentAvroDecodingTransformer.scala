@@ -27,10 +27,10 @@ import za.co.absa.abris.config.FromAvroConfig
 import za.co.absa.hyperdrive.ingestor.api.context.HyperdriveContext
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
-import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.HyperdriveContextKeys
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigKeys, AbrisConfigUtil, AbrisConsumerConfigKeys, SchemaRegistryConfigUtil}
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer.ColumnPrefix
+import za.co.absa.hyperdrive.ingestor.implementation.utils.{AbrisConfigUtil, AbrisConsumerConfigKeys, SchemaRegistryConfigUtil}
 
 private[transformer] class ConfluentAvroDecodingTransformer(
   val valueAvroConfig: FromAvroConfig,
@@ -48,8 +48,8 @@ private[transformer] class ConfluentAvroDecodingTransformer(
   }
 
   private def getKeyValueDataFrame(dataFrame: DataFrame, keyAvroConfig: FromAvroConfig) = {
-    val keyStructCol = UUID.randomUUID().toString
-    val valueStructCol = UUID.randomUUID().toString
+    val keyStructCol = ColumnPrefix + "-key"
+    val valueStructCol = ColumnPrefix + "-value"
     val columnsToSelect = Seq(
       from_avro(col("key"), keyAvroConfig) as Symbol(keyStructCol),
       from_avro(col("value"), valueAvroConfig) as Symbol(valueStructCol)
@@ -85,7 +85,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
     nonNullableDf.select(dataColumns ++ keepColumns.map(col):_*)
   }
 
-  private def checkIfColumnNameConflictsExistWithKeepColumns(avroColumns: Seq[String]) = {
+  private def checkIfColumnNameConflictsExistWithKeepColumns(avroColumns: Seq[String]): Unit = {
     val nameCollisions = avroColumns.intersect(keepColumns)
     if (nameCollisions.nonEmpty) {
       throw new IllegalArgumentException(s"Names of columns to keep collided with key and value columns. Consider renaming them before. Conflicts: $nameCollisions")
@@ -106,6 +106,8 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 
 object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
+
+  val ColumnPrefix = "22c9fda5-d56c-44e6-9c5f-13197e71f3fc"
 
   object AbrisConfigKeys extends AbrisConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
