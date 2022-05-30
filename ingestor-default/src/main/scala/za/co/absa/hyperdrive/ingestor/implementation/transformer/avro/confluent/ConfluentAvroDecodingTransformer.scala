@@ -15,7 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
-import java.util.UUID
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -73,7 +72,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
   }
 
   private def getValueDataFrame(dataFrame: DataFrame) = {
-    val dataStructCol = UUID.randomUUID().toString
+    val dataStructCol = ColumnPrefix
     val columnsToSelect = Seq(
       from_avro(col("value"), valueAvroConfig) as Symbol(dataStructCol)
     ) ++ keepColumns.map(col)
@@ -107,7 +106,7 @@ private[transformer] class ConfluentAvroDecodingTransformer(
 object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with ConfluentAvroDecodingTransformerAttributes {
   private val keyColumnPrefixLength = 4
 
-  val ColumnPrefix = "22c9fda5-d56c-44e6-9c5f-13197e71f3fc"
+  val ColumnPrefix = "hyperdrive-22c9fda5-d56c-44e6-9c5f-13197e71f3fc"
 
   object AbrisConfigKeys extends AbrisConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
