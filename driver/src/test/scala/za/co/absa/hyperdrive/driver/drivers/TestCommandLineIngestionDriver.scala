@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.driver.SparkIngestor.KEY_APP_NAME
 
 class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
 
@@ -27,7 +26,6 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
 
     val config = CommandLineIngestionDriver.parseConfiguration(settings)
 
-    config.getString("ingestor.spark.app.name") shouldBe "any_name"
     config.getStringArray("reader.kafka.brokers") shouldBe Array("localhost:9092", "otherhost:9093")
     config.getString("ssl.keystore.password") shouldBe "any-keystore!!@#$% password"
     config.getString("ssl.truststore.password") shouldBe "kd9910))383(((*-+"
@@ -54,7 +52,6 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
   private def getSettings: Array[String] = {
     import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_BROKERS
     Array(
-      s"$KEY_APP_NAME=any_name",
       s"$KEY_BROKERS=localhost:9092,otherhost:9093",
       "ssl.keystore.password=any-keystore!!@#$% password",
       "ssl.truststore.password=kd9910))383(((*-+",

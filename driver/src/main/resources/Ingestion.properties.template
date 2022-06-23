@@ -24,9 +24,6 @@ component.transformer.id.0=[avro.decoder]
 component.transformer.class.[avro.decoder]=za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer
 component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
-# Spark settings
-ingestor.spark.app.name=ingestor-app-pane
-
 # Source(Kafka) settings
 reader.kafka.topic=souce-payload-topic
 reader.kafka.brokers=PLAINTEXT\://broker1\:9091,SSL\://broker2:9092

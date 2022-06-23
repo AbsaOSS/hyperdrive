@@ -93,7 +93,6 @@ class KafkaToKafkaDockerTest extends FlatSpec with Matchers with SparkTestBase w
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
 
       // Spark settings
-      "ingestor.spark.app.name" -> "ingestor-app",
       "ingestor.spark.termination.method" -> "ProcessAllAvailable",
 
       // Source(Kafka) settings

@@ -78,9 +78,6 @@ class KafkaToParquetDockerTest extends FlatSpec with Matchers with SparkTestBase
       "component.transformer.class.column.selector" -> "za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer",
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter",
 
-      // Spark settings
-      "ingestor.spark.app.name" -> "ingestor-app",
-
       // Source(Kafka) settings
       "reader.kafka.topic" -> topic,
       "reader.kafka.brokers" -> kafkaSchemaRegistryWrapper.kafkaUrl,

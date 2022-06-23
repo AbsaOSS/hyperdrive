@@ -104,7 +104,7 @@ object SparkIngestor extends SparkIngestorAttributes {
 
   def apply(conf: Configuration): SparkIngestor = {
     ComponentFactoryUtil.validateConfiguration(conf, getProperties)
-    val spark = getSparkSession(conf)
+    val spark = SparkSession.builder().getOrCreate()
     val terminationMethod = getTerminationMethod(conf)
     val awaitTerminationTimeout = getAwaitTerminationTimeoutMs(conf)
 
@@ -138,10 +138,4 @@ object SparkIngestor extends SparkIngestorAttributes {
         }
       )
   }
-
-  private def getSparkSession(conf: Configuration): SparkSession = {
-    val name = ConfigUtils.getOrThrow(KEY_APP_NAME, conf)
-    SparkSession.builder().appName(name).getOrCreate()
-  }
-
 }
