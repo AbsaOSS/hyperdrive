@@ -311,15 +311,12 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     val config = new BaseConfiguration
     config.addProperty("key1", "")
     config.addProperty("key2", "nay")
-    config.addProperty("key3", "1")
     config.addProperty("key4", 0)
 
     val ex1 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key1", config)
     ex1.getMessage should include("key1")
     val ex2 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key2", config)
     ex2.getMessage should include("key2")
-    val ex3 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key3", config)
-    ex3.getMessage should include("key3")
     val ex4 = the[Exception] thrownBy ConfigUtils.getOptionalBoolean("key4", config)
     ex4.getMessage should include("key4")
   }
