@@ -162,7 +162,6 @@ class KafkaToKafkaDeduplicationAfterRetryDockerTest extends FlatSpec with Matche
       "component.writer" -> "za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter",
 
       // Spark settings
-      "ingestor.spark.app.name" -> "ingestor-app",
       "ingestor.spark.termination.timeout" -> "60000",
 
       // Source(Kafka) settings

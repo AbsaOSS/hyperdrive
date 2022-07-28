@@ -20,7 +20,6 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 trait SparkIngestorAttributes extends HasComponentAttributes {
   val keysPrefix = "ingestor.spark"
-  val KEY_APP_NAME = s"$keysPrefix.app.name"
   val KEY_TERMINATION_METHOD = s"$keysPrefix.termination.method"
   val KEY_AWAIT_TERMINATION_TIMEOUT = s"$keysPrefix.await.termination.timeout"
 
@@ -29,7 +28,6 @@ trait SparkIngestorAttributes extends HasComponentAttributes {
   override def getDescription: String = "Component that invokes Spark for the ingestion"
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    KEY_APP_NAME -> PropertyMetadata("Name of Spark application", None, required = true),
     KEY_TERMINATION_METHOD -> PropertyMetadata("Termination method",
       Some(s"Either '$ProcessAllAvailable' (stop when no more messages arrive) or '$AwaitTermination' (stop on signal)." +
         s" Default is '$ProcessAllAvailable'"), required = false),

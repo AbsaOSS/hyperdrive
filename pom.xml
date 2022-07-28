@@ -343,6 +343,9 @@
                                 <exclude>.editorconfig</exclude>
                                 <exclude>**/*.MockMaker</exclude>
                                 <exclude>**/*.json</exclude>
+                                <exclude>mvnw</exclude>
+                                <exclude>mvnw.cmd</exclude>
+                                <exclude>.mvn/**/*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
