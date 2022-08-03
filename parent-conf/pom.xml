@@ -39,16 +39,11 @@
 
     <properties>
         <!--Enforced versions-->
-        <avro.version>1.8.2</avro.version> <!--Same as Abris uses-->
-        <commons.text.version>1.8</commons.text.version>
         <paranamer.version>2.8</paranamer.version>
 
         <!--Maven-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <!--ABRiS-->
-        <abris.version>5.1.1</abris.version>
 
         <!--Scala-->
         <scalatest.version>3.0.5</scalatest.version>
@@ -61,7 +56,6 @@
         <spring.kafka.test.version>2.2.4.RELEASE</spring.kafka.test.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
-        <kafka.avro.serializer.version>5.3.4</kafka.avro.serializer.version> <!--Same as Abris uses-->
 
         <embedded.mongo.version>2.1.2</embedded.mongo.version>
 
@@ -86,16 +80,6 @@
     </properties>
 
     <dependencies>
-        <!--Enforced dependency versions-->
-        <!--Avro-->
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.thoughtworks.paranamer</groupId>
             <artifactId>paranamer</artifactId>
@@ -139,17 +123,6 @@
 
         <dependencies>
             <!--Enforced dependency versions-->
-            <!--Avro-->
-            <dependency>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro</artifactId>
-                <version>${avro.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-text</artifactId>
-                <version>${commons.text.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.thoughtworks.paranamer</groupId>
                 <artifactId>paranamer</artifactId>
@@ -199,6 +172,12 @@
                 <artifactId>spark-core_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-text</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--Kafka-->
@@ -206,6 +185,12 @@
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
                 <version>${spark.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client-runtime</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- MongoDb Spark connector -->
@@ -263,19 +248,14 @@
                 <!-- Cannot have scope test because it is used by abris -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-avro-serializer</artifactId>
-                <version>${kafka.avro.serializer.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers</artifactId>
-                <version>${testcontainers.kafka.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>kafka</artifactId>
-                <version>${testcontainers.kafka.version}</version>
-                <scope>test</scope>
+                <version>${confluent.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- Excluded because version >= 2.12.0 is required for Spark 3.2.0 -->
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>

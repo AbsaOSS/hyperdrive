@@ -112,11 +112,18 @@
 
         <!-- Spark versions -->
         <spark_2.version>2.4.3</spark_2.version>
-        <spark_3.version>3.1.2</spark_3.version>
+        <spark_3.version>3.2.2</spark_3.version>
         <spark_2.sql.mongo.version>2.4.3</spark_2.sql.mongo.version>
         <spark_3.sql.mongo.version>3.0.1</spark_3.sql.mongo.version>
         <spark_2.mongodb.driver.version>2.7.0</spark_2.mongodb.driver.version>
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
+        <hadoop_3.version>3.3.1</hadoop_3.version>
+
+        <!-- ABRiS versions -->
+        <abris_spark_24.version>5.1.1</abris_spark_24.version>
+        <abris_spark_32.version>6.2.0</abris_spark_32.version>
+        <confluent_abris_5.version>5.3.4</confluent_abris_5.version>
+        <confluent_abris_6.version>6.2.1</confluent_abris_6.version>
 
         <!-- Default versions -->
         <spark.compat.version />
@@ -180,7 +187,25 @@
                 <spark.version>${spark_2.version}</spark.version>
                 <spark.sql.mongo.version>${spark_2.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_2.mongodb.driver.version}</mongodb.driver.version>
+                <abris.version>${abris_spark_24.version}</abris.version>
+                <confluent.version>${confluent_abris_5.version}</confluent.version>
             </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>testcontainers</artifactId>
+                        <version>${testcontainers.kafka.version}</version>
+                        <scope>test</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>kafka</artifactId>
+                        <version>${testcontainers.kafka.version}</version>
+                        <scope>test</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <modules>
                 <module>compatibility_spark-2</module>
                 <module>hyperdrive-release_spark-2</module>
@@ -193,7 +218,41 @@
                 <spark.version>${spark_3.version}</spark.version>
                 <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
+                <abris.version>${abris_spark_32.version}</abris.version>
+                <confluent.version>${confluent_abris_6.version}</confluent.version>
             </properties>
+            <dependencies>
+                <!-- For some reason, this dependency is not transitively included in spark-core -->
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client-api</artifactId>
+                    <version>${hadoop_3.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>testcontainers</artifactId>
+                        <version>${testcontainers.kafka.version}</version>
+                        <scope>test</scope>
+                        <exclusions>
+                            <exclusion>
+                                <!-- Excluded because version >= 2.12.0 is required for Spark 3.2.0 -->
+                                <groupId>com.fasterxml.jackson.core</groupId>
+                                <artifactId>jackson-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>kafka</artifactId>
+                        <version>${testcontainers.kafka.version}</version>
+                        <scope>test</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <modules>
                 <module>compatibility_spark-3</module>
                 <module>hyperdrive-release_spark-3</module>

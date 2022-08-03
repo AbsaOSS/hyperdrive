@@ -15,15 +15,35 @@
 
 package za.co.absa.hyperdrive.compatibility.impl
 
+import org.apache.avro.util.internal.JacksonUtils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
+import org.codehaus.jackson.map.ObjectMapper
 import za.co.absa.hyperdrive.compatibility.api.CompatibleSparkUtil
 
+import java.io.ByteArrayOutputStream
+
 object SparkUtil extends CompatibleSparkUtil {
+  private lazy val objectMapper = new ObjectMapper()
+
   override def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex =
     new MetadataLogFileIndex(spark, new Path(destination), None)
 
   override def hasMetadata(spark: SparkSession, destination: String): Boolean =
     FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration)
+
+  override def jsonStringToObject(jsonString: String): Object = {
+    val jsonNode = objectMapper.readTree(jsonString)
+    JacksonUtils.toObject(jsonNode)
+  }
+
+  override def objectToJsonString(obj: Object): Option[String] = {
+    Option(JacksonUtils.toJsonNode(obj))
+      .map { json =>
+        val baos = new ByteArrayOutputStream()
+        objectMapper.writeValue(baos, json)
+        baos.toString
+      }
+  }
 }

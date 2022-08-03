@@ -26,4 +26,10 @@ object CompatibleSparkUtilProvider extends CompatibleSparkUtil {
 
   def hasMetadata(spark: SparkSession, destination: String): Boolean =
     SparkUtil.hasMetadata(spark, destination)
+
+  override def jsonStringToObject(jsonString: String): Object =
+    SparkUtil.jsonStringToObject(jsonString)
+
+  override def objectToJsonString(obj: Object): Option[String] =
+    SparkUtil.objectToJsonString(obj)
 }

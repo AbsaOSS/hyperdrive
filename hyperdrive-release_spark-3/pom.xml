@@ -59,6 +59,10 @@
                         <configuration>
                             <relocations>
                                 <relocation>
+                                    <pattern>org.apache.commons.text</pattern>
+                                    <shadedPattern>org.apache.shaded.commons.text</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.commons.beanutils</pattern>
                                     <shadedPattern>org.apache.shaded.commons.beanutils</shadedPattern>
                                 </relocation>
