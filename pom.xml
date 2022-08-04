@@ -20,7 +20,7 @@
     <groupId>za.co.absa.hyperdrive</groupId>
     <artifactId>hyperdrive_2.12</artifactId>
     <packaging>pom</packaging>
-    <version>4.6.1-SNAPSHOT</version>
+    <version>4.7.0</version>
     <name>hyperdrive</name>
     <description>Hyperdrive is a configurable and scalable ingestion platform that allows data movement and
         transformation from the fast to the batch layer in a Lambda Architecture on top of Apache Spark.
@@ -55,7 +55,7 @@
         <connection>scm:git:git://github.com/AbsaOSS/hyperdrive.git</connection>
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/hyperdrive.git</developerConnection>
         <url>https://github.com/AbsaOSS/hyperdrive/tree/master</url>
-      <tag>HEAD</tag>
+      <tag>v4.7.0</tag>
   </scm>
 
     <licenses>
