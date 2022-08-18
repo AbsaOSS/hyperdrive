@@ -24,6 +24,8 @@ trait HudiStreamWriterAttributes extends HasComponentAttributes {
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
   val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
   val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
+  val KEY_OP_COLUMN = s"$rootFactoryConfKey.op.column"
+  val KEY_OP_DELETED_VALUE = s"$rootFactoryConfKey.op.deleted.value"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
 
   override def getName: String = "Parquet Stream Writer"
@@ -35,6 +37,8 @@ trait HudiStreamWriterAttributes extends HasComponentAttributes {
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
     KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("Key column needed for Hudi"), required = true),
     KEY_TIMESTAMP_COLUMN -> PropertyMetadata("Timestamp column", Some("Timestamp column needed for Hudi"), required = true),
+    KEY_OP_COLUMN -> PropertyMetadata("Op column", Some("A column containing values marking a record for deletion"), required = false),
+    KEY_OP_DELETED_VALUE -> PropertyMetadata("Delete value for op column", Some("The value marking a record for deletion in the op column"), required = false),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )
