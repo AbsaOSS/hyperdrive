@@ -46,5 +46,10 @@
             <artifactId>spark-core_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark3-bundle_${scala.compat.version}</artifactId>
+            <version>${hudi.version}</version>
+        </dependency>
     </dependencies>
 </project>

@@ -118,6 +118,8 @@
         <spark_2.mongodb.driver.version>2.7.0</spark_2.mongodb.driver.version>
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
         <hadoop_3.version>3.3.1</hadoop_3.version>
+        <hudi.spark_3.version>0.12.0</hudi.spark_3.version>
+        <hudi.spark_2.version>0.12.0</hudi.spark_2.version>
 
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
@@ -130,6 +132,7 @@
         <spark.version />
         <spark.sql.mongo.version />
         <mongodb.driver.version />
+        <hudi.version />
 
     </properties>
 
@@ -193,6 +196,11 @@
             <dependencyManagement>
                 <dependencies>
                     <dependency>
+                        <groupId>org.apache.hudi</groupId>
+                        <artifactId>hudi-spark2.4-bundle_${scala.compat.version}</artifactId>
+                        <version>${hudi.spark_2.version}</version>
+                    </dependency>
+                    <dependency>
                         <groupId>org.testcontainers</groupId>
                         <artifactId>testcontainers</artifactId>
                         <version>${testcontainers.kafka.version}</version>
@@ -232,6 +240,11 @@
             </dependencies>
             <dependencyManagement>
                 <dependencies>
+                    <dependency>
+                        <groupId>org.apache.hudi</groupId>
+                        <artifactId>hudi-spark3-bundle_${scala.compat.version}</artifactId>
+                        <version>${hudi.spark_3.version}</version>
+                    </dependency>
                     <dependency>
                         <groupId>org.testcontainers</groupId>
                         <artifactId>testcontainers</artifactId>
