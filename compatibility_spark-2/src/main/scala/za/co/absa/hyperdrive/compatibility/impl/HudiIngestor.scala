@@ -20,7 +20,7 @@ import za.co.absa.hyperdrive.compatibility.api.CompatibleHudiIngestor
 import java.io.ByteArrayOutputStream
 
 object HudiIngestor extends CompatibleHudiIngestor {
-  override def upsertStream(df: DataFrame, partitionColumns: Seq[String], destination: String, keyColumn: String,
-                            timestampColumn: String): StreamingQuery = ???
+  def getWriteConfigs(partitionColumns: Seq[String], destination: String, keyColumn: String,
+                      timestampColumn: String): Map[String, String] = ???
 
 }

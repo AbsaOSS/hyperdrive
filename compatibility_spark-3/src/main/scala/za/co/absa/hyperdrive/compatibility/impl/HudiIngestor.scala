@@ -16,28 +16,24 @@
 
 package za.co.absa.hyperdrive.compatibility.impl
 
-import org.apache.hudi.DataSourceWriteOptions.{HIVE_STYLE_PARTITIONING, KEYGENERATOR_CLASS_NAME, PARTITIONPATH_FIELD, PRECOMBINE_FIELD, RECORDKEY_FIELD, TABLE_NAME}
+import org.apache.hudi.DataSourceWriteOptions._
 import org.apache.hudi.QuickstartUtils.getQuickstartWriteConfigs
 import org.apache.hudi.keygen.ComplexKeyGenerator
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import za.co.absa.hyperdrive.compatibility.api.CompatibleHudiIngestor
 
 object HudiIngestor extends CompatibleHudiIngestor {
-  override def upsertStream(df: DataFrame, partitionColumns: Seq[String], destination: String, keyColumn: String,
-                            timestampColumn: String): StreamingQuery = {
-    val dsw1 = df.writeStream
-      .format("hudi")
-      .options(getQuickstartWriteConfigs)
-      .option(PRECOMBINE_FIELD.key(), timestampColumn)
-      .option(RECORDKEY_FIELD.key(), keyColumn)
-      .option(KEYGENERATOR_CLASS_NAME.key(), classOf[ComplexKeyGenerator].getName)
-      .option(PARTITIONPATH_FIELD.key(), partitionColumns.mkString(","))
-      .option(HIVE_STYLE_PARTITIONING.key(), "true")
-      .option(TABLE_NAME.key(), destination)
-      .option("hoodie.table.name", destination)
-      .outputMode(OutputMode.Append())
-      .option("checkpointLocation", s"${destination}/_checkpoints")
-    dsw1.start(destination)
+  def getWriteConfigs(partitionColumns: Seq[String], destination: String, keyColumn: String,
+                      timestampColumn: String): Map[String, String] = {
+    import scala.collection.JavaConverters._
+    getQuickstartWriteConfigs.asScala.toMap ++
+      Map(
+        PRECOMBINE_FIELD.key() -> timestampColumn,
+        RECORDKEY_FIELD.key() -> keyColumn,
+        KEYGENERATOR_CLASS_NAME.key() -> classOf[ComplexKeyGenerator].getName,
+        PARTITIONPATH_FIELD.key() -> partitionColumns.mkString(","),
+        HIVE_STYLE_PARTITIONING.key() -> "true",
+        TABLE_NAME.key() -> destination,
+        "hoodie.table.name" -> destination
+      )
   }
 }

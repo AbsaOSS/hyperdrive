@@ -19,10 +19,11 @@ import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait HudiStreamWriterAttributes extends HasComponentAttributes {
-  private val rootFactoryConfKey = "writer.parquet"
+  private val rootFactoryConfKey = "writer.hudi"
   val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
-  val KEY_METADATA_CHECK = s"$rootFactoryConfKey.metadata.check"
+  val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
+  val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
 
   override def getName: String = "Parquet Stream Writer"
@@ -32,8 +33,8 @@ trait HudiStreamWriterAttributes extends HasComponentAttributes {
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true),
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
-    KEY_METADATA_CHECK -> PropertyMetadata("Metadata check", Some("Set this option if the consistency of the metadata log should be checked prior to the query. " +
-      "For very large tables, the check may be very expensive"), required = false),
+    KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("Key column needed for Hudi"), required = true),
+    KEY_TIMESTAMP_COLUMN -> PropertyMetadata("Timestamp column", Some("Timestamp column needed for Hudi"), required = true),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 ABSA Group Limited
  *
@@ -14,9 +13,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.api
+package za.co.absa.hyperdrive.compatibility.provider
 
-trait CompatibleHudiIngestor {
+import za.co.absa.hyperdrive.compatibility.api.CompatibleHudiIngestor
+import za.co.absa.hyperdrive.compatibility.impl.HudiIngestor
+
+object CompatibleHudiIngestorProvider extends CompatibleHudiIngestor {
   def getWriteConfigs(partitionColumns: Seq[String], destination: String, keyColumn: String,
-                      timestampColumn: String): Map[String, String]
+                      timestampColumn: String): Map[String, String] =
+    HudiIngestor.getWriteConfigs(partitionColumns, destination, keyColumn, timestampColumn)
 }

@@ -20,48 +20,47 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleHudiIngestorProvider
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
-import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
-import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriterAttributes
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterProperties}
 
 private[writer] class HudiStreamWriter(
   destination: String, trigger: Trigger,
   checkpointLocation: String,
-  partitionColumns: Option[Seq[String]],
+  keyColumn: String,
+  timestampColumn: String,
+  partitionColumns: Seq[String],
   val extraConfOptions: Map[String, String]) extends StreamWriter {
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    val dsw1 = df.writeStream
-      .format("hudi")
-      .options(getQuickstartWriteConfigs)
-      .option(PRECOMBINE_FIELD.key(), timestampColumn)
-      .option(RECORDKEY_FIELD.key(), keyColumn)
-      .option(KEYGENERATOR_CLASS_NAME.key(), classOf[ComplexKeyGenerator].getName)
-      .option(PARTITIONPATH_FIELD.key(), partitionColumns.mkString(","))
-      .option(HIVE_STYLE_PARTITIONING.key(), "true")
-      .option(TABLE_NAME.key(), destination)
-      .option("hoodie.table.name", destination)
+    val hudiWriteConfigs = CompatibleHudiIngestorProvider.getWriteConfigs(partitionColumns, destination, keyColumn, timestampColumn)
+    dataFrame.writeStream
+      .trigger(trigger)
+      .format(source = "hudi")
       .outputMode(OutputMode.Append())
-      .option("checkpointLocation", s"${destination}/_checkpoints")
+      .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
+      .options(hudiWriteConfigs)
+      .options(extraConfOptions)
+      .start(destination)
   }
 }
 
-object HudiStreamWriter extends StreamWriterFactory with ParquetStreamWriterAttributes {
+object HudiStreamWriter extends StreamWriterFactory with HudiStreamWriterAttributes {
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
     val trigger = StreamWriterUtil.getTrigger(config)
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
-    val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config)
+    val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config).getOrElse(Seq())
+    val keyColumn = ConfigUtils.getOrThrow(KEY_KEY_COLUMN, config)
+    val timestampColumn = ConfigUtils.getOrThrow(KEY_TIMESTAMP_COLUMN, config)
     val extraOptions = getExtraOptions(config)
 
-    LoggerFactory.getLogger(this.getClass).info(s"Going to create ParquetStreamWriter instance using: " +
+    LoggerFactory.getLogger(this.getClass).info(s"Going to create HudiStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new HudiStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, extraOptions)
+    new HudiStreamWriter(destinationDirectory, trigger, checkpointLocation, keyColumn, timestampColumn, partitionColumns, extraOptions)
   }
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
-
-  def getMetadataCheck(configuration: Configuration): Boolean = ConfigUtils.getOptionalBoolean(KEY_METADATA_CHECK, configuration).getOrElse(false)
 
   def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
 
