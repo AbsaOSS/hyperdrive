@@ -26,6 +26,17 @@
     <artifactId>ingestor-default_2.12</artifactId>
 
     <dependencies>
+        <!--Delta-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-scala_2.12</artifactId>
+            <version>2.13.3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-core_2.12</artifactId>
+            <version>2.0.0</version>
+        </dependency>
         <!--Hyperdrive-->
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
