@@ -32,6 +32,7 @@ private[writer] class DeltaStreamWriter(destination: String,
                                         timestampColumn: String,
                                         opColumn: String,
                                         deletedValue: String,
+                                        filterValue: Option[String],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
   if (StringUtils.isBlank(destination)) {
@@ -58,8 +59,13 @@ private[writer] class DeltaStreamWriter(destination: String,
 
         logger.info(s"Writing batchId: $batchId")
 
-        val fieldNames = df.schema.fieldNames.filter(_ != s"$timestampColumn").mkString(",")
-        val latestChangeForEachKey = df
+        val preFilteredDF = filterValue match {
+          case Some(filterValue) => df.filter(s"$opColumn != '$filterValue'")
+          case None => df
+        }
+
+        val fieldNames = preFilteredDF.schema.fieldNames.filter(_ != s"$timestampColumn").mkString(",")
+        val latestChangeForEachKey = preFilteredDF
           .selectExpr(s"$keyColumn", s"struct($timestampColumn, $fieldNames) as otherCols" )
           .groupBy(s"$keyColumn")
           .agg(functions.max("otherCols").as("latest"))
@@ -98,11 +104,12 @@ object DeltaStreamWriter extends StreamWriterFactory with DeltaStreamWriterAttri
     val timestampColumn = ConfigUtils.getOrThrow(KEY_TIMESTAMP_COLUMN, config)
     val opColumn = ConfigUtils.getOrThrow(KEY_OP_COLUMN, config)
     val deletedValue = ConfigUtils.getOrThrow(KEY_OP_DELETED_VALUE, config)
+    val filterValue = ConfigUtils.getOrNone(KEY_OP_FILTER_VALUE, config)
 
     LoggerFactory.getLogger(this.getClass).info(s"Going to create DeltaStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new DeltaStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, timestampColumn, opColumn, deletedValue, extraOptions)
+    new DeltaStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, timestampColumn, opColumn, deletedValue, filterValue, extraOptions)
   }
 
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")

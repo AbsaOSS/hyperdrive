@@ -27,6 +27,7 @@ trait DeltaStreamWriterAttributes extends HasComponentAttributes {
   val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
   val KEY_OP_COLUMN = s"$rootFactoryConfKey.op.column"
   val KEY_OP_DELETED_VALUE = s"$rootFactoryConfKey.op.deleted.value"
+  val KEY_OP_FILTER_VALUE = s"$rootFactoryConfKey.op.filter.value"
 
   override def getName: String = "Delta Stream Writer"
 
@@ -38,6 +39,7 @@ trait DeltaStreamWriterAttributes extends HasComponentAttributes {
     KEY_TIMESTAMP_COLUMN -> PropertyMetadata("Timestamp column", Some("Timestamp column needed Delta Hudi"), required = true),
     KEY_OP_COLUMN -> PropertyMetadata("Op column", Some("A column containing values marking a record for deletion"), required = true),
     KEY_OP_DELETED_VALUE -> PropertyMetadata("Delete value for op column", Some("The value marking a record for deletion in the op column"), required = true),
+    KEY_OP_FILTER_VALUE -> PropertyMetadata("Filter value for op column", Some("The value marking a record for filter in the op column"), required = true),
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
