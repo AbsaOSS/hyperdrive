@@ -18,8 +18,10 @@ package za.co.absa.hyperdrive.ingestor.implementation.writer.delta
 import io.delta.tables.DeltaTable
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
+import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
-import org.apache.spark.sql.{DataFrame, Row, functions}
+import org.apache.spark.sql.{Column, DataFrame, Row, functions}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterProperties}
@@ -69,8 +71,9 @@ private[writer] class DeltaStreamWriter(destination: String,
           .selectExpr(s"$keyColumn", s"struct($timestampColumn, $fieldNames) as otherCols" )
           .groupBy(s"$keyColumn")
           .agg(functions.max("otherCols").as("latest"))
+          .filter(col("latest").isNotNull)
+          .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
           .selectExpr( "latest.*")
-
 
         DeltaTable
           .forPath(destination)
