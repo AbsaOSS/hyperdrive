@@ -19,7 +19,7 @@ import io.delta.tables.DeltaTable
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, lit, when}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{Column, DataFrame, Row, functions}
 import org.slf4j.LoggerFactory
@@ -31,10 +31,10 @@ private[writer] class DeltaStreamWriter(destination: String,
                                         checkpointLocation: String,
                                         partitionColumns: Seq[String],
                                         keyColumn: String,
-                                        timestampColumn: String,
                                         opColumn: String,
                                         deletedValue: String,
-                                        filterValue: Option[String],
+                                        sortColumns: Seq[String],
+                                        sortColumnsCustomOrder: Map[String, Seq[String]],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
   if (StringUtils.isBlank(destination)) {
@@ -61,19 +61,21 @@ private[writer] class DeltaStreamWriter(destination: String,
 
         logger.info(s"Writing batchId: $batchId")
 
-        val preFilteredDF = filterValue match {
-          case Some(filterValue) => df.filter(s"$opColumn != '$filterValue'")
-          case None => df
-        }
+        val sortFieldsPrefix = "tmp_hyperdrive_"
 
-        val fieldNames = preFilteredDF.schema.fieldNames.filter(_ != s"$timestampColumn").mkString(",")
-        val latestChangeForEachKey = preFilteredDF
-          .selectExpr(s"$keyColumn", s"struct($timestampColumn, $fieldNames) as otherCols" )
+        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
+
+        val originalFieldNames = df.schema.fieldNames.mkString(",")
+        val sortColumnsWithPrefix = sortColumns.map(sortColumn => s"$sortFieldsPrefix$sortColumn")
+
+        val latestChangeForEachKey = dataFrameWithSortColumns
+          .selectExpr(s"$keyColumn", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols" )
           .groupBy(s"$keyColumn")
           .agg(functions.max("otherCols").as("latest"))
           .filter(col("latest").isNotNull)
           .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
           .selectExpr( "latest.*")
+          .drop(sortColumnsWithPrefix :_*)
 
         DeltaTable
           .forPath(destination)
@@ -91,6 +93,22 @@ private[writer] class DeltaStreamWriter(destination: String,
       .start()
   }
 
+  private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
+    sortColumns.foldLeft(dataFrame) { (df, sortColumn) =>
+      val order = sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
+      val columnValue = order match {
+        case o if o.isEmpty =>
+          col(s"$sortColumn")
+        case o =>
+          o.reverse.foldLeft(when(lit(false), 0)) {
+            (sortAgg, value) => sortAgg.when(col(sortColumn).equalTo(value), lit(o.indexOf(value)))
+          }.otherwise(0)
+      }
+
+      df.withColumn(s"$sortFieldsPrefix$sortColumn", columnValue)
+    }
+  }
+
   def getDestination: String = destination
 }
 
@@ -104,15 +122,16 @@ object DeltaStreamWriter extends StreamWriterFactory with DeltaStreamWriterAttri
     val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config).getOrElse(Seq())
 
     val keyColumn = ConfigUtils.getOrThrow(KEY_KEY_COLUMN, config)
-    val timestampColumn = ConfigUtils.getOrThrow(KEY_TIMESTAMP_COLUMN, config)
     val opColumn = ConfigUtils.getOrThrow(KEY_OP_COLUMN, config)
     val deletedValue = ConfigUtils.getOrThrow(KEY_OP_DELETED_VALUE, config)
-    val filterValue = ConfigUtils.getOrNone(KEY_OP_FILTER_VALUE, config)
+    val sortColumns = ConfigUtils.getSeqOrThrow(KEY_SORT_COLUMNS, config)
+    val sortColumnsCustomOrder =  ConfigUtils.getMapOrEmpty(KEY_SORT_COLUMNS_CUSTOM_ORDER, config)
+
 
     LoggerFactory.getLogger(this.getClass).info(s"Going to create DeltaStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new DeltaStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, timestampColumn, opColumn, deletedValue, filterValue, extraOptions)
+    new DeltaStreamWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, opColumn, deletedValue, sortColumns, sortColumnsCustomOrder, extraOptions)
   }
 
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")

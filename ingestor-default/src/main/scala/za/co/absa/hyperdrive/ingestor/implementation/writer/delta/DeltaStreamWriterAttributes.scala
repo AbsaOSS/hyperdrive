@@ -24,10 +24,10 @@ trait DeltaStreamWriterAttributes extends HasComponentAttributes {
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
   val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
-  val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
   val KEY_OP_COLUMN = s"$rootFactoryConfKey.op.column"
   val KEY_OP_DELETED_VALUE = s"$rootFactoryConfKey.op.deleted.value"
-  val KEY_OP_FILTER_VALUE = s"$rootFactoryConfKey.op.filter.value"
+  val KEY_SORT_COLUMNS = s"$rootFactoryConfKey.sortColumns"
+  val KEY_SORT_COLUMNS_CUSTOM_ORDER = s"$rootFactoryConfKey.sortColumns.customOrder"
 
   override def getName: String = "Delta Stream Writer"
 
@@ -35,12 +35,12 @@ trait DeltaStreamWriterAttributes extends HasComponentAttributes {
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true),
-    KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("Key column needed for Delta"), required = true),
-    KEY_TIMESTAMP_COLUMN -> PropertyMetadata("Timestamp column", Some("Timestamp column needed Delta Hudi"), required = true),
-    KEY_OP_COLUMN -> PropertyMetadata("Op column", Some("A column containing values marking a record for deletion"), required = true),
-    KEY_OP_DELETED_VALUE -> PropertyMetadata("Delete value for op column", Some("The value marking a record for deletion in the op column"), required = true),
-    KEY_OP_FILTER_VALUE -> PropertyMetadata("Filter value for op column", Some("The value marking a record for filter in the op column"), required = true),
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
+    KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("A column with unique entity identifier"), required = true),
+    KEY_OP_COLUMN -> PropertyMetadata("Op column", Some("A column containing values marking a record with an operation"), required = true),
+    KEY_OP_DELETED_VALUE -> PropertyMetadata("Delete value for op column", Some("The value marking a record for deletion in the op column"), required = true),
+    KEY_SORT_COLUMNS -> PropertyMetadata("Sort columns", Some("A list of columns used to sort rows based on precedence"), required = true),
+    KEY_SORT_COLUMNS_CUSTOM_ORDER -> PropertyMetadata("Columns' custom order", Some("A column's custom order"), required = false),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )
