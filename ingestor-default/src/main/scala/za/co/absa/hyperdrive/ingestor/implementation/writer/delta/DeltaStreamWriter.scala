@@ -15,11 +15,11 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.delta
 
-import io.delta.tables.DeltaTable
+import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, lit, when}
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{Column, DataFrame, Row, functions}
 import org.slf4j.LoggerFactory
@@ -77,35 +77,49 @@ private[writer] class DeltaStreamWriter(destination: String,
           .selectExpr( "latest.*")
           .drop(sortColumnsWithPrefix :_*)
 
-        DeltaTable
-          .forPath(destination)
-          .as("t")
-          .merge(latestChangeForEachKey.as("s"), s"s.$keyColumn = t.$keyColumn")
-          .whenMatched(s"s.$opColumn = '$deletedValue'")
-          .delete()
-          .whenMatched()
-          .updateAll()
-          .whenNotMatched(s"s.$opColumn != '$deletedValue'")
-          .insertAll()
-          .execute()
-
+          generateDeltaMerge(latestChangeForEachKey).execute()
       })
       .start()
+  }
+
+  private def generateDeltaMerge(latestChanges: DataFrame): DeltaMergeBuilder = {
+    val initialDeltaBuilder = DeltaTable
+      .forPath(destination)
+      .as("currentTable")
+      .merge(latestChanges.as("changes"), s"currentTable.$keyColumn = changes.$keyColumn")
+      .whenMatched(s"changes.$opColumn = '$deletedValue'")
+      .delete()
+
+    val deltaBuilderWithSortColumns = sortColumns.foldLeft(initialDeltaBuilder) { (builder, sortColumn) =>
+      val order = sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
+      order match {
+        case o if o.isEmpty =>
+          builder
+            .whenMatched(s"changes.$sortColumn > currentTable.$sortColumn")
+            .updateAll()
+        case o =>
+          val orderString = o.mkString("#")
+          builder
+            .whenMatched(s"""locate(changes.$sortColumn, "$orderString") > locate(currentTable.$sortColumn, "$orderString")""")
+            .updateAll()
+      }
+    }
+
+    deltaBuilderWithSortColumns
+      .whenNotMatched(s"changes.$opColumn != '$deletedValue'")
+      .insertAll()
   }
 
   private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
     sortColumns.foldLeft(dataFrame) { (df, sortColumn) =>
       val order = sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
-      val columnValue = order match {
+      order match {
         case o if o.isEmpty =>
-          col(s"$sortColumn")
+          df.withColumn(s"$sortFieldsPrefix$sortColumn", col(s"$sortColumn"))
         case o =>
-          o.reverse.foldLeft(when(lit(false), 0)) {
-            (sortAgg, value) => sortAgg.when(col(sortColumn).equalTo(value), lit(o.indexOf(value)))
-          }.otherwise(0)
+          val orderString = o.mkString("#")
+          df.withColumn(s"$sortFieldsPrefix$sortColumn", functions.expr(s"""locate(value, "$orderString")"""))
       }
-
-      df.withColumn(s"$sortFieldsPrefix$sortColumn", columnValue)
     }
   }
 
