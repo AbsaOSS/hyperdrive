@@ -15,7 +15,6 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.writer.deltaCDCToSnapshot
 
-import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
@@ -23,7 +22,8 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.{Column, DataFrame, Row, functions}
 import org.slf4j.LoggerFactory
-import za.co.absa.hyperdrive.compatibility.provider.CompatibleDeltaIngestorProvider
+import za.co.absa.hyperdrive.compatibility.api.DeltaCDCToSnapshotWriterConfiguration
+import za.co.absa.hyperdrive.compatibility.provider.CompatibleDeltaCDCToSnapshotWriterProvider
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory, StreamWriterProperties}
 
@@ -37,95 +37,27 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
                                         sortColumns: Seq[String],
                                         sortColumnsCustomOrder: Map[String, Seq[String]],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
-  private val logger = LoggerFactory.getLogger(this.getClass)
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException(s"Invalid DELTA destination: '$destination'")
   }
+  val compatibleDeltaCDCToSnapshotWriter = CompatibleDeltaCDCToSnapshotWriterProvider.provide(
+    DeltaCDCToSnapshotWriterConfiguration(
+      StreamWriterProperties.CheckpointLocation,
+      destination,
+      trigger,
+      checkpointLocation,
+      partitionColumns,
+      keyColumn,
+      opColumn,
+      deletedValue,
+      sortColumns,
+      sortColumnsCustomOrder,
+      extraConfOptions
+  ))
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    CompatibleDeltaIngestorProvider.isDeltaSupported()
-    dataFrame.writeStream
-      .trigger(trigger)
-      .outputMode(OutputMode.Append())
-      .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
-      .options(extraConfOptions)
-      .foreachBatch((df: DataFrame, batchId: Long) => {
-        if(!DeltaTable.isDeltaTable(df.sparkSession, destination)) {
-          df.sparkSession
-            .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema)
-            .write
-            .format("delta")
-            .mode("overwrite")
-            .option("overwriteSchema", "true")
-            .partitionBy(partitionColumns :_*)
-            .save(destination)
-        }
-
-        logger.info(s"Writing batchId: $batchId")
-
-        val sortFieldsPrefix = "tmp_hyperdrive_"
-
-        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
-
-        val originalFieldNames = df.schema.fieldNames.mkString(",")
-        val sortColumnsWithPrefix = sortColumns.map(sortColumn => s"$sortFieldsPrefix$sortColumn")
-
-        val latestChangeForEachKey = dataFrameWithSortColumns
-          .selectExpr(s"$keyColumn", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols" )
-          .groupBy(s"$keyColumn")
-          .agg(functions.max("otherCols").as("latest"))
-          .filter(col("latest").isNotNull)
-          .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-          .selectExpr( "latest.*")
-          .drop(sortColumnsWithPrefix :_*)
-
-        generateDeltaMerge(latestChangeForEachKey).execute()
-      })
-      .start()
+    compatibleDeltaCDCToSnapshotWriter.write(dataFrame)
   }
-
-  private def generateDeltaMerge(latestChanges: DataFrame): DeltaMergeBuilder = {
-    val initialDeltaBuilder = DeltaTable
-      .forPath(destination)
-      .as("currentTable")
-      .merge(latestChanges.as("changes"), s"currentTable.$keyColumn = changes.$keyColumn")
-      .whenMatched(s"changes.$opColumn = '$deletedValue'")
-      .delete()
-
-    val deltaBuilderWithSortColumns = sortColumns.foldLeft(initialDeltaBuilder) { (builder, sortColumn) =>
-      val order = sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
-      order match {
-        case o if o.isEmpty =>
-          builder
-            .whenMatched(s"changes.$sortColumn > currentTable.$sortColumn")
-            .updateAll()
-        case o =>
-          val orderString = o.mkString("#")
-          builder
-            .whenMatched(s"""locate(changes.$sortColumn, "$orderString") > locate(currentTable.$sortColumn, "$orderString")""")
-            .updateAll()
-      }
-    }
-
-    deltaBuilderWithSortColumns
-      .whenNotMatched(s"changes.$opColumn != '$deletedValue'")
-      .insertAll()
-  }
-
-  private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
-    sortColumns.foldLeft(dataFrame) { (df, sortColumn) =>
-      val order = sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
-      order match {
-        case o if o.isEmpty =>
-          df.withColumn(s"$sortFieldsPrefix$sortColumn", col(s"$sortColumn"))
-        case o =>
-          val orderString = o.mkString("#")
-          df.withColumn(s"$sortFieldsPrefix$sortColumn", functions.expr(s"""locate(value, "$orderString")"""))
-      }
-    }
-  }
-
-  def getDestination: String = destination
 }
 
 object DeltaCDCToSnapshotWriter extends StreamWriterFactory with DeltaCDCToSnapshotWriterAttributes {

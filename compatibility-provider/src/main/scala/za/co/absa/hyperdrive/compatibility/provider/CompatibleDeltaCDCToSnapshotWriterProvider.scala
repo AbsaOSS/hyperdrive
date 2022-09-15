@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl
+package za.co.absa.hyperdrive.compatibility.provider
 
-import za.co.absa.hyperdrive.compatibility.api.CompatibleDeltaIngestor
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.streaming.StreamingQuery
+import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSnapshotWriter, DeltaCDCToSnapshotWriterConfiguration}
+import za.co.absa.hyperdrive.compatibility.impl.DeltaCDCToSnapshotWriter
 
-object DeltaIngestor extends CompatibleDeltaIngestor {
-  override def isDeltaSupported(): Unit = ???
+object CompatibleDeltaCDCToSnapshotWriterProvider {
+  def provide(configuration: DeltaCDCToSnapshotWriterConfiguration): CompatibleDeltaCDCToSnapshotWriter =
+    new DeltaCDCToSnapshotWriter(configuration)
 }

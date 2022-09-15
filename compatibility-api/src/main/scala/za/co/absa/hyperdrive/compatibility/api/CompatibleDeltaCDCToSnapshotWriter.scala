@@ -15,6 +15,25 @@
 
 package za.co.absa.hyperdrive.compatibility.api
 
-trait CompatibleDeltaIngestor {
-  def isDeltaSupported(): Unit
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
+
+trait CompatibleDeltaCDCToSnapshotWriter {
+  val configuration: DeltaCDCToSnapshotWriterConfiguration
+
+  def write(dataFrame: DataFrame): StreamingQuery
 }
+
+case class DeltaCDCToSnapshotWriterConfiguration(
+  checkpointLocationPropName: String,
+  destination: String,
+  trigger: Trigger,
+  checkpointLocation: String,
+  partitionColumns: Seq[String],
+  keyColumn: String,
+  opColumn: String,
+  deletedValue: String,
+  sortColumns: Seq[String],
+  sortColumnsCustomOrder: Map[String, Seq[String]],
+  extraConfOptions: Map[String, String]
+)

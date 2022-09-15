@@ -15,8 +15,10 @@
 
 package za.co.absa.hyperdrive.compatibility.impl
 
-import za.co.absa.hyperdrive.compatibility.api.CompatibleDeltaIngestor
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.streaming.StreamingQuery
+import za.co.absa.hyperdrive.compatibility.api.CompatibleDeltaCDCToSnapshotWriter
 
-object DeltaIngestor extends CompatibleDeltaIngestor {
-  override def isDeltaSupported(): Unit = {}
+class DeltaCDCToSnapshotWriter( configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
+  override def write(dataFrame: DataFrame, configuration: DeltaCDCToSnapshotWriterConfiguration): StreamingQuery = ???
 }
