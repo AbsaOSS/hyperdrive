@@ -330,17 +330,17 @@ More on these options: https://docs.mongodb.com/spark-connector/current/configur
 ##### DeltaCDCToSnapshotWriter
 | Property Name | Required | Description |
 | :--- | :---: | :--- |
-| `writer.delta.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
-| `writer.delta.partition.columns` | No | Comma-separated list of columns to partition by. |
-| `writer.delta.key.column` | Yes | A column with unique entity identifier. |
-| `writer.delta.operation.column` | Yes | A column containing value marking a record with an operation. |
-| `writer.delta.operation.deleted.value` | Yes | The value marking a record for deletion in the operation column. |
-| `writer.delta.precombineColumns` | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
-| `writer.delta.precombineColumns.customOrder` | No | Precombine column's custom order. |
+| `writer.deltaCDCToSnapshot.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.deltaCDCToSnapshot.partition.columns` | No | Comma-separated list of columns to partition by. |
+| `writer.deltaCDCToSnapshot.key.column` | Yes | A column with unique entity identifier. |
+| `writer.deltaCDCToSnapshot.operation.column` | Yes | A column containing value marking a record with an operation. |
+| `writer.deltaCDCToSnapshot.operation.deleted.value` | Yes | The value marking a record for deletion in the operation column. |
+| `writer.deltaCDCToSnapshot.precombineColumns` | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.deltaCDCToSnapshot.precombineColumns.customOrder` | No | Precombine column's custom order. |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
-Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.delta.options`, e.g. `writer.delta.options.key=value`
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltaCDCToSnapshot.options`, e.g. `writer.deltaCDCToSnapshot.options.key=value`
 
 #### Common writer properties
 
