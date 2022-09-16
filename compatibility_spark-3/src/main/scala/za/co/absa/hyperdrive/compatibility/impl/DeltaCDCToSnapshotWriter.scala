@@ -17,10 +17,10 @@ package za.co.absa.hyperdrive.compatibility.impl
 
 import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSnapshotWriter, DeltaCDCToSnapshotWriterConfiguration}
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
-import org.apache.spark.sql.{Column, DataFrame, Row, functions}
+import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, functions}
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
+import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.slf4j.LoggerFactory
 
 class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
@@ -38,7 +38,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
             .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema)
             .write
             .format("delta")
-            .mode("overwrite")
+            .mode(SaveMode.ErrorIfExists)
             .option("overwriteSchema", "true")
             .partitionBy(configuration.partitionColumns :_*)
             .save(configuration.destination)
@@ -51,7 +51,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
         val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
 
         val originalFieldNames = df.schema.fieldNames.mkString(",")
-        val sortColumnsWithPrefix = configuration.sortColumns.map(sortColumn => s"$sortFieldsPrefix$sortColumn")
+        val sortColumnsWithPrefix = configuration.precombineColumns.map(precombineColumn => s"$sortFieldsPrefix$precombineColumn")
 
         val latestChangeForEachKey = dataFrameWithSortColumns
           .selectExpr(s"${configuration.keyColumn}", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols" )
@@ -72,38 +72,38 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
       .forPath(configuration.destination)
       .as("currentTable")
       .merge(latestChanges.as("changes"), s"currentTable.${configuration.keyColumn} = changes.${configuration.keyColumn}")
-      .whenMatched(s"changes.${configuration.opColumn} = '${configuration.deletedValue}'")
+      .whenMatched(s"changes.${configuration.operationColumn} = '${configuration.operationDeleteValue}'")
       .delete()
 
-    val deltaBuilderWithSortColumns = configuration.sortColumns.foldLeft(initialDeltaBuilder) { (builder, sortColumn) =>
-      val order = configuration.sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
+    val deltaBuilderWithSortColumns = configuration.precombineColumns.foldLeft(initialDeltaBuilder) { (builder, precombineColumn) =>
+      val order = configuration.precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
       order match {
         case o if o.isEmpty =>
           builder
-            .whenMatched(s"changes.$sortColumn > currentTable.$sortColumn")
+            .whenMatched(s"changes.$precombineColumn > currentTable.$precombineColumn")
             .updateAll()
         case o =>
           val orderString = o.mkString("#")
           builder
-            .whenMatched(s"""locate(changes.$sortColumn, "$orderString") > locate(currentTable.$sortColumn, "$orderString")""")
+            .whenMatched(s"""locate(changes.$precombineColumn, "$orderString") > locate(currentTable.$precombineColumn, "$orderString")""")
             .updateAll()
       }
     }
 
     deltaBuilderWithSortColumns
-      .whenNotMatched(s"changes.${configuration.opColumn} != '${configuration.deletedValue}'")
+      .whenNotMatched(s"changes.${configuration.operationColumn} != '${configuration.operationDeleteValue}'")
       .insertAll()
   }
 
   private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
-    configuration.sortColumns.foldLeft(dataFrame) { (df, sortColumn) =>
-      val order = configuration.sortColumnsCustomOrder.getOrElse(sortColumn, Seq.empty[String])
+    configuration.precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
+      val order = configuration.precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
       order match {
         case o if o.isEmpty =>
-          df.withColumn(s"$sortFieldsPrefix$sortColumn", col(s"$sortColumn"))
+          df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(s"$precombineColumn"))
         case o =>
           val orderString = o.mkString("#")
-          df.withColumn(s"$sortFieldsPrefix$sortColumn", functions.expr(s"""locate(value, "$orderString")"""))
+          df.withColumn(s"$sortFieldsPrefix$precombineColumn", functions.expr(s"""locate($precombineColumn, "$orderString")"""))
       }
     }
   }

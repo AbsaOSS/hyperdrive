@@ -235,7 +235,6 @@
             </dependencies>
             <dependencyManagement>
                 <dependencies>
-
                     <dependency>
                         <groupId>org.testcontainers</groupId>
                         <artifactId>testcontainers</artifactId>

@@ -15,8 +15,6 @@
 
 package za.co.absa.hyperdrive.compatibility.provider
 
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.streaming.StreamingQuery
 import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSnapshotWriter, DeltaCDCToSnapshotWriterConfiguration}
 import za.co.absa.hyperdrive.compatibility.impl.DeltaCDCToSnapshotWriter
 

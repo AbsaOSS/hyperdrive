@@ -29,9 +29,9 @@ case class DeltaCDCToSnapshotWriterConfiguration(
   checkpointLocation: String,
   partitionColumns: Seq[String],
   keyColumn: String,
-  opColumn: String,
-  deletedValue: String,
-  sortColumns: Seq[String],
-  sortColumnsCustomOrder: Map[String, Seq[String]],
+  operationColumn: String,
+  operationDeleteValue: String,
+  precombineColumns: Seq[String],
+  precombineColumnsCustomOrder: Map[String, Seq[String]],
   extraConfOptions: Map[String, String]
 )
