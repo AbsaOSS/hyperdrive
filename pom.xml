@@ -119,6 +119,7 @@
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
         <hadoop_3.version>3.3.1</hadoop_3.version>
         <delta.spark_3.version>2.1.0</delta.spark_3.version>
+        <jackson-module.version>2.12.3</jackson-module.version>
 
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
@@ -245,6 +246,11 @@
                                 <artifactId>jackson-annotations</artifactId>
                             </exclusion>
                         </exclusions>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
+                        <version>${jackson-module.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>io.delta</groupId>
