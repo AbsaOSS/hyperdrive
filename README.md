@@ -44,7 +44,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 - `AddDateVersionTransformerStreamWriter` - adds columns for ingestion date and an auto-incremented version number, to be used for partitioning.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode.
 - `KafkaStreamWriter` - writes to a Kafka topic.
-- `DeltaCDCToSnapshotWriter` - writes the DataFrame as Parquet in Delta format. It expects CDC events and performs merge logic and creates the latest snapshot table.
+- `DeltaCDCToSnapshotWriter` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates the latest snapshot table.
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`

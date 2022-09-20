@@ -46,7 +46,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
 
         logger.info(s"Writing batchId: $batchId")
 
-        val sortFieldsPrefix = "tmp_hyperdrive_"
+        val sortFieldsPrefix = "_tmp_hyperdrive_"
 
         val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
 
@@ -83,7 +83,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
             .whenMatched(s"changes.$precombineColumn > currentTable.$precombineColumn")
             .updateAll()
         case o =>
-          val orderString = o.mkString("#")
+          val orderString = o.mkString("#$@")
           builder
             .whenMatched(s"""locate(changes.$precombineColumn, "$orderString") > locate(currentTable.$precombineColumn, "$orderString")""")
             .updateAll()
@@ -102,7 +102,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
         case o if o.isEmpty =>
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(s"$precombineColumn"))
         case o =>
-          val orderString = o.mkString("#")
+          val orderString = o.mkString("#$@")
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", functions.expr(s"""locate($precombineColumn, "$orderString")"""))
       }
     }

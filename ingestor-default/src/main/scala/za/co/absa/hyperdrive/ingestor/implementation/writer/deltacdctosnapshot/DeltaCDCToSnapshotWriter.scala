@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer.deltaCDCToSnapshot
+package za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctosnapshot
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
