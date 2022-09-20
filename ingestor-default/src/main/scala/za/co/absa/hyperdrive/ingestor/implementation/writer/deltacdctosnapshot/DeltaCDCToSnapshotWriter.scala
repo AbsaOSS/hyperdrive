@@ -36,22 +36,22 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
                                         precombineColumnsCustomOrder: Map[String, Seq[String]],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
   if (StringUtils.isBlank(destination)) {
-    throw new IllegalArgumentException(s"Invalid DELTA destination: '$destination'")
+    throw new IllegalArgumentException("Destination must not be blank!")
   }
   val compatibleDeltaCDCToSnapshotWriter: CompatibleDeltaCDCToSnapshotWriter =
     CompatibleDeltaCDCToSnapshotWriterProvider.provide(
         DeltaCDCToSnapshotWriterConfiguration(
-        StreamWriterProperties.CheckpointLocation,
-        destination,
-        trigger,
-        checkpointLocation,
-        partitionColumns,
-        keyColumn,
-        operationColumn,
-        operationDeleteValue,
-        precombineColumns,
-        precombineColumnsCustomOrder,
-        extraConfOptions
+          StreamWriterProperties.CheckpointLocation,
+          destination,
+          trigger,
+          checkpointLocation,
+          partitionColumns,
+          keyColumn,
+          operationColumn,
+          operationDeleteValue,
+          precombineColumns,
+          precombineColumnsCustomOrder,
+          extraConfOptions
       )
     )
 

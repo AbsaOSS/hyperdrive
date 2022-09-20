@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 
 class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
+  private val STRING_SEPARATOR = "#$@"
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
     dataFrame.writeStream
@@ -34,6 +35,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         if(!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
+          logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
           df.sparkSession
             .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema)
             .write
@@ -59,7 +61,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
           .agg(functions.max("otherCols").as("latest"))
           .filter(col("latest").isNotNull)
           .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-          .selectExpr( "latest.*")
+          .selectExpr("latest.*")
           .drop(sortColumnsWithPrefix :_*)
 
         generateDeltaMerge(latestChangeForEachKey).execute()
@@ -83,7 +85,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
             .whenMatched(s"changes.$precombineColumn > currentTable.$precombineColumn")
             .updateAll()
         case o =>
-          val orderString = o.mkString("#$@")
+          val orderString = o.mkString(STRING_SEPARATOR)
           builder
             .whenMatched(s"""locate(changes.$precombineColumn, "$orderString") > locate(currentTable.$precombineColumn, "$orderString")""")
             .updateAll()
@@ -100,9 +102,9 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
       val order = configuration.precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
       order match {
         case o if o.isEmpty =>
-          df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(s"$precombineColumn"))
+          df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
         case o =>
-          val orderString = o.mkString("#$@")
+          val orderString = o.mkString(STRING_SEPARATOR)
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", functions.expr(s"""locate($precombineColumn, "$orderString")"""))
       }
     }

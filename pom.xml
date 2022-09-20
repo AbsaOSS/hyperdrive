@@ -132,7 +132,6 @@
         <spark.version />
         <spark.sql.mongo.version />
         <mongodb.driver.version />
-        <delta.version />
 
     </properties>
 
