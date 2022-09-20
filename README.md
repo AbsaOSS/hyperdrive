@@ -328,24 +328,24 @@ Common MongoDB additional options
 More on these options: https://docs.mongodb.com/spark-connector/current/configuration
 
 ##### DeltaCDCToSnapshotWriter
-| Property Name | Required | Description |
-| :--- | :---: | :--- |
-| `writer.deltaCDCToSnapshot.destination.directory` | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
-| `writer.deltaCDCToSnapshot.partition.columns` | No | Comma-separated list of columns to partition by. |
-| `writer.deltaCDCToSnapshot.key.column` | Yes | A column with unique entity identifier. |
-| `writer.deltaCDCToSnapshot.operation.column` | Yes | A column containing value marking a record with an operation. |
-| `writer.deltaCDCToSnapshot.operation.deleted.value` | Yes | The value marking a record for deletion in the operation column. |
-| `writer.deltaCDCToSnapshot.precombineColumns` | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
-| `writer.deltaCDCToSnapshot.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order. |
-| `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
-| `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
+| Property Name                                             | Required | Description |
+|:----------------------------------------------------------| :---: | :--- |
+| `writer.deltacdctosnapshot.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.deltacdctosnapshot.partition.columns`             | No | Comma-separated list of columns to partition by. |
+| `writer.deltacdctosnapshot.key.column`                    | Yes | A column with unique entity identifier. |
+| `writer.deltacdctosnapshot.operation.column`              | Yes | A column containing value marking a record with an operation. |
+| `writer.deltacdctosnapshot.operation.deleted.value`       | Yes | The value marking a record for deletion in the operation column. |
+| `writer.deltacdctosnapshot.precombineColumns`             | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.deltacdctosnapshot.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order. |
+| `writer.common.trigger.type`                              | No | See [Combination writer properties](#common-writer-properties) |
+| `writer.common.trigger.processing.time`                   | No | See [Combination writer properties](#common-writer-properties) |
 
-Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltaCDCToSnapshot.options`, e.g. `writer.deltaCDCToSnapshot.options.key=value`
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctosnapshot.options`, e.g. `writer.deltacdctosnapshot.options.key=value`
 
 **Example**
 
-- `writer.deltaCDCToSnapshot.precombineColumns=A_TIMSTAMP, A_ENTTYP`
-- `writer.deltaCDCToSnapshot.precombineColumns.customOrder.A_ENTTYP=PT,FI,RR,UB,UP,DL,FD`
+- `writer.deltacdctosnapshot.precombineColumns=A_TIMSTAMP, A_ENTTYP`
+- `writer.deltacdctosnapshot.precombineColumns.customOrder.A_ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 #### Common writer properties
 
