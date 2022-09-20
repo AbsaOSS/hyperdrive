@@ -17,11 +17,14 @@ package za.co.absa.hyperdrive.compatibility.impl
 
 import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSnapshotWriter, DeltaCDCToSnapshotWriterConfiguration}
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
-import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, functions}
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.slf4j.LoggerFactory
+
+import java.net.URI
 
 class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -39,15 +42,19 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         if(!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
-          logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
-          df.sparkSession
-            .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema)
-            .write
-            .format("delta")
-            .mode(SaveMode.ErrorIfExists)
-            .option("overwriteSchema", "true")
-            .partitionBy(configuration.partitionColumns :_*)
-            .save(configuration.destination)
+          if(isDirEmptyOrDoesNotExist(df.sparkSession, configuration.destination)) {
+            logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
+            df.sparkSession
+              .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema)
+              .write
+              .format("delta")
+              .mode(SaveMode.Overwrite)
+              .option("overwriteSchema", "true")
+              .partitionBy(configuration.partitionColumns :_*)
+              .save(configuration.destination)
+          } else {
+            throw new IllegalArgumentException(s"Could not create new delta table. Directory ${configuration.destination} is not empty!")
+          }
         }
 
         logger.info(s"Writing batchId: $batchId")
@@ -111,6 +118,20 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
           val orderString = o.mkString(STRING_SEPARATOR)
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", functions.expr(s"""locate($precombineColumn, "$orderString")"""))
       }
+    }
+  }
+
+  private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
+    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
+    val path = new Path(destination)
+    if(fs.exists(path)) {
+      if(fs.isDirectory(path)) {
+        !fs.listFiles(path, true).hasNext
+      } else {
+        true
+      }
+    } else {
+      true
     }
   }
 }
