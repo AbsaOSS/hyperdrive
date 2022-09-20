@@ -128,7 +128,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
       if(fs.isDirectory(path)) {
         !fs.listFiles(path, true).hasNext
       } else {
-        true
+        false
       }
     } else {
       true
