@@ -336,11 +336,16 @@ More on these options: https://docs.mongodb.com/spark-connector/current/configur
 | `writer.deltaCDCToSnapshot.operation.column` | Yes | A column containing value marking a record with an operation. |
 | `writer.deltaCDCToSnapshot.operation.deleted.value` | Yes | The value marking a record for deletion in the operation column. |
 | `writer.deltaCDCToSnapshot.precombineColumns` | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
-| `writer.deltaCDCToSnapshot.precombineColumns.customOrder` | No | Precombine column's custom order. |
+| `writer.deltaCDCToSnapshot.precombineColumns.customOrder` | No | Precombine column's custom order in descending order. |
 | `writer.common.trigger.type` | No | See [Combination writer properties](#common-writer-properties) |
 | `writer.common.trigger.processing.time` | No | See [Combination writer properties](#common-writer-properties) |
 
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltaCDCToSnapshot.options`, e.g. `writer.deltaCDCToSnapshot.options.key=value`
+
+**Example**
+
+- `writer.deltaCDCToSnapshot.precombineColumns=A_TIMSTAMP, A_ENTTYP`
+- `writer.deltaCDCToSnapshot.precombineColumns.customOrder.A_ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 #### Common writer properties
 
