@@ -47,10 +47,6 @@
             <version>${spark.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
         </dependency>
