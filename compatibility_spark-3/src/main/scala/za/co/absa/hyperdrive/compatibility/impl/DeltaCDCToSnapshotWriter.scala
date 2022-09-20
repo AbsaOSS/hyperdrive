@@ -27,6 +27,10 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val STRING_SEPARATOR = "#$@"
 
+  if(configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
+    throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
+  }
+
   override def write(dataFrame: DataFrame): StreamingQuery = {
     dataFrame.writeStream
       .trigger(configuration.trigger)
