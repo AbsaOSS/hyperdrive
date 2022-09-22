@@ -344,8 +344,13 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 **Example**
 
-- `writer.deltacdctosnapshot.precombineColumns=A_TIMSTAMP, A_ENTTYP`
-- `writer.deltacdctosnapshot.precombineColumns.customOrder.A_ENTTYP=PT,FI,RR,UB,UP,DL,FD`
+- `component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctosnapshot.DeltaCDCToSnapshotWriter`
+- `writer.deltacdctosnapshot.destination.directory=/tmp/destination`
+- `writer.deltacdctosnapshot.key.column=key`
+- `writer.deltacdctosnapshot.operation.column=ENTTYP`
+- `writer.deltacdctosnapshot.operation.deleted.value=DL`
+- `writer.deltacdctosnapshot.precombineColumns=TIMSTAMP, ENTTYP`
+- `writer.deltacdctosnapshot.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 #### Common writer properties
 

@@ -29,6 +29,7 @@ import java.net.URI
 class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val STRING_SEPARATOR = "#$@"
+  val CHECKPOINT_LOCATION = "checkpointLocation"
 
   if(configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
@@ -38,7 +39,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
     dataFrame.writeStream
       .trigger(configuration.trigger)
       .outputMode(OutputMode.Append())
-      .option(configuration.checkpointLocationPropName, configuration.checkpointLocation)
+      .option(CHECKPOINT_LOCATION, configuration.checkpointLocation)
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         if(!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
@@ -122,7 +123,7 @@ class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfigurat
   }
 
   private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
-    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
+    val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
     val path = new Path(destination)
     if(fs.exists(path)) {
       if(fs.isDirectory(path)) {

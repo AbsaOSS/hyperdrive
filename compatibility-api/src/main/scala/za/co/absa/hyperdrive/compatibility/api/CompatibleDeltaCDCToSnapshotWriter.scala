@@ -23,7 +23,6 @@ trait CompatibleDeltaCDCToSnapshotWriter {
 }
 
 case class DeltaCDCToSnapshotWriterConfiguration(
-  checkpointLocationPropName: String,
   destination: String,
   trigger: Trigger,
   checkpointLocation: String,
