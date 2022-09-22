@@ -44,6 +44,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 - `AddDateVersionTransformerStreamWriter` - adds columns for ingestion date and an auto-incremented version number, to be used for partitioning.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode.
 - `KafkaStreamWriter` - writes to a Kafka topic.
+- `DeltaCDCToSCD2Writer` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates SCD2 table.
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
@@ -325,6 +326,32 @@ Common MongoDB additional options
 | `writer.mongodb.option.spark.mongodb.output.ordered` | `true` | When set to `false` inserts are done in parallel, increasing performance, but the order of documents is not preserved. |
 | `writer.mongodb.option.spark.mongodb.output.forceInsert` | `false`| Forces saves to use inserts, even if a Dataset contains `_id.` |
 More on these options: https://docs.mongodb.com/spark-connector/current/configuration
+
+##### DeltaCDCToSCD2Writer
+| Property Name                                             | Required | Description |
+|:----------------------------------------------------------| :---: | :--- |
+| `writer.deltacdctoscd2.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter` |
+| `writer.deltacdctoscd2.partition.columns`             | No | Comma-separated list of columns to partition by. |
+| `writer.deltacdctoscd2.key.column`                    | Yes | A column with unique entity identifier. |
+| `writer.deltacdctoscd2.timestamp.column`              | Yes | A column with timestamp. |
+| `writer.deltacdctoscd2.operation.column`              | Yes | A column containing value marking a record with an operation. |
+| `writer.deltacdctoscd2.operation.deleted.value`       | Yes | The value marking a record for deletion in the operation column. |
+| `writer.deltacdctoscd2.precombineColumns`             | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.deltacdctoscd2.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order. |
+| `writer.common.trigger.type`                              | No | See [Combination writer properties](#common-writer-properties) |
+| `writer.common.trigger.processing.time`                   | No | See [Combination writer properties](#common-writer-properties) |
+
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctoscd2.options`, e.g. `writer.deltacdctoscd2.options.key=value`
+
+**Example**
+- `component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctoscd2.DeltaCDCToSCD2Writer`
+- `writer.deltacdctoscd2.destination.directory=/tmp/destination`
+- `writer.deltacdctoscd2.key.column=key`
+- `writer.deltacdctoscd2.timestamp.column=TIMSTAMP`
+- `writer.deltacdctoscd2.operation.column=ENTTYP`
+- `writer.deltacdctoscd2.operation.deleted.value=DL`
+- `writer.deltacdctoscd2.precombineColumns=ENTTYP`
+- `writer.deltacdctoscd2.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 #### Common writer properties
 
