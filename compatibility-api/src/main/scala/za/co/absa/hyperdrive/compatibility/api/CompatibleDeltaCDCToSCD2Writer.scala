@@ -28,7 +28,7 @@ case class DeltaCDCToSCD2WriterConfiguration(
   checkpointLocation: String,
   partitionColumns: Seq[String],
   keyColumn: String,
-  timeStampColumn: String,
+  timestampColumn: String,
   operationColumn: String,
   operationDeleteValue: String,
   precombineColumns: Seq[String],

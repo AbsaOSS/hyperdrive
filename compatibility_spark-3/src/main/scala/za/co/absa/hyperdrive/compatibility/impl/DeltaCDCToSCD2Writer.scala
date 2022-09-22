@@ -29,11 +29,15 @@ import java.net.URI
 
 class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) extends CompatibleDeltaCDCToSCD2Writer {
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val STRING_SEPARATOR = "#$@"
+
   private val CHECKPOINT_LOCATION = "checkpointLocation"
+
+  private val STRING_SEPARATOR = "#$@"
   private val START_DATE_COLUMN = "_start_date"
   private val END_DATE_COLUMN = "_end_date"
   private val IS_CURRENT_COLUMN = "_is_current"
+  private val MERGE_KEY_COLUMN = "_mergeKey"
+  private val SORT_FIELD_PREFIX = "_tmp_hyperdrive_"
 
   if(configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
@@ -50,7 +54,13 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
           if(isDirEmptyOrDoesNotExist(df.sparkSession, configuration.destination)) {
             logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
             df.sparkSession
-              .createDataFrame(df.sparkSession.sparkContext.emptyRDD[Row], df.schema.add(START_DATE_COLUMN, TimestampType, false).add(END_DATE_COLUMN, TimestampType, true).add(IS_CURRENT_COLUMN, BooleanType, false))
+              .createDataFrame(
+                df.sparkSession.sparkContext.emptyRDD[Row],
+                df.schema
+                  .add(START_DATE_COLUMN, TimestampType, false)
+                  .add(END_DATE_COLUMN, TimestampType, true)
+                  .add(IS_CURRENT_COLUMN, BooleanType, false)
+              )
               .write
               .format("delta")
               .mode(SaveMode.Overwrite)
@@ -63,17 +73,15 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
         }
         logger.info(s"Writing batchId: $batchId")
 
-        val sortFieldsPrefix = "_tmp_hyperdrive_"
-
-        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
+        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, SORT_FIELD_PREFIX)
 
         val fieldNames = df.schema.fieldNames
         val originalFieldNames = df.schema.fieldNames.mkString(",")
-        val sortColumnsWithPrefix = configuration.precombineColumns.map(precombineColumn => s"$sortFieldsPrefix$precombineColumn")
+        val sortColumnsWithPrefix = configuration.precombineColumns.map(precombineColumn => s"$SORT_FIELD_PREFIX$precombineColumn")
 
         val uniqueChangesForEachKeyAndTimestamp = dataFrameWithSortColumns
-          .selectExpr(s"${configuration.keyColumn}", s"${configuration.timeStampColumn}", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols" )
-          .groupBy(s"${configuration.keyColumn}", s"${configuration.timeStampColumn}")
+          .selectExpr(s"${configuration.keyColumn}", s"${configuration.timestampColumn}", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols" )
+          .groupBy(s"${configuration.keyColumn}", s"${configuration.timestampColumn}")
           .agg(functions.max("otherCols").as("latest"))
           .filter(col("latest").isNotNull)
           .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
@@ -92,12 +100,12 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     val initialDeltaBuilder = DeltaTable
       .forPath(configuration.destination)
       .as("currentTable")
-      .merge(latestChanges.as("changes"), s"currentTable._is_current = true AND currentTable.${configuration.keyColumn} = changes._mergeKey") // AND currentTable._is_current = true")
+      .merge(latestChanges.as("changes"), s"currentTable.$IS_CURRENT_COLUMN = true AND currentTable.${configuration.keyColumn} = changes.$MERGE_KEY_COLUMN")
       .whenMatched("currentTable.A_TIMSTAMP < changes.A_TIMSTAMP")
         .update(
           Map(
-            "_end_date" -> col("changes.A_TIMSTAMP"),
-            "_is_current" -> lit(false)
+            s"$END_DATE_COLUMN" -> col("changes.A_TIMSTAMP"),
+            s"$IS_CURRENT_COLUMN" -> lit(false)
           )
         )
 
@@ -109,8 +117,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
                 .whenMatched(s"currentTable.$precombineColumn < changes.$precombineColumn")
                 .update(
                   Map(
-                    "_end_date" -> col("changes.A_TIMSTAMP"),
-                    "_is_current" -> lit(false)
+                    s"$END_DATE_COLUMN" -> col("changes.A_TIMSTAMP"),
+                    s"$IS_CURRENT_COLUMN" -> lit(false)
                   )
                 )
             case o =>
@@ -119,8 +127,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
                 .whenMatched(s"""locate(currentTable.$precombineColumn, "$orderString") < locate(changes.$precombineColumn, "$orderString")""")
                 .update(
                   Map(
-                    "_end_date" -> col("changes.A_TIMSTAMP"),
-                    "_is_current" -> lit(false)
+                    s"$END_DATE_COLUMN" -> col("changes.A_TIMSTAMP"),
+                    s"$IS_CURRENT_COLUMN" -> lit(false)
                   )
                 )
           }
@@ -128,26 +136,26 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     deltaBuilderWithSortColumns
       .whenMatched()
       .delete()
-      .whenNotMatched("changes._mergeKey is NOT NULL")
+      .whenNotMatched(s"changes.$MERGE_KEY_COLUMN is NOT NULL")
       .insert(
         originalFieldNames.map( c =>
           c -> col(s"changes.$c")
-        ).toMap ++ Map("_start_date" -> col("changes._start_date"),  "_end_date" -> col("changes._end_date"), "_is_current" -> col("changes._is_current"))
+        ).toMap ++ Map(s"$START_DATE_COLUMN" -> col(s"changes.$START_DATE_COLUMN"),  s"$END_DATE_COLUMN" -> col(s"changes.$END_DATE_COLUMN"), s"$IS_CURRENT_COLUMN" -> col(s"changes.$IS_CURRENT_COLUMN"))
       )
   }
 
   private def getStagedDataFrame(dataFrame: DataFrame): DataFrame = {
-    val idWindowDesc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col(configuration.timeStampColumn).desc)
+    val idWindowDesc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col(configuration.timestampColumn).desc)
     val insertRows = dataFrame
-      .withColumn("_start_date", col(configuration.timeStampColumn))
-      .withColumn("_end_date", lag("_start_date", 1, null).over(idWindowDesc))
-      .withColumn("_mergeKey", lit(null))
-      .withColumn("_end_date", functions.when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col("_start_date")).when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col("_end_date")).otherwise(null))
-      .withColumn("_is_current", functions.when(col("_end_date").isNull, lit(true)).otherwise(lit(false)))
+      .withColumn(s"$START_DATE_COLUMN", col(configuration.timestampColumn))
+      .withColumn(s"$END_DATE_COLUMN", lag(s"$START_DATE_COLUMN", 1, null).over(idWindowDesc))
+      .withColumn(s"$MERGE_KEY_COLUMN", lit(null))
+      .withColumn(s"$END_DATE_COLUMN", functions.when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(s"$START_DATE_COLUMN")).when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(s"$END_DATE_COLUMN")).otherwise(null))
+      .withColumn(s"$IS_CURRENT_COLUMN", functions.when(col(s"$END_DATE_COLUMN").isNull, lit(true)).otherwise(lit(false)))
 
     import dataFrame.sparkSession.implicits._
-    val idWindowAsc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col("_start_date").asc)
-    val updateRows = insertRows.withColumn("_rn", row_number.over(idWindowAsc)).where($"_rn" === 1).drop("_rn").withColumn("_mergeKey", col(configuration.keyColumn))
+    val idWindowAsc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col(s"$START_DATE_COLUMN").asc)
+    val updateRows = insertRows.withColumn("_rn", row_number.over(idWindowAsc)).where($"_rn" === 1).drop("_rn").withColumn(s"$MERGE_KEY_COLUMN", col(configuration.keyColumn))
 
     insertRows.union(updateRows)
   }
