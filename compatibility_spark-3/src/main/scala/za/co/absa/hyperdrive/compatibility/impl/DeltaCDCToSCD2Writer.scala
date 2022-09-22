@@ -30,6 +30,7 @@ import java.net.URI
 class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) extends CompatibleDeltaCDCToSCD2Writer {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val STRING_SEPARATOR = "#$@"
+  private val CHECKPOINT_LOCATION = "checkpointLocation"
   private val START_DATE_COLUMN = "_start_date"
   private val END_DATE_COLUMN = "_end_date"
   private val IS_CURRENT_COLUMN = "_is_current"
@@ -42,7 +43,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     dataFrame.writeStream
       .trigger(configuration.trigger)
       .outputMode(OutputMode.Append())
-      .option(configuration.checkpointLocationPropName, configuration.checkpointLocation)
+      .option(CHECKPOINT_LOCATION, configuration.checkpointLocation)
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         if(!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
@@ -165,7 +166,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
-    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
+    val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
     val path = new Path(destination)
     if(fs.exists(path)) {
       if(fs.isDirectory(path)) {

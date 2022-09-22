@@ -23,7 +23,6 @@ trait CompatibleDeltaCDCToSCD2Writer {
 }
 
 case class DeltaCDCToSCD2WriterConfiguration(
-  checkpointLocationPropName: String,
   destination: String,
   trigger: Trigger,
   checkpointLocation: String,

@@ -19,7 +19,7 @@ import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait DeltaCDCToSCD2WriterAttributes extends HasComponentAttributes {
-  private val rootFactoryConfKey = "writer.deltaCDCToSnapshot"
+  private val rootFactoryConfKey = "writer.deltacdctosnapshot"
   val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"

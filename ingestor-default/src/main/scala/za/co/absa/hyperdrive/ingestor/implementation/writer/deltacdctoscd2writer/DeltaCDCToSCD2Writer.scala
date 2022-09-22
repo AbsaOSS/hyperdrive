@@ -42,7 +42,6 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   val compatibleDeltaCDCToSnapshotWriter: CompatibleDeltaCDCToSCD2Writer =
     CompatibleDeltaCDCToSCD2WriterProvider.provide(
       DeltaCDCToSCD2WriterConfiguration(
-        StreamWriterProperties.CheckpointLocation,
         destination,
         trigger,
         checkpointLocation,
@@ -63,6 +62,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
 }
 
 object DeltaCDCToSCD2Writer extends StreamWriterFactory with DeltaCDCToSCD2WriterAttributes {
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(config: Configuration): StreamWriter = {
     val destinationDirectory = getDestinationDirectory(config)
@@ -79,7 +79,7 @@ object DeltaCDCToSCD2Writer extends StreamWriterFactory with DeltaCDCToSCD2Write
     val precombineColumnsCustomOrder =  ConfigUtils.getMapOrEmpty(KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER, config)
 
 
-    LoggerFactory.getLogger(this.getClass).info(s"Going to create DeltaStreamWriter instance using: " +
+    logger.info(s"Going to create DeltaStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', " +
       s"partition columns='$partitionColumns', key column='$keyColumn', timestamp column='$timestampColumn', operation column='$operationColumn', " +
       s"operation delete value='$operationDeleteValue', precombine columns='$precombineColumns', " +
