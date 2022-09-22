@@ -140,18 +140,41 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .insert(
         originalFieldNames.map( c =>
           c -> col(s"changes.$c")
-        ).toMap ++ Map(s"$START_DATE_COLUMN" -> col(s"changes.$START_DATE_COLUMN"),  s"$END_DATE_COLUMN" -> col(s"changes.$END_DATE_COLUMN"), s"$IS_CURRENT_COLUMN" -> col(s"changes.$IS_CURRENT_COLUMN"))
+        ).toMap ++
+          Map(
+            s"$START_DATE_COLUMN" -> col(s"changes.$START_DATE_COLUMN"),
+            s"$END_DATE_COLUMN" -> col(s"changes.$END_DATE_COLUMN"),
+            s"$IS_CURRENT_COLUMN" -> col(s"changes.$IS_CURRENT_COLUMN")
+          )
       )
   }
 
   private def getStagedDataFrame(dataFrame: DataFrame): DataFrame = {
     val idWindowDesc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col(configuration.timestampColumn).desc)
     val insertRows = dataFrame
-      .withColumn(s"$START_DATE_COLUMN", col(configuration.timestampColumn))
-      .withColumn(s"$END_DATE_COLUMN", lag(s"$START_DATE_COLUMN", 1, null).over(idWindowDesc))
-      .withColumn(s"$MERGE_KEY_COLUMN", lit(null))
-      .withColumn(s"$END_DATE_COLUMN", functions.when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(s"$START_DATE_COLUMN")).when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(s"$END_DATE_COLUMN")).otherwise(null))
-      .withColumn(s"$IS_CURRENT_COLUMN", functions.when(col(s"$END_DATE_COLUMN").isNull, lit(true)).otherwise(lit(false)))
+      .withColumn(
+        s"$START_DATE_COLUMN",
+        col(configuration.timestampColumn)
+      )
+      .withColumn(
+        s"$END_DATE_COLUMN",
+        lag(s"$START_DATE_COLUMN", 1, null).over(idWindowDesc)
+      )
+      .withColumn(
+        s"$MERGE_KEY_COLUMN",
+        lit(null)
+      )
+      .withColumn(
+        s"$END_DATE_COLUMN",
+        functions
+          .when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(s"$START_DATE_COLUMN"))
+          .when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(s"$END_DATE_COLUMN"))
+          .otherwise(null)
+      )
+      .withColumn(
+        s"$IS_CURRENT_COLUMN",
+        functions.when(col(s"$END_DATE_COLUMN").isNull, lit(true)).otherwise(lit(false))
+      )
 
     import dataFrame.sparkSession.implicits._
     val idWindowAsc = org.apache.spark.sql.expressions.Window.partitionBy(configuration.keyColumn).orderBy(col(s"$START_DATE_COLUMN").asc)
