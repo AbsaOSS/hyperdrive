@@ -29,7 +29,7 @@ import java.net.URI
 class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val STRING_SEPARATOR = "#$@"
-  val CHECKPOINT_LOCATION = "checkpointLocation"
+  private val CHECKPOINT_LOCATION = "checkpointLocation"
 
   if(configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
