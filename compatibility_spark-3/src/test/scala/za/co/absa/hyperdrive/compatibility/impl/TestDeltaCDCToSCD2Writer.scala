@@ -41,8 +41,8 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
   behavior of "DeltaCDCToSCD2Writer"
 
   it should "set format as 'parquet'" in {
-    val inputData = CDCEvent.loadFromFile(getClass.getResource("/scd2Resources/mergeIntoEmptyTable/InputData").getPath)
-    val expected = DeltaEvent.loadFromFile(getClass.getResource("/scd2Resources/mergeIntoEmptyTable/Expected").getPath)
+    val inputData = CDCEvent.loadFromFile(getClass.getResource("/scd2Resources/mergeIntoEmptyTable/InputData.data").getPath)
+    val expected = DeltaEvent.loadFromFile(getClass.getResource("/scd2Resources/mergeIntoEmptyTable/Expected.data").getPath)
 
     import spark.implicits._
 
