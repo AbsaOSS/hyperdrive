@@ -30,26 +30,26 @@ import java.net.URI
 class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) extends CompatibleDeltaCDCToSCD2Writer {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val CHECKPOINT_LOCATION = "checkpointLocation"
+  private val CheckpointLocation = "checkpointLocation"
 
-  private val STRING_SEPARATOR = "#$@"
-  private val START_DATE_COLUMN = "_start_date"
-  private val END_DATE_COLUMN = "_end_date"
-  private val IS_CURRENT_COLUMN = "_is_current"
-  private val MERGE_KEY_COLUMN = "_mergeKey"
-  private val SORT_FIELD_PREFIX = "_tmp_hyperdrive_"
-  val OLD_DATA_PREFIX = "_oldData"
-  val NEW_DATA_PREFIX = "_newData"
+  private val StringSeparator = "#$@"
+  private val StartDateColumn = "_start_date"
+  private val EndDateColumn = "_end_date"
+  private val IsCurrentColumn = "_is_current"
+  private val MergeKeyColumn = "_mergeKey"
+  private val SortFieldPrefix = "_tmp_hyperdrive_"
+  private val OldDataPrefix = "_oldData"
+  private val NewDataPrefix = "_newData"
 
-  if (configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
-    throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
+  if (configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
+    throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $StringSeparator")
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
     dataFrame.writeStream
       .trigger(configuration.trigger)
       .outputMode(OutputMode.Append())
-      .option(CHECKPOINT_LOCATION, configuration.checkpointLocation)
+      .option(CheckpointLocation, configuration.checkpointLocation)
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         if (!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
@@ -59,9 +59,9 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
               .createDataFrame(
                 df.sparkSession.sparkContext.emptyRDD[Row],
                 df.schema
-                  .add(START_DATE_COLUMN, TimestampType, nullable = false)
-                  .add(END_DATE_COLUMN, TimestampType, nullable = true)
-                  .add(IS_CURRENT_COLUMN, BooleanType, nullable = false)
+                  .add(StartDateColumn, TimestampType, nullable = false)
+                  .add(EndDateColumn, TimestampType, nullable = true)
+                  .add(IsCurrentColumn, BooleanType, nullable = false)
               )
               .write
               .format("delta")
@@ -83,13 +83,13 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
 
         val union = previousEvents.union(nextEvents).distinct().unionAll(
           uniqueChangesForEachKeyAndTimestamp
-            .withColumn(START_DATE_COLUMN, col(configuration.timestampColumn))
-            .withColumn(END_DATE_COLUMN, lit(null))
-            .withColumn(IS_CURRENT_COLUMN, lit(false))
-            .withColumn(MERGE_KEY_COLUMN, lit(null))
+            .withColumn(StartDateColumn, col(configuration.timestampColumn))
+            .withColumn(EndDateColumn, lit(null))
+            .withColumn(IsCurrentColumn, lit(false))
+            .withColumn(MergeKeyColumn, lit(null))
         )
 
-        val stagedData = setSCD2Fields(union).drop(MERGE_KEY_COLUMN)
+        val stagedData = setSCD2Fields(union).drop(MergeKeyColumn)
         val uniqueStagedData = removeDuplicates(stagedData)
         generateDeltaMerge(uniqueStagedData).execute()
       })
@@ -97,41 +97,41 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   private def getPreviousEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
-    deltaTable.toDF.as(OLD_DATA_PREFIX).join(
-      uniqueChangesForEachKeyAndTimestamp.as(NEW_DATA_PREFIX),
-      col(s"$NEW_DATA_PREFIX.${configuration.keyColumn}").equalTo(col(s"$OLD_DATA_PREFIX.${configuration.keyColumn}"))
-        .and(col(s"$NEW_DATA_PREFIX.${configuration.timestampColumn}").>=(col(s"$OLD_DATA_PREFIX.$START_DATE_COLUMN")))
-        .and(col(s"$NEW_DATA_PREFIX.${configuration.timestampColumn}").<=(col(s"$OLD_DATA_PREFIX.$END_DATE_COLUMN")))
+    deltaTable.toDF.as(OldDataPrefix).join(
+      uniqueChangesForEachKeyAndTimestamp.as(NewDataPrefix),
+      col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
+        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").>=(col(s"$OldDataPrefix.$StartDateColumn")))
+        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").<=(col(s"$OldDataPrefix.$EndDateColumn")))
         .or(
-          col(s"$NEW_DATA_PREFIX.${configuration.keyColumn}").equalTo(col(s"$OLD_DATA_PREFIX.${configuration.keyColumn}"))
-            .and(col(s"$NEW_DATA_PREFIX.${configuration.timestampColumn}").>=(col(s"$OLD_DATA_PREFIX.$START_DATE_COLUMN")))
-            .and(col(s"$OLD_DATA_PREFIX.$IS_CURRENT_COLUMN").equalTo(true))
+          col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
+            .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").>=(col(s"$OldDataPrefix.$StartDateColumn")))
+            .and(col(s"$OldDataPrefix.$IsCurrentColumn").equalTo(true))
         )
-    ).select(s"$OLD_DATA_PREFIX.*").withColumn(s"$MERGE_KEY_COLUMN", col(s"${configuration.keyColumn}"))
+    ).select(s"$OldDataPrefix.*").withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
   }
 
   private def getNextEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
     val fieldNames = deltaTable.toDF.schema.fieldNames
-      .filter(_ != START_DATE_COLUMN)
+      .filter(_ != StartDateColumn)
       .filter(_ != configuration.timestampColumn)
     val originalFieldNames = deltaTable.toDF.schema.fieldNames
-    deltaTable.toDF.as(OLD_DATA_PREFIX).join(
-      uniqueChangesForEachKeyAndTimestamp.as(NEW_DATA_PREFIX),
-      col(s"$NEW_DATA_PREFIX.${configuration.keyColumn}").equalTo(col(s"$OLD_DATA_PREFIX.${configuration.keyColumn}"))
-        .and(col(s"$NEW_DATA_PREFIX.${configuration.timestampColumn}").<(col(s"$OLD_DATA_PREFIX.$START_DATE_COLUMN")))
-    ).select(s"$OLD_DATA_PREFIX.*", s"$NEW_DATA_PREFIX.${configuration.timestampColumn}")
+    deltaTable.toDF.as(OldDataPrefix).join(
+      uniqueChangesForEachKeyAndTimestamp.as(NewDataPrefix),
+      col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
+        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").<(col(s"$OldDataPrefix.$StartDateColumn")))
+    ).select(s"$OldDataPrefix.*", s"$NewDataPrefix.${configuration.timestampColumn}")
       .selectExpr(
         s"${configuration.keyColumn}",
-        s"$NEW_DATA_PREFIX.${configuration.timestampColumn}",
-        s"struct($START_DATE_COLUMN, $OLD_DATA_PREFIX.${configuration.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
+        s"$NewDataPrefix.${configuration.timestampColumn}",
+        s"struct($StartDateColumn, $OldDataPrefix.${configuration.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
       )
-      .groupBy(s"${configuration.keyColumn}", s"$NEW_DATA_PREFIX.${configuration.timestampColumn}")
+      .groupBy(s"${configuration.keyColumn}", s"$NewDataPrefix.${configuration.timestampColumn}")
       .agg(functions.min("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
       .selectExpr("latest.*")
       .select(originalFieldNames.head, originalFieldNames.tail: _*)
-      .withColumn(s"$MERGE_KEY_COLUMN", col(s"${configuration.keyColumn}"))
+      .withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
   }
 
   private def generateDeltaMerge(latestChanges: DataFrame): DeltaMergeBuilder = {
@@ -139,7 +139,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .forPath(configuration.destination)
       .as("currentTable")
       .merge(
-        latestChanges.as("changes"), s"currentTable.${configuration.keyColumn} = changes.${configuration.keyColumn} AND currentTable.$START_DATE_COLUMN = changes.$START_DATE_COLUMN"
+        latestChanges.as("changes"), s"currentTable.${configuration.keyColumn} = changes.${configuration.keyColumn} AND currentTable.$StartDateColumn = changes.$StartDateColumn"
       )
       .whenMatched()
       .updateAll()
@@ -150,52 +150,52 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private def setSCD2Fields(dataFrame: DataFrame): DataFrame = {
     val idWindowDesc = org.apache.spark.sql.expressions.Window
       .partitionBy(configuration.keyColumn)
-      .orderBy(col(configuration.timestampColumn).desc, col(MERGE_KEY_COLUMN).desc)
+      .orderBy(col(configuration.timestampColumn).desc, col(MergeKeyColumn).desc)
     dataFrame
       .withColumn(
-        START_DATE_COLUMN,
+        StartDateColumn,
         col(configuration.timestampColumn)
       )
 
       .withColumn(
-        END_DATE_COLUMN,
+        EndDateColumn,
         functions.when(
-          col(MERGE_KEY_COLUMN).isNotNull.and(
-            lag(MERGE_KEY_COLUMN, 1, null).over(idWindowDesc).isNotNull
+          col(MergeKeyColumn).isNotNull.and(
+            lag(MergeKeyColumn, 1, null).over(idWindowDesc).isNotNull
           ),
-          col(END_DATE_COLUMN)
+          col(EndDateColumn)
         ).when(
-          col(MERGE_KEY_COLUMN).isNotNull.and(
-            lag(MERGE_KEY_COLUMN, 1, null).over(idWindowDesc).isNull
+          col(MergeKeyColumn).isNotNull.and(
+            lag(MergeKeyColumn, 1, null).over(idWindowDesc).isNull
           ).and(
             col(configuration.timestampColumn).equalTo(
               lag(s"${configuration.timestampColumn}", 1, null).over(idWindowDesc)
             )
           ),
-          lag(START_DATE_COLUMN, 2, null).over(idWindowDesc)
+          lag(StartDateColumn, 2, null).over(idWindowDesc)
         ).otherwise(
-          lag(START_DATE_COLUMN, 1, null).over(idWindowDesc)
+          lag(StartDateColumn, 1, null).over(idWindowDesc)
         )
       )
       .withColumn(
-        END_DATE_COLUMN,
+        EndDateColumn,
         functions
-          .when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(START_DATE_COLUMN))
-          .when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(END_DATE_COLUMN))
+          .when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(StartDateColumn))
+          .when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(EndDateColumn))
           .otherwise(null)
       )
       .withColumn(
-        IS_CURRENT_COLUMN,
-        functions.when(col(END_DATE_COLUMN).isNull, lit(true)).otherwise(lit(false))
+        IsCurrentColumn,
+        functions.when(col(EndDateColumn).isNull, lit(true)).otherwise(lit(false))
       )
   }
 
   private def removeDuplicates(inputDF: DataFrame): DataFrame = {
-    val dataFrameWithSortColumns = getDataFrameWithSortColumns(inputDF, SORT_FIELD_PREFIX)
+    val dataFrameWithSortColumns = getDataFrameWithSortColumns(inputDF, SortFieldPrefix)
 
     val originalFieldNames = inputDF.schema.fieldNames.mkString(",")
     val sortColumnsWithPrefix = configuration.precombineColumns.map(precombineColumn =>
-      s"$SORT_FIELD_PREFIX$precombineColumn"
+      s"$SortFieldPrefix$precombineColumn"
     )
 
     dataFrameWithSortColumns
@@ -219,7 +219,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
         case o if o.isEmpty =>
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
         case o =>
-          val orderString = o.mkString(STRING_SEPARATOR)
+          val orderString = o.mkString(StringSeparator)
           df.withColumn(
             s"$sortFieldsPrefix$precombineColumn",
             functions.expr(s"""locate($precombineColumn, "$orderString")""")
