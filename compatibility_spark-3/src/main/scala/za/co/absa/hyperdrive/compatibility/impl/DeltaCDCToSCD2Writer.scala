@@ -152,7 +152,6 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .partitionBy(configuration.keyColumn)
       .orderBy(col(configuration.timestampColumn).desc, col(MergeKeyColumn).desc)
     dataFrame
-      .withColumn(StartDateColumn, col(configuration.timestampColumn))
       .withColumn(
         EndDateColumn,
         functions.when(
