@@ -92,9 +92,9 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
             .withColumn(IsOldDataColumn, lit(false))
         )
 
-        val stagedData = setSCD2Fields(union).drop(IsOldDataColumn)
-        val uniqueStagedData = removeDuplicates(stagedData)
-        generateDeltaMerge(uniqueStagedData).execute()
+        val uniqueEvents = removeDuplicates(union)
+        val stagedData = setSCD2Fields(uniqueEvents).drop(IsOldDataColumn)
+        generateDeltaMerge(stagedData).execute()
       })
       .start()
   }
@@ -159,10 +159,16 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
         EndDateColumn,
         functions.when(
           col(IsOldDataColumn).equalTo(true).and(
-            lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(true)
+            lag(configuration.keyColumn, 1, null).over(idWindowDesc).isNull
           ),
           col(EndDateColumn)
-        ).when(
+        )
+          .when(
+            col(IsOldDataColumn).equalTo(true).and(
+              lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(true)
+            ),
+            col(EndDateColumn)
+          ).when(
           col(IsOldDataColumn).equalTo(true).and(
             lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(false)
           ).and(
@@ -218,9 +224,9 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
           df
             .withColumn(SortFieldCustomOrderColumn, lit(o.toArray))
             .withColumn(
-            s"$sortFieldsPrefix$precombineColumn",
-            functions.expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
-          ).drop(SortFieldCustomOrderColumn)
+              s"$sortFieldsPrefix$precombineColumn",
+              functions.expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
+            ).drop(SortFieldCustomOrderColumn)
       }
     }
   }

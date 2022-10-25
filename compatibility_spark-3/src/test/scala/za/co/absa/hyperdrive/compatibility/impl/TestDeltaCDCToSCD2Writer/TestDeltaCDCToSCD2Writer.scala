@@ -24,91 +24,90 @@ import za.co.absa.hyperdrive.compatibility.api.DeltaCDCToSCD2WriterConfiguration
 import za.co.absa.hyperdrive.compatibility.impl.DeltaCDCToSCD2Writer
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
+import scala.reflect.io.Path
+
 class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers with BeforeAndAfterEach with SparkTestBase {
-  private val baseDir = TempDirectory("TestDeltaCDCToSCD2Writer").deleteOnExit()
+  private val baseDir: TempDirectory = TempDirectory("TestDeltaCDCToSCD2Writer").deleteOnExit()
   private val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
   private val checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
 
+  import spark.implicits._
+
+  private val memoryStream = MemoryStream[CDCEvent](1, spark.sqlContext)
+
   override def beforeEach(): Unit = {
-    baseDir.deleteOnExit()
+    Path(destinationPath).deleteRecursively()
+    Path(checkpointPath).deleteRecursively()
+    memoryStream.reset()
   }
 
   behavior of "DeltaCDCToSCD2Writer"
 
   it should "merge unique by timestamp scd2 rows into empty delta table" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-
-    memoryStream.addData(loadCDCEvents("/01-empty-table-conflicting-dates/input.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
+    writeOneInput("/01-empty-table-conflicting-dates/tested-input.csv")
 
     getResult should contain theSameElementsAs loadDeltaEvents("/01-empty-table-conflicting-dates/expected.csv")
   }
 
   it should "merge twice the same data" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-    val cdcEvents = loadCDCEvents("/02-twice-the-same-data/input.csv")
-
-    memoryStream.addData(cdcEvents)
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
-    memoryStream.addData(cdcEvents)
-    writer.write(memoryStream.toDF()).processAllAvailable()
+    writeTwoInputs(
+      "/02-twice-the-same-data/tested-input.csv",
+      "/02-twice-the-same-data/tested-input.csv"
+    )
 
     getResult should contain theSameElementsAs loadDeltaEvents("/02-twice-the-same-data/expected.csv")
   }
 
   it should "merge one row combinations" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-
-    memoryStream.addData(loadCDCEvents("/03-merge-one-row-combinations/initial.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
-    memoryStream.addData(loadCDCEvents("/03-merge-one-row-combinations/input.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
+    writeTwoInputs(
+      "/03-merge-one-row-combinations/initial-input.csv",
+      "/03-merge-one-row-combinations/tested-input.csv"
+    )
 
     getResult should contain theSameElementsAs loadDeltaEvents("/03-merge-one-row-combinations/expected.csv")
   }
 
   it should "merge two rows combinations" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-
-    memoryStream.addData(loadCDCEvents("/04-merge-two-rows-combinations/initial.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
-    memoryStream.addData(loadCDCEvents("/04-merge-two-rows-combinations/input.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
+    writeTwoInputs(
+      "/04-merge-two-rows-combinations/initial-input.csv",
+      "/04-merge-two-rows-combinations/tested-input.csv"
+    )
 
     getResult should contain theSameElementsAs loadDeltaEvents("/04-merge-two-rows-combinations/expected.csv")
   }
 
   it should "merge three rows combinations" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-
-    memoryStream.addData(loadCDCEvents("/05-merge-three-rows-combinations/initial.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
-    memoryStream.addData(loadCDCEvents("/05-merge-three-rows-combinations/input.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
+    writeTwoInputs(
+      "/05-merge-three-rows-combinations/initial-input.csv",
+      "/05-merge-three-rows-combinations/tested-input.csv"
+    )
     getResult should contain theSameElementsAs loadDeltaEvents("/05-merge-three-rows-combinations/expected.csv")
   }
 
   it should "complex merges" in {
-    val memoryStream = createMemoryStream()
-    val writer = createDeltaCDCToSCD2Writer()
-
-    memoryStream.addData(loadCDCEvents("/06-complex-merges/initial.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
-
-    memoryStream.addData(loadCDCEvents("/06-complex-merges/input.csv"))
-    writer.write(memoryStream.toDF()).processAllAvailable()
+    writeTwoInputs(
+      "/06-complex-merges/initial-input.csv",
+      "/06-complex-merges/tested-input.csv"
+    )
 
     getResult should contain theSameElementsAs loadDeltaEvents("/06-complex-merges/expected.csv")
+  }
+
+  def writeOneInput(testedInputPath: String): Unit = {
+    val writer = createDeltaCDCToSCD2Writer()
+
+    memoryStream.addData(loadCDCEvents(testedInputPath))
+    writer.write(memoryStream.toDF()).processAllAvailable()
+  }
+
+  def writeTwoInputs(initialInputPath: String, testedInputPath: String): Unit = {
+    val writer = createDeltaCDCToSCD2Writer()
+
+    memoryStream.addData(loadCDCEvents(initialInputPath))
+    writer.write(memoryStream.toDF()).processAllAvailable()
+
+    memoryStream.addData(loadCDCEvents(testedInputPath))
+    writer.write(memoryStream.toDF()).processAllAvailable()
   }
 
   private def createDeltaCDCToSCD2Writer(): DeltaCDCToSCD2Writer = new DeltaCDCToSCD2Writer(
@@ -132,11 +131,6 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
 
   private def loadDeltaEvents(path: String): Seq[DeltaEvent] =
     DeltaEvent.loadFromFile(getClass.getResource(s"/delta-cdc-to-scd2$path").getPath)
-
-  private def createMemoryStream(): MemoryStream[CDCEvent] = {
-    import spark.implicits._
-    MemoryStream[CDCEvent](1, spark.sqlContext)
-  }
 
   private def getResult: Seq[DeltaEvent] = {
     import spark.implicits._
