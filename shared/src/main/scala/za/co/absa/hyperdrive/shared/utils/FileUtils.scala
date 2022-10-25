@@ -16,6 +16,7 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.hadoop.fs.{FileSystem, Path}
+import scala.io.Source
 
 private[hyperdrive] object FileUtils {
 
@@ -33,6 +34,15 @@ private[hyperdrive] object FileUtils {
 
   def isEmpty(directory: String)(implicit fs: FileSystem): Boolean = {
     val path = new Path(directory)
-    fs.exists(path) &&  !fs.listFiles(path, true).hasNext
+    fs.exists(path) && !fs.listFiles(path, true).hasNext
+  }
+
+  def readFileLines(file: String): Vector[String] = {
+    val source = Source.fromFile(file)
+    try {
+      source.getLines().toVector
+    } finally {
+      source.close()
+    }
   }
 }
