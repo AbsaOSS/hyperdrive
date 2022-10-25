@@ -39,6 +39,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private val IsCurrentColumn = "_is_current"
   private val IsOldDataColumn = "_is_old_data"
   private val SortFieldPrefix = "_tmp_hyperdrive_"
+  private val SortFieldCustomOrderColumn = "_sort_field_custom_order_"
   private val OldData = "_old_data"
   private val NewData = "_new_data"
 
@@ -214,11 +215,12 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
         case o if o.isEmpty =>
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
         case o =>
-          val orderString = o.mkString(StringSeparator)
-          df.withColumn(
+          df
+            .withColumn(SortFieldCustomOrderColumn, lit(o.toArray))
+            .withColumn(
             s"$sortFieldsPrefix$precombineColumn",
-            functions.expr(s"""locate($precombineColumn, "$orderString")""")
-          )
+            functions.expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
+          ).drop(SortFieldCustomOrderColumn)
       }
     }
   }
