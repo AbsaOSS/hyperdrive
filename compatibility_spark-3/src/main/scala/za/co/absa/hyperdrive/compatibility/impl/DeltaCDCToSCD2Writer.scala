@@ -81,7 +81,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
         val previousEvents = getPreviousEvents(deltaTable, uniqueChangesForEachKeyAndTimestamp)
         val nextEvents = getNextEvents(deltaTable, uniqueChangesForEachKeyAndTimestamp)
 
-        val union = previousEvents.union(nextEvents).distinct().unionAll(
+        val union = previousEvents.union(nextEvents).distinct().union(
           uniqueChangesForEachKeyAndTimestamp
             .withColumn(StartDateColumn, col(configuration.timestampColumn))
             .withColumn(EndDateColumn, lit(null))
