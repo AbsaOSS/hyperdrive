@@ -84,7 +84,7 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
     getResult should contain theSameElementsAs loadDeltaEvents("/05-merge-three-rows-combinations/expected.csv")
   }
 
-  it should "complex merges" in {
+  it should "merge complex inputs" in {
     writeTwoInputs(
       "/06-complex-merges/initial-input.csv",
       "/06-complex-merges/tested-input.csv"
