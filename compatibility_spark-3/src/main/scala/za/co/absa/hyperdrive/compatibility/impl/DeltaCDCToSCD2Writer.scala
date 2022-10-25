@@ -17,13 +17,14 @@ package za.co.absa.hyperdrive.compatibility.impl
 
 import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSCD2Writer, DeltaCDCToSCD2WriterConfiguration}
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.{col, lag, lit}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.slf4j.LoggerFactory
 import org.apache.spark.sql.types.{BooleanType, TimestampType}
+import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 import java.net.URI
 
@@ -224,11 +225,10 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
-    val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
-    val path = new Path(destination)
-    if (fs.exists(path)) {
-      if (fs.isDirectory(path)) {
-        !fs.listFiles(path, true).hasNext
+    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
+    if (FileUtils.exists(destination)) {
+      if (FileUtils.isDirectory(destination)) {
+        FileUtils.isEmpty(destination)
       } else {
         false
       }
@@ -237,4 +237,3 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     }
   }
 }
-
