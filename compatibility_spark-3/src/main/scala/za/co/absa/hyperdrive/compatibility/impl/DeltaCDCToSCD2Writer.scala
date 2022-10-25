@@ -191,9 +191,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     val dataFrameWithSortColumns = getDataFrameWithSortColumns(inputDF, SortFieldPrefix)
 
     val originalFieldNames = inputDF.schema.fieldNames.mkString(",")
-    val sortColumnsWithPrefix = configuration.precombineColumns.map(precombineColumn =>
-      s"$SortFieldPrefix$precombineColumn"
-    )
+    val sortColumnsWithPrefix = dataFrameWithSortColumns.schema.fieldNames.filter(_.startsWith(SortFieldPrefix))
 
     dataFrameWithSortColumns
       .selectExpr(
