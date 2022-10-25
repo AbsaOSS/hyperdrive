@@ -37,10 +37,10 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private val StartDateColumn = "_start_date"
   private val EndDateColumn = "_end_date"
   private val IsCurrentColumn = "_is_current"
-  private val MergeKeyColumn = "_mergeKey"
+  private val IsOldDataColumn = "_is_old_data"
   private val SortFieldPrefix = "_tmp_hyperdrive_"
-  private val OldData = "_oldData"
-  private val NewData = "_newData"
+  private val OldData = "_old_data"
+  private val NewData = "_new_data"
 
   if (configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $StringSeparator")
@@ -88,10 +88,10 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
             .withColumn(StartDateColumn, col(configuration.timestampColumn))
             .withColumn(EndDateColumn, lit(null))
             .withColumn(IsCurrentColumn, lit(false))
-            .withColumn(MergeKeyColumn, lit(null))
+            .withColumn(IsOldDataColumn, lit(false))
         )
 
-        val stagedData = setSCD2Fields(union).drop(MergeKeyColumn)
+        val stagedData = setSCD2Fields(union).drop(IsOldDataColumn)
         val uniqueStagedData = removeDuplicates(stagedData)
         generateDeltaMerge(uniqueStagedData).execute()
       })
@@ -109,7 +109,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
             .and(col(s"$NewData.${configuration.timestampColumn}").>=(col(s"$OldData.$StartDateColumn")))
             .and(col(s"$OldData.$IsCurrentColumn").equalTo(true))
         )
-    ).select(s"$OldData.*").withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
+    ).select(s"$OldData.*").withColumn(s"$IsOldDataColumn", lit(true))
   }
 
   private def getNextEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
@@ -133,7 +133,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
       .selectExpr("latest.*")
       .select(originalFieldNames.head, originalFieldNames.tail: _*)
-      .withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
+      .withColumn(s"$IsOldDataColumn", lit(true))
   }
 
   private def generateDeltaMerge(latestChanges: DataFrame): DeltaMergeBuilder = {
@@ -152,18 +152,18 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private def setSCD2Fields(dataFrame: DataFrame): DataFrame = {
     val idWindowDesc = org.apache.spark.sql.expressions.Window
       .partitionBy(configuration.keyColumn)
-      .orderBy(col(configuration.timestampColumn).desc, col(MergeKeyColumn).desc)
+      .orderBy(col(configuration.timestampColumn).desc, col(IsOldDataColumn).desc)
     dataFrame
       .withColumn(
         EndDateColumn,
         functions.when(
-          col(MergeKeyColumn).isNotNull.and(
-            lag(MergeKeyColumn, 1, null).over(idWindowDesc).isNotNull
+          col(IsOldDataColumn).equalTo(true).and(
+            lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(true)
           ),
           col(EndDateColumn)
         ).when(
-          col(MergeKeyColumn).isNotNull.and(
-            lag(MergeKeyColumn, 1, null).over(idWindowDesc).isNull
+          col(IsOldDataColumn).equalTo(true).and(
+            lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(false)
           ).and(
             col(configuration.timestampColumn).equalTo(
               lag(s"${configuration.timestampColumn}", 1, null).over(idWindowDesc)
