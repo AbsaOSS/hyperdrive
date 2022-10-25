@@ -180,8 +180,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .withColumn(
         EndDateColumn,
         functions
-          .when(col(configuration.operationColumn).equalTo(configuration.operationDeleteValue), col(StartDateColumn))
-          .when(col(configuration.operationColumn).notEqual(configuration.operationDeleteValue), col(EndDateColumn))
+          .when(col(configuration.operationColumn).isInCollection(configuration.operationDeleteValues), col(StartDateColumn))
+          .when(!col(configuration.operationColumn).isInCollection(configuration.operationDeleteValues), col(EndDateColumn))
           .otherwise(null)
       )
       .withColumn(

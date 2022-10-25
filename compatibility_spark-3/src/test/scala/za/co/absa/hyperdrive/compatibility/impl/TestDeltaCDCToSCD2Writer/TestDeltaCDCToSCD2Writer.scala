@@ -120,7 +120,7 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
       keyColumn = "id",
       timestampColumn = "timestamp",
       operationColumn = "eventType",
-      operationDeleteValue = "DL",
+      operationDeleteValues = Seq("DL", "FD"),
       precombineColumns = Seq("eventType"),
       precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
       extraConfOptions = Map.empty[String, String]
