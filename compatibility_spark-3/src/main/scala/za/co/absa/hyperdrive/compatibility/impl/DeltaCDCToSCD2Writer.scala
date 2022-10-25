@@ -47,33 +47,34 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
+    if (!DeltaTable.isDeltaTable(dataFrame.sparkSession, configuration.destination)) {
+      if (isDirEmptyOrDoesNotExist(dataFrame.sparkSession, configuration.destination)) {
+        logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
+        dataFrame.sparkSession
+          .createDataFrame(
+            dataFrame.sparkSession.sparkContext.emptyRDD[Row],
+            dataFrame.schema
+              .add(StartDateColumn, TimestampType, nullable = false)
+              .add(EndDateColumn, TimestampType, nullable = true)
+              .add(IsCurrentColumn, BooleanType, nullable = false)
+          )
+          .write
+          .format("delta")
+          .mode(SaveMode.Overwrite)
+          .option("overwriteSchema", "true")
+          .partitionBy(configuration.partitionColumns: _*)
+          .save(configuration.destination)
+      } else {
+        throw new IllegalArgumentException(s"Could not create new delta table. Directory ${configuration.destination} is not empty!")
+      }
+    }
+
     dataFrame.writeStream
       .trigger(configuration.trigger)
       .outputMode(OutputMode.Append())
       .option(CheckpointLocation, configuration.checkpointLocation)
       .options(configuration.extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
-        if (!DeltaTable.isDeltaTable(df.sparkSession, configuration.destination)) {
-          if (isDirEmptyOrDoesNotExist(df.sparkSession, configuration.destination)) {
-            logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
-            df.sparkSession
-              .createDataFrame(
-                df.sparkSession.sparkContext.emptyRDD[Row],
-                df.schema
-                  .add(StartDateColumn, TimestampType, nullable = false)
-                  .add(EndDateColumn, TimestampType, nullable = true)
-                  .add(IsCurrentColumn, BooleanType, nullable = false)
-              )
-              .write
-              .format("delta")
-              .mode(SaveMode.Overwrite)
-              .option("overwriteSchema", "true")
-              .partitionBy(configuration.partitionColumns: _*)
-              .save(configuration.destination)
-          } else {
-            throw new IllegalArgumentException(s"Could not create new delta table. Directory ${configuration.destination} is not empty!")
-          }
-        }
         logger.info(s"Writing batchId: $batchId")
 
         val deltaTable = DeltaTable.forPath(configuration.destination)
