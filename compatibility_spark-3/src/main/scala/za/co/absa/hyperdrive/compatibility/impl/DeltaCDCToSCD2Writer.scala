@@ -38,8 +38,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private val IsCurrentColumn = "_is_current"
   private val MergeKeyColumn = "_mergeKey"
   private val SortFieldPrefix = "_tmp_hyperdrive_"
-  private val OldDataPrefix = "_oldData"
-  private val NewDataPrefix = "_newData"
+  private val OldData = "_oldData"
+  private val NewData = "_newData"
 
   if (configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $StringSeparator")
@@ -97,17 +97,17 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   private def getPreviousEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
-    deltaTable.toDF.as(OldDataPrefix).join(
-      uniqueChangesForEachKeyAndTimestamp.as(NewDataPrefix),
-      col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
-        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").>=(col(s"$OldDataPrefix.$StartDateColumn")))
-        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").<=(col(s"$OldDataPrefix.$EndDateColumn")))
+    deltaTable.toDF.as(OldData).join(
+      uniqueChangesForEachKeyAndTimestamp.as(NewData),
+      col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
+        .and(col(s"$NewData.${configuration.timestampColumn}").>=(col(s"$OldData.$StartDateColumn")))
+        .and(col(s"$NewData.${configuration.timestampColumn}").<=(col(s"$OldData.$EndDateColumn")))
         .or(
-          col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
-            .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").>=(col(s"$OldDataPrefix.$StartDateColumn")))
-            .and(col(s"$OldDataPrefix.$IsCurrentColumn").equalTo(true))
+          col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
+            .and(col(s"$NewData.${configuration.timestampColumn}").>=(col(s"$OldData.$StartDateColumn")))
+            .and(col(s"$OldData.$IsCurrentColumn").equalTo(true))
         )
-    ).select(s"$OldDataPrefix.*").withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
+    ).select(s"$OldData.*").withColumn(s"$MergeKeyColumn", col(s"${configuration.keyColumn}"))
   }
 
   private def getNextEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
@@ -115,17 +115,17 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .filter(_ != StartDateColumn)
       .filter(_ != configuration.timestampColumn)
     val originalFieldNames = deltaTable.toDF.schema.fieldNames
-    deltaTable.toDF.as(OldDataPrefix).join(
-      uniqueChangesForEachKeyAndTimestamp.as(NewDataPrefix),
-      col(s"$NewDataPrefix.${configuration.keyColumn}").equalTo(col(s"$OldDataPrefix.${configuration.keyColumn}"))
-        .and(col(s"$NewDataPrefix.${configuration.timestampColumn}").<(col(s"$OldDataPrefix.$StartDateColumn")))
-    ).select(s"$OldDataPrefix.*", s"$NewDataPrefix.${configuration.timestampColumn}")
+    deltaTable.toDF.as(OldData).join(
+      uniqueChangesForEachKeyAndTimestamp.as(NewData),
+      col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
+        .and(col(s"$NewData.${configuration.timestampColumn}").<(col(s"$OldData.$StartDateColumn")))
+    ).select(s"$OldData.*", s"$NewData.${configuration.timestampColumn}")
       .selectExpr(
         s"${configuration.keyColumn}",
-        s"$NewDataPrefix.${configuration.timestampColumn}",
-        s"struct($StartDateColumn, $OldDataPrefix.${configuration.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
+        s"$NewData.${configuration.timestampColumn}",
+        s"struct($StartDateColumn, $OldData.${configuration.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
       )
-      .groupBy(s"${configuration.keyColumn}", s"$NewDataPrefix.${configuration.timestampColumn}")
+      .groupBy(s"${configuration.keyColumn}", s"$NewData.${configuration.timestampColumn}")
       .agg(functions.min("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
