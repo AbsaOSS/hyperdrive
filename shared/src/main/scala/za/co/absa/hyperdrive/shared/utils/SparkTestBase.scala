@@ -17,7 +17,7 @@ package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.spark.sql.SparkSession
 
-trait SparkTestBase {
+private[hyperdrive] trait SparkTestBase {
   implicit val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
     .appName(s"Commons unit testing SchemaUtils")
