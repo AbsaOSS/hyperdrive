@@ -31,7 +31,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
                                         partitionColumns: Seq[String],
                                         keyColumn: String,
                                         operationColumn: String,
-                                        operationDeleteValue: String,
+                                        operationDeleteValues: Seq[String],
                                         precombineColumns: Seq[String],
                                         precombineColumnsCustomOrder: Map[String, Seq[String]],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
@@ -47,7 +47,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
           partitionColumns,
           keyColumn,
           operationColumn,
-          operationDeleteValue,
+          operationDeleteValues,
           precombineColumns,
           precombineColumnsCustomOrder,
           extraConfOptions
@@ -71,17 +71,17 @@ object DeltaCDCToSnapshotWriter extends StreamWriterFactory with DeltaCDCToSnaps
 
     val keyColumn = ConfigUtils.getOrThrow(KEY_KEY_COLUMN, config)
     val operationColumn = ConfigUtils.getOrThrow(KEY_OPERATION_COLUMN, config)
-    val operationDeleteValue = ConfigUtils.getOrThrow(KEY_OPERATION_DELETED_VALUE, config)
+    val operationDeleteValues = ConfigUtils.getSeqOrThrow(KEY_OPERATION_DELETED_VALUES, config)
     val precombineColumns = ConfigUtils.getSeqOrThrow(KEY_PRECOMBINE_COLUMNS, config)
     val precombineColumnsCustomOrder =  ConfigUtils.getMapOrEmpty(KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER, config)
 
     logger.info(s"Going to create DeltaStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', " +
       s"partition columns='$partitionColumns', key column='$keyColumn', operation column='$operationColumn', " +
-      s"operation delete value='$operationDeleteValue', precombine columns='$precombineColumns', " +
+      s"operation delete values='$operationDeleteValues', precombine columns='$precombineColumns', " +
       s"precombine columns custom order='$precombineColumnsCustomOrder', extra options='$extraOptions'")
 
-    new DeltaCDCToSnapshotWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, operationColumn, operationDeleteValue, precombineColumns, precombineColumnsCustomOrder, extraOptions)
+    new DeltaCDCToSnapshotWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, operationColumn, operationDeleteValues, precombineColumns, precombineColumnsCustomOrder, extraOptions)
   }
 
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")

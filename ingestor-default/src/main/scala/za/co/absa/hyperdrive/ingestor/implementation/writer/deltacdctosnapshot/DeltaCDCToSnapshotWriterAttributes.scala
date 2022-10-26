@@ -25,7 +25,7 @@ trait DeltaCDCToSnapshotWriterAttributes extends HasComponentAttributes {
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
   val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
   val KEY_OPERATION_COLUMN = s"$rootFactoryConfKey.operation.column"
-  val KEY_OPERATION_DELETED_VALUE = s"$rootFactoryConfKey.operation.deleted.value"
+  val KEY_OPERATION_DELETED_VALUES = s"$rootFactoryConfKey.operation.deleted.values"
   val KEY_PRECOMBINE_COLUMNS = s"$rootFactoryConfKey.precombineColumns"
   val KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER = s"$rootFactoryConfKey.precombineColumns.customOrder"
 
@@ -38,7 +38,7 @@ trait DeltaCDCToSnapshotWriterAttributes extends HasComponentAttributes {
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
     KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("A column with unique entity identifier"), required = true),
     KEY_OPERATION_COLUMN -> PropertyMetadata("Operation column", Some("A column containing value marking a record with an operation"), required = true),
-    KEY_OPERATION_DELETED_VALUE -> PropertyMetadata("Delete value for Operation column", Some("The value marking a record for deletion in the operation column"), required = true),
+    KEY_OPERATION_DELETED_VALUES -> PropertyMetadata("Delete value for Operation column", Some("Values marking a record for deletion in the operation column"), required = true),
     KEY_PRECOMBINE_COLUMNS -> PropertyMetadata("Precombine columns", Some("When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order"), required = true),
     KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER -> PropertyMetadata("Precombine columns' custom order", Some("Precombine column's custom order"), required = false),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,

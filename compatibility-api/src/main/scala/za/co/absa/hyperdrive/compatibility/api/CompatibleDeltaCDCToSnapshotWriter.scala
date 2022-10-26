@@ -29,7 +29,7 @@ case class DeltaCDCToSnapshotWriterConfiguration(
   partitionColumns: Seq[String],
   keyColumn: String,
   operationColumn: String,
-  operationDeleteValue: String,
+  operationDeleteValues: Seq[String],
   precombineColumns: Seq[String],
   precombineColumnsCustomOrder: Map[String, Seq[String]],
   extraConfOptions: Map[String, String]
