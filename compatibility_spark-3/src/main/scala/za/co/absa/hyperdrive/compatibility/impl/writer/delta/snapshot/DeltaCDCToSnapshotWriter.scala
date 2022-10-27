@@ -31,15 +31,15 @@ import za.co.absa.hyperdrive.shared.utils.FileUtils
 import java.net.URI
 
 private[writer] class DeltaCDCToSnapshotWriter(destination: String,
-                                        trigger: Trigger,
-                                        checkpointLocation: String,
-                                        partitionColumns: Seq[String],
-                                        keyColumn: String,
-                                        operationColumn: String,
-                                        operationDeleteValues: Seq[String],
-                                        precombineColumns: Seq[String],
-                                        precombineColumnsCustomOrder: Map[String, Seq[String]],
-                                        val extraConfOptions: Map[String, String]) extends StreamWriter {
+                                               trigger: Trigger,
+                                               checkpointLocation: String,
+                                               partitionColumns: Seq[String],
+                                               keyColumn: String,
+                                               operationColumn: String,
+                                               operationDeleteValues: Seq[String],
+                                               precombineColumns: Seq[String],
+                                               precombineColumnsCustomOrder: Map[String, Seq[String]],
+                                               val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val STRING_SEPARATOR = "#$@"
   private val CHECKPOINT_LOCATION = "checkpointLocation"
@@ -137,6 +137,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
       }
     }
   }
+
   private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
     implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
     if (FileUtils.exists(destination)) {
@@ -165,7 +166,7 @@ object DeltaCDCToSnapshotWriter extends StreamWriterFactory with DeltaCDCToSnaps
     val operationColumn = ConfigUtils.getOrThrow(KEY_OPERATION_COLUMN, config)
     val operationDeleteValues = ConfigUtils.getSeqOrThrow(KEY_OPERATION_DELETED_VALUES, config)
     val precombineColumns = ConfigUtils.getSeqOrThrow(KEY_PRECOMBINE_COLUMNS, config)
-    val precombineColumnsCustomOrder =  ConfigUtils.getMapOrEmpty(KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER, config)
+    val precombineColumnsCustomOrder = ConfigUtils.getMapOrEmpty(KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER, config)
 
     logger.info(s"Going to create DeltaStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', " +
