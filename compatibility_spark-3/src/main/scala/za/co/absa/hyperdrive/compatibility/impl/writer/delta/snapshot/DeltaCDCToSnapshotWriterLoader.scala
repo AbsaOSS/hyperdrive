@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
 
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.streaming.StreamingQuery
-import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSnapshotWriter, DeltaCDCToSnapshotWriterConfiguration}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-class DeltaCDCToSnapshotWriter(configuration: DeltaCDCToSnapshotWriterConfiguration) extends CompatibleDeltaCDCToSnapshotWriter {
-  override def write(dataFrame: DataFrame): StreamingQuery = ???
+class DeltaCDCToSnapshotWriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = DeltaCDCToSnapshotWriter
 }

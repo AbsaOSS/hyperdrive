@@ -344,7 +344,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 **Example**
 
-- `component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctosnapshot.DeltaCDCToSnapshotWriter`
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot.DeltaCDCToSnapshotWriter`
 - `writer.deltacdctosnapshot.destination.directory=/tmp/destination`
 - `writer.deltacdctosnapshot.key.column=key`
 - `writer.deltacdctosnapshot.operation.column=ENTTYP`

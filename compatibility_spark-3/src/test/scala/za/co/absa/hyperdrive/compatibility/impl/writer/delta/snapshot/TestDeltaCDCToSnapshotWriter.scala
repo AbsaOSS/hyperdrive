@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
 
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.compatibility.api.DeltaCDCToSnapshotWriterConfiguration
 import za.co.absa.hyperdrive.shared.utils.{FileUtils, SparkTestBase}
 
 import java.sql.Timestamp
@@ -60,7 +59,6 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
   }
 
   private def createDeltaCDCToSnapshotWriter(): DeltaCDCToSnapshotWriter = new DeltaCDCToSnapshotWriter(
-    DeltaCDCToSnapshotWriterConfiguration(
       destination = destinationPath,
       trigger = Trigger.Once(),
       checkpointLocation = checkpointPath,
@@ -71,7 +69,6 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
       precombineColumns = Seq("timestamp","eventType"),
       precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
       extraConfOptions = Map.empty[String, String]
-    )
   )
 
   private def loadCDCEvents(path: String): Seq[CDCEvent] =
