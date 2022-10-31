@@ -15,7 +15,7 @@
 
 package za.co.absa.hyperdrive.compatibility.impl.TestDeltaCDCToSCD2Writer
 
-import za.co.absa.hyperdrive.shared.utils.FileUtils
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.FileUtils
 
 import java.sql.Timestamp
 import scala.util.Try

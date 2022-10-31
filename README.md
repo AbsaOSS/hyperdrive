@@ -44,6 +44,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 - `AddDateVersionTransformerStreamWriter` - adds columns for ingestion date and an auto-incremented version number, to be used for partitioning.
 - `ParquetStreamWriter` - writes the DataFrame as Parquet, in **append** mode.
 - `KafkaStreamWriter` - writes to a Kafka topic.
+- `DeltaCDCToSnapshotWriter` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates the latest snapshot table.
 - `DeltaCDCToSCD2Writer` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates SCD2 table.
 
 ### Custom components
@@ -326,6 +327,31 @@ Common MongoDB additional options
 | `writer.mongodb.option.spark.mongodb.output.ordered` | `true` | When set to `false` inserts are done in parallel, increasing performance, but the order of documents is not preserved. |
 | `writer.mongodb.option.spark.mongodb.output.forceInsert` | `false`| Forces saves to use inserts, even if a Dataset contains `_id.` |
 More on these options: https://docs.mongodb.com/spark-connector/current/configuration
+
+##### DeltaCDCToSnapshotWriter
+| Property Name                                             | Required | Description                                                                                                                                |
+|:----------------------------------------------------------| :---: |:-------------------------------------------------------------------------------------------------------------------------------------------|
+| `writer.deltacdctosnapshot.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter`                                               |
+| `writer.deltacdctosnapshot.partition.columns`             | No | Comma-separated list of columns to partition by.                                                                                           |
+| `writer.deltacdctosnapshot.key.column`                    | Yes | A column with unique entity identifier.                                                                                                    |
+| `writer.deltacdctosnapshot.operation.column`              | Yes | A column containing value marking a record with an operation.                                                                              |
+| `writer.deltacdctosnapshot.operation.deleted.values`      | Yes | Values marking a record for deletion in the operation column.                                                                              |
+| `writer.deltacdctosnapshot.precombineColumns`             | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.deltacdctosnapshot.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order.                                                                                       |
+| `writer.common.trigger.type`                              | No | See [Combination writer properties](#common-writer-properties)                                                                             |
+| `writer.common.trigger.processing.time`                   | No | See [Combination writer properties](#common-writer-properties)                                                                             |
+
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctosnapshot.options`, e.g. `writer.deltacdctosnapshot.options.key=value`
+
+**Example**
+
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot.DeltaCDCToSnapshotWriter`
+- `writer.deltacdctosnapshot.destination.directory=/tmp/destination`
+- `writer.deltacdctosnapshot.key.column=key`
+- `writer.deltacdctosnapshot.operation.column=ENTTYP`
+- `writer.deltacdctosnapshot.operation.deleted.values=DL,FD`
+- `writer.deltacdctosnapshot.precombineColumns=TIMSTAMP, ENTTYP`
+- `writer.deltacdctosnapshot.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 ##### DeltaCDCToSCD2Writer
 | Property Name                                         | Required | Description                                                                                                                                |

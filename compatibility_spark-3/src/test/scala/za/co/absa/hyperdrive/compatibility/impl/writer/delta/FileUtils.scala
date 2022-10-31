@@ -13,27 +13,17 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 
-import org.apache.hadoop.fs.{FileSystem, Path}
 import scala.io.Source
 
 private[hyperdrive] object FileUtils {
-
-  def exists(file: String)(implicit fs: FileSystem): Boolean = {
-    fs.exists(new Path(file))
-  }
-
-  def notExists(file: String)(implicit fs: FileSystem): Boolean = !exists(file)
-
-  def isDirectory(file: String)(implicit fs: FileSystem): Boolean = {
-    fs.isDirectory(new Path(file))
-  }
-
-  def isNotDirectory(file: String)(implicit fs: FileSystem): Boolean = !isDirectory(file)
-
-  def isEmpty(directory: String)(implicit fs: FileSystem): Boolean = {
-    val path = new Path(directory)
-    fs.exists(path) && !fs.listFiles(path, true).hasNext
+  def readFileLines(file: String): Vector[String] = {
+    val source = Source.fromFile(file)
+    try {
+      source.getLines().toVector
+    } finally {
+      source.close()
+    }
   }
 }

@@ -321,6 +321,42 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     ex4.getMessage should include("key4")
   }
 
+  "getMapOrEmpty" should "return the value as an map if key exists" in {
+    // given
+    val config = new BaseConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("key.subKey", "value1, value2, value3, value4")
+
+    // when
+    val value = ConfigUtils.getMapOrEmpty("key", config)
+
+    // then
+    value should contain theSameElementsAs Map("subKey" -> List("value1", "value2", "value3", "value4"))
+  }
+
+  it should "return map with empty sequence if key exists but value is empty" in {
+    // given
+    val config = new BaseConfiguration()
+    config.addProperty("key.subKey", "")
+
+    // when
+    val value = ConfigUtils.getMapOrEmpty("key", config)
+
+    // then
+    value should contain theSameElementsAs Map("subKey" -> List())
+  }
+
+  it should "return Empty map if key does not exist" in {
+    // given
+    val config = new BaseConfiguration()
+
+    // when
+    val value = ConfigUtils.getMapOrEmpty("key.subKey", config)
+
+    // then
+    value shouldBe Map.empty
+  }
+
   "getTransformerPrefix" should "get the prefix of a transformer class" in {
     val config = new BaseConfiguration
     config.addProperty(s"${StreamTransformerFactory.ClassKeyPrefix}.[dummy-transformer]", classOf[DummyStreamTransformer].getCanonicalName)

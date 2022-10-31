@@ -33,6 +33,11 @@
     <dependencies>
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
+            <artifactId>api_${scala.compat.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>compatibility-api_${scala.compat.version}</artifactId>
             <version>${project.version}</version>
         </dependency>
