@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.shared.utils
 
 import org.apache.hadoop.fs.{FileSystem, Path}
-import scala.io.Source
 
 private[hyperdrive] object FileUtils {
 
