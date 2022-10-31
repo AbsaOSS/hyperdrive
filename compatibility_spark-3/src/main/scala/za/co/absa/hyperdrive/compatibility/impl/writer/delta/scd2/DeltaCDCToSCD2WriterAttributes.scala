@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctoscd2writer
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}

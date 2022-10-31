@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.TestDeltaCDCToSCD2Writer
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.compatibility.api.DeltaCDCToSCD2WriterConfiguration
-import za.co.absa.hyperdrive.compatibility.impl.DeltaCDCToSCD2Writer
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 import scala.reflect.io.Path
@@ -111,19 +109,17 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
   }
 
   private def createDeltaCDCToSCD2Writer(): DeltaCDCToSCD2Writer = new DeltaCDCToSCD2Writer(
-    DeltaCDCToSCD2WriterConfiguration(
-      destination = destinationPath,
-      trigger = Trigger.Once(),
-      checkpointLocation = checkpointPath,
-      partitionColumns = Seq.empty,
-      keyColumn = "id",
-      timestampColumn = "timestamp",
-      operationColumn = "eventType",
-      operationDeleteValues = Seq("DL", "FD"),
-      precombineColumns = Seq("eventType"),
-      precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
-      extraConfOptions = Map.empty[String, String]
-    )
+    destination = destinationPath,
+    trigger = Trigger.Once(),
+    checkpointLocation = checkpointPath,
+    partitionColumns = Seq.empty,
+    keyColumn = "id",
+    timestampColumn = "timestamp",
+    operationColumn = "eventType",
+    operationDeleteValues = Seq("DL", "FD"),
+    precombineColumns = Seq("eventType"),
+    precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
+    extraConfOptions = Map.empty[String, String]
   )
 
   private def loadCDCEvents(path: String): Seq[CDCEvent] =

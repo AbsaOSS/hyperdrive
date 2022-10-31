@@ -13,22 +13,36 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
-import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSCD2Writer, DeltaCDCToSCD2WriterConfiguration}
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
+import org.apache.commons.configuration2.Configuration
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.FileSystem
-import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.{col, lag, lit, when}
-import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
-import org.slf4j.LoggerFactory
+import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
+import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.types.{BooleanType, TimestampType}
+import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 import za.co.absa.hyperdrive.shared.utils.FileUtils
 
 import java.net.URI
 
-class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) extends CompatibleDeltaCDCToSCD2Writer {
+private[writer] class DeltaCDCToSCD2Writer(destination: String,
+                                           trigger: Trigger,
+                                           checkpointLocation: String,
+                                           partitionColumns: Seq[String],
+                                           keyColumn: String,
+                                           timestampColumn: String,
+                                           operationColumn: String,
+                                           operationDeleteValues: Seq[String],
+                                           precombineColumns: Seq[String],
+                                           precombineColumnsCustomOrder: Map[String, Seq[String]],
+                                           val extraConfOptions: Map[String, String]) extends StreamWriter {
+
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val CheckpointLocation = "checkpointLocation"
@@ -43,14 +57,17 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private val OldData = "_old_data"
   private val NewData = "_new_data"
 
-  if (configuration.precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
+  if (StringUtils.isBlank(destination)) {
+    throw new IllegalArgumentException("Destination must not be blank!")
+  }
+  if (precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
     throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $StringSeparator")
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    if (!DeltaTable.isDeltaTable(dataFrame.sparkSession, configuration.destination)) {
-      if (isDirEmptyOrDoesNotExist(dataFrame.sparkSession, configuration.destination)) {
-        logger.info(s"Destination: ${configuration.destination} is not a delta table. Creating new delta table.")
+    if (!DeltaTable.isDeltaTable(dataFrame.sparkSession, destination)) {
+      if (isDirEmptyOrDoesNotExist(dataFrame.sparkSession, destination)) {
+        logger.info(s"Destination: $destination is not a delta table. Creating new delta table.")
         dataFrame.sparkSession
           .createDataFrame(
             dataFrame.sparkSession.sparkContext.emptyRDD[Row],
@@ -63,22 +80,22 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
           .format("delta")
           .mode(SaveMode.Overwrite)
           .option("overwriteSchema", "true")
-          .partitionBy(configuration.partitionColumns: _*)
-          .save(configuration.destination)
+          .partitionBy(partitionColumns: _*)
+          .save(destination)
       } else {
-        throw new IllegalArgumentException(s"Could not create new delta table. Directory ${configuration.destination} is not empty!")
+        throw new IllegalArgumentException(s"Could not create new delta table. Directory $destination is not empty!")
       }
     }
 
     dataFrame.writeStream
-      .trigger(configuration.trigger)
+      .trigger(trigger)
       .outputMode(OutputMode.Append())
-      .option(CheckpointLocation, configuration.checkpointLocation)
-      .options(configuration.extraConfOptions)
+      .option(CheckpointLocation, checkpointLocation)
+      .options(extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         logger.info(s"Writing batchId: $batchId")
 
-        val deltaTable = DeltaTable.forPath(configuration.destination)
+        val deltaTable = DeltaTable.forPath(destination)
 
         val uniqueChangesForEachKeyAndTimestamp = removeDuplicates(df)
         val previousEvents = getPreviousEvents(deltaTable, uniqueChangesForEachKeyAndTimestamp)
@@ -86,7 +103,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
 
         val union = previousEvents.union(nextEvents).distinct().union(
           uniqueChangesForEachKeyAndTimestamp
-            .withColumn(StartDateColumn, col(configuration.timestampColumn))
+            .withColumn(StartDateColumn, col(timestampColumn))
             .withColumn(EndDateColumn, lit(null))
             .withColumn(IsCurrentColumn, lit(false))
             .withColumn(IsOldDataColumn, lit(false))
@@ -102,12 +119,12 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private def getPreviousEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
     deltaTable.toDF.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
-      col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
-        .and(col(s"$NewData.${configuration.timestampColumn}").>=(col(s"$OldData.$StartDateColumn")))
-        .and(col(s"$NewData.${configuration.timestampColumn}").<=(col(s"$OldData.$EndDateColumn")))
+      col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
+        .and(col(s"$NewData.$timestampColumn").>=(col(s"$OldData.$StartDateColumn")))
+        .and(col(s"$NewData.$timestampColumn").<=(col(s"$OldData.$EndDateColumn")))
         .or(
-          col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
-            .and(col(s"$NewData.${configuration.timestampColumn}").>=(col(s"$OldData.$StartDateColumn")))
+          col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
+            .and(col(s"$NewData.$timestampColumn").>=(col(s"$OldData.$StartDateColumn")))
             .and(col(s"$OldData.$IsCurrentColumn").equalTo(true))
         )
     ).select(s"$OldData.*").withColumn(s"$IsOldDataColumn", lit(true))
@@ -116,19 +133,19 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   private def getNextEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
     val fieldNames = deltaTable.toDF.schema.fieldNames
       .filter(_ != StartDateColumn)
-      .filter(_ != configuration.timestampColumn)
+      .filter(_ != timestampColumn)
     val originalFieldNames = deltaTable.toDF.schema.fieldNames
     deltaTable.toDF.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
-      col(s"$NewData.${configuration.keyColumn}").equalTo(col(s"$OldData.${configuration.keyColumn}"))
-        .and(col(s"$NewData.${configuration.timestampColumn}").<(col(s"$OldData.$StartDateColumn")))
-    ).select(s"$OldData.*", s"$NewData.${configuration.timestampColumn}")
+      col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
+        .and(col(s"$NewData.$timestampColumn").<(col(s"$OldData.$StartDateColumn")))
+    ).select(s"$OldData.*", s"$NewData.$timestampColumn")
       .selectExpr(
-        s"${configuration.keyColumn}",
-        s"$NewData.${configuration.timestampColumn}",
-        s"struct($StartDateColumn, $OldData.${configuration.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
+        s"$keyColumn",
+        s"$NewData.$timestampColumn",
+        s"struct($StartDateColumn, $OldData.$timestampColumn, ${fieldNames.mkString(",")}) as otherCols"
       )
-      .groupBy(s"${configuration.keyColumn}", s"$NewData.${configuration.timestampColumn}")
+      .groupBy(s"$keyColumn", s"$NewData.$timestampColumn")
       .agg(functions.min("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
@@ -139,10 +156,10 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
 
   private def generateDeltaMerge(latestChanges: DataFrame): DeltaMergeBuilder = {
     DeltaTable
-      .forPath(configuration.destination)
+      .forPath(destination)
       .as("currentTable")
       .merge(
-        latestChanges.as("changes"), s"currentTable.${configuration.keyColumn} = changes.${configuration.keyColumn} AND currentTable.$StartDateColumn = changes.$StartDateColumn"
+        latestChanges.as("changes"), s"currentTable.$keyColumn = changes.$keyColumn AND currentTable.$StartDateColumn = changes.$StartDateColumn"
       )
       .whenMatched()
       .updateAll()
@@ -152,14 +169,14 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
 
   private def setSCD2Fields(dataFrame: DataFrame): DataFrame = {
     val idWindowDesc = org.apache.spark.sql.expressions.Window
-      .partitionBy(configuration.keyColumn)
-      .orderBy(col(configuration.timestampColumn).desc, col(IsOldDataColumn).desc)
+      .partitionBy(keyColumn)
+      .orderBy(col(timestampColumn).desc, col(IsOldDataColumn).desc)
     dataFrame
       .withColumn(
         EndDateColumn,
         when(
           col(IsOldDataColumn).equalTo(true).and(
-            lag(configuration.keyColumn, 1, null).over(idWindowDesc).isNull
+            lag(keyColumn, 1, null).over(idWindowDesc).isNull
           ),
           col(EndDateColumn)
         )
@@ -172,8 +189,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
           col(IsOldDataColumn).equalTo(true).and(
             lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(false)
           ).and(
-            col(configuration.timestampColumn).equalTo(
-              lag(s"${configuration.timestampColumn}", 1, null).over(idWindowDesc)
+            col(timestampColumn).equalTo(
+              lag(s"$timestampColumn", 1, null).over(idWindowDesc)
             )
           ),
           lag(StartDateColumn, 2, null).over(idWindowDesc)
@@ -184,8 +201,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       .withColumn(
         EndDateColumn,
         functions
-          .when(col(configuration.operationColumn).isInCollection(configuration.operationDeleteValues), col(StartDateColumn))
-          .when(!col(configuration.operationColumn).isInCollection(configuration.operationDeleteValues), col(EndDateColumn))
+          .when(col(operationColumn).isInCollection(operationDeleteValues), col(StartDateColumn))
+          .when(!col(operationColumn).isInCollection(operationDeleteValues), col(EndDateColumn))
           .otherwise(null)
       )
       .withColumn(
@@ -202,11 +219,11 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
 
     dataFrameWithSortColumns
       .selectExpr(
-        s"${configuration.keyColumn}",
-        s"${configuration.timestampColumn}",
+        s"$keyColumn",
+        s"$timestampColumn",
         s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols"
       )
-      .groupBy(s"${configuration.keyColumn}", s"${configuration.timestampColumn}")
+      .groupBy(s"$keyColumn", s"$timestampColumn")
       .agg(functions.max("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
@@ -215,8 +232,8 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
   }
 
   private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
-    configuration.precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
-      val order = configuration.precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
+    precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
+      val order = precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
       order match {
         case o if o.isEmpty =>
           df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
@@ -243,4 +260,38 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       true
     }
   }
+}
+
+object DeltaCDCToSCD2Writer extends StreamWriterFactory with DeltaCDCToSCD2WriterAttributes {
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
+  def apply(config: Configuration): StreamWriter = {
+    val destinationDirectory = getDestinationDirectory(config)
+    val trigger = StreamWriterUtil.getTrigger(config)
+    val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
+    val extraOptions = getExtraOptions(config)
+    val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config).getOrElse(Seq())
+
+    val keyColumn = ConfigUtils.getOrThrow(KEY_KEY_COLUMN, config)
+    val timestampColumn = ConfigUtils.getOrThrow(KEY_TIMESTAMP_COLUMN, config)
+    val operationColumn = ConfigUtils.getOrThrow(KEY_OPERATION_COLUMN, config)
+    val operationDeleteValues = ConfigUtils.getSeqOrThrow(KEY_OPERATION_DELETED_VALUES, config)
+    val precombineColumns = ConfigUtils.getSeqOrThrow(KEY_PRECOMBINE_COLUMNS, config)
+    val precombineColumnsCustomOrder = ConfigUtils.getMapOrEmpty(KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER, config)
+
+
+    logger.info(s"Going to create DeltaStreamWriter instance using: " +
+      s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', " +
+      s"partition columns='$partitionColumns', key column='$keyColumn', timestamp column='$timestampColumn', operation column='$operationColumn', " +
+      s"operation delete values='$operationDeleteValues', precombine columns='$precombineColumns', " +
+      s"precombine columns custom order='$precombineColumnsCustomOrder', extra options='$extraOptions'")
+
+    new DeltaCDCToSCD2Writer(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, timestampColumn, operationColumn, operationDeleteValues, precombineColumns, precombineColumnsCustomOrder, extraOptions)
+  }
+
+  def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")
+
+  def getExtraOptions(configuration: Configuration): Map[String, String] = ConfigUtils.getPropertySubset(configuration, KEY_EXTRA_CONFS_ROOT)
+
+  override def getExtraConfigurationPrefix: Option[String] = Some(KEY_EXTRA_CONFS_ROOT)
 }

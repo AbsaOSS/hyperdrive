@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.provider
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
-import za.co.absa.hyperdrive.compatibility.api.{CompatibleDeltaCDCToSCD2Writer, DeltaCDCToSCD2WriterConfiguration}
-import za.co.absa.hyperdrive.compatibility.impl.DeltaCDCToSCD2Writer
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-object CompatibleDeltaCDCToSCD2WriterProvider {
-  def provide(configuration: DeltaCDCToSCD2WriterConfiguration): CompatibleDeltaCDCToSCD2Writer =
-    new DeltaCDCToSCD2Writer(configuration)
+class DeltaCDCToSCD2WriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = DeltaCDCToSCD2Writer
 }

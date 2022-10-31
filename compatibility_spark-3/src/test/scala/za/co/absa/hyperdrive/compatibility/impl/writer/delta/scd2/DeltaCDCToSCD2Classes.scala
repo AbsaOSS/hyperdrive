@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.TestDeltaCDCToSCD2Writer
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
 import za.co.absa.hyperdrive.compatibility.impl.writer.delta.FileUtils
 

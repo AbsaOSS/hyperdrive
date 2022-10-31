@@ -370,7 +370,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctoscd2.options`, e.g. `writer.deltacdctoscd2.options.key=value`
 
 **Example**
-- `component.writer=za.co.absa.hyperdrive.ingestor.implementation.writer.deltacdctoscd2writer.DeltaCDCToSCD2Writer`
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2.DeltaCDCToSCD2Writer`
 - `writer.deltacdctoscd2.destination.directory=/tmp/destination`
 - `writer.deltacdctoscd2.key.column=key`
 - `writer.deltacdctoscd2.timestamp.column=TIMSTAMP`
