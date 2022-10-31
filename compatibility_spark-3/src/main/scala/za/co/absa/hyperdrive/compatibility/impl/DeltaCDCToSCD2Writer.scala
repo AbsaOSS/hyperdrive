@@ -20,7 +20,7 @@ import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, lag, lit}
+import org.apache.spark.sql.functions.{col, lag, lit, when}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.slf4j.LoggerFactory
 import org.apache.spark.sql.types.{BooleanType, TimestampType}
@@ -157,7 +157,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
     dataFrame
       .withColumn(
         EndDateColumn,
-        functions.when(
+        when(
           col(IsOldDataColumn).equalTo(true).and(
             lag(configuration.keyColumn, 1, null).over(idWindowDesc).isNull
           ),
@@ -190,7 +190,7 @@ class DeltaCDCToSCD2Writer(configuration: DeltaCDCToSCD2WriterConfiguration) ext
       )
       .withColumn(
         IsCurrentColumn,
-        functions.when(col(EndDateColumn).isNull, lit(true)).otherwise(lit(false))
+        when(col(EndDateColumn).isNull, lit(true)).otherwise(lit(false))
       )
   }
 
