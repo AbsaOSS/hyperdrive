@@ -15,33 +15,13 @@
 
 package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
 
-import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.compatibility.impl.writer.delta.CDCEvent
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
+import org.scalatest.{FlatSpec, Matchers}
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.{CDCEvent, DeltaTestBase}
 
-import scala.reflect.io.Path
-
-class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Matchers with BeforeAndAfterEach with SparkTestBase {
-  private val baseDir: TempDirectory = TempDirectory("TestDeltaCDCToSnapshotWriter").deleteOnExit()
-  private val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
-  private val checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
-
-  import spark.implicits._
-
-  private val memoryStream = MemoryStream[CDCEvent](1, spark.sqlContext)
-
-  override def beforeEach(): Unit = {
-    Path(destinationPath).deleteRecursively()
-    Path(checkpointPath).deleteRecursively()
-    memoryStream.reset()
-  }
-
+class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Matchers with DeltaTestBase {
   behavior of "DeltaCDCToSnapshotWriter"
-
 
   it should "merge cdc events and create latest snapshot table" in {
     writeOneInput("/delta-cdc-to-snapshot/first-input.csv")
@@ -70,9 +50,4 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
       precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
       extraConfOptions = Map.empty[String, String]
   )
-
-  private def getResult: Seq[CDCEvent] = {
-    import spark.implicits._
-    spark.read.format("delta").load(destinationPath).as[CDCEvent].collect().toSeq
-  }
 }
