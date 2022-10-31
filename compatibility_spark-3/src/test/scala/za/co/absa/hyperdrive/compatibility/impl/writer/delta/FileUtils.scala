@@ -13,19 +13,17 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 
-import org.apache.spark.sql.SparkSession
+import scala.io.Source
 
-private[hyperdrive] trait SparkTestBase {
-  implicit val spark: SparkSession = SparkSession.builder()
-    .master("local[*]")
-    .appName(s"Commons unit testing SchemaUtils")
-    .config("spark.ui.enabled", "false")
-    .config("spark.debug.maxToStringFields", 100)
-    .config("spark.driver.bindAddress", "127.0.0.1")
-    .config("spark.driver.host", "127.0.0.1")
-    .config("spark.sql.hive.convertMetastoreParquet", false)
-    .config("fs.defaultFS", "file:/")
-    .getOrCreate()
+private[hyperdrive] object FileUtils {
+  def readFileLines(file: String): Vector[String] = {
+    val source = Source.fromFile(file)
+    try {
+      source.getLines().toVector
+    } finally {
+      source.close()
+    }
+  }
 }
