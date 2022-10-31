@@ -44,17 +44,17 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
 
 
   it should "merge cdc events and create latest snapshot table" in {
-    writeOneInput("/first-input.csv")
-    getResult should contain theSameElementsAs loadCDCEvents("/first-expected.csv")
+    writeOneInput("/delta-cdc-to-snapshot/first-input.csv")
+    getResult should contain theSameElementsAs CDCEvent.loadFromFile("/delta-cdc-to-snapshot/first-expected.csv")
 
-    writeOneInput("/second-input.csv")
-    getResult should contain theSameElementsAs loadCDCEvents("/second-expected.csv")
+    writeOneInput("/delta-cdc-to-snapshot/second-input.csv")
+    getResult should contain theSameElementsAs CDCEvent.loadFromFile("/delta-cdc-to-snapshot/second-expected.csv")
   }
 
   def writeOneInput(testedInputPath: String): Unit = {
     val writer = createDeltaCDCToSnapshotWriter()
 
-    memoryStream.addData(loadCDCEvents(testedInputPath))
+    memoryStream.addData(CDCEvent.loadFromFile(testedInputPath))
     writer.write(memoryStream.toDF()).processAllAvailable()
   }
 
@@ -70,9 +70,6 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
       precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
       extraConfOptions = Map.empty[String, String]
   )
-
-  private def loadCDCEvents(path: String): Seq[CDCEvent] =
-    CDCEvent.loadFromFile(getClass.getResource(s"/delta-cdc-to-snapshot$path").getPath)
 
   private def getResult: Seq[CDCEvent] = {
     import spark.implicits._

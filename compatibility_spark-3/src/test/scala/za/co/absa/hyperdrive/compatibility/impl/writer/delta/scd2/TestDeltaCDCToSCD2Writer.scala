@@ -43,69 +43,69 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
   behavior of "DeltaCDCToSCD2Writer"
 
   it should "merge unique by timestamp scd2 rows into empty delta table" in {
-    writeOneInput("/01-empty-table-conflicting-dates/tested-input.csv")
+    writeOneInput("/delta-cdc-to-scd2/01-empty-table-conflicting-dates/tested-input.csv")
 
-    getResult should contain theSameElementsAs loadDeltaEvents("/01-empty-table-conflicting-dates/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/01-empty-table-conflicting-dates/expected.csv")
   }
 
   it should "merge twice the same data" in {
     writeTwoInputs(
-      "/02-twice-the-same-data/tested-input.csv",
-      "/02-twice-the-same-data/tested-input.csv"
+      "/delta-cdc-to-scd2/02-twice-the-same-data/tested-input.csv",
+      "/delta-cdc-to-scd2/02-twice-the-same-data/tested-input.csv"
     )
 
-    getResult should contain theSameElementsAs loadDeltaEvents("/02-twice-the-same-data/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/02-twice-the-same-data/expected.csv")
   }
 
   it should "merge one row combinations" in {
     writeTwoInputs(
-      "/03-merge-one-row-combinations/initial-input.csv",
-      "/03-merge-one-row-combinations/tested-input.csv"
+      "/delta-cdc-to-scd2/03-merge-one-row-combinations/initial-input.csv",
+      "/delta-cdc-to-scd2/03-merge-one-row-combinations/tested-input.csv"
     )
 
-    getResult should contain theSameElementsAs loadDeltaEvents("/03-merge-one-row-combinations/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/03-merge-one-row-combinations/expected.csv")
   }
 
   it should "merge two rows combinations" in {
     writeTwoInputs(
-      "/04-merge-two-rows-combinations/initial-input.csv",
-      "/04-merge-two-rows-combinations/tested-input.csv"
+      "/delta-cdc-to-scd2/04-merge-two-rows-combinations/initial-input.csv",
+      "/delta-cdc-to-scd2/04-merge-two-rows-combinations/tested-input.csv"
     )
 
-    getResult should contain theSameElementsAs loadDeltaEvents("/04-merge-two-rows-combinations/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/04-merge-two-rows-combinations/expected.csv")
   }
 
   it should "merge three rows combinations" in {
     writeTwoInputs(
-      "/05-merge-three-rows-combinations/initial-input.csv",
-      "/05-merge-three-rows-combinations/tested-input.csv"
+      "/delta-cdc-to-scd2/05-merge-three-rows-combinations/initial-input.csv",
+      "/delta-cdc-to-scd2/05-merge-three-rows-combinations/tested-input.csv"
     )
-    getResult should contain theSameElementsAs loadDeltaEvents("/05-merge-three-rows-combinations/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/05-merge-three-rows-combinations/expected.csv")
   }
 
   it should "merge complex inputs" in {
     writeTwoInputs(
-      "/06-complex-merges/initial-input.csv",
-      "/06-complex-merges/tested-input.csv"
+      "/delta-cdc-to-scd2/06-complex-merges/initial-input.csv",
+      "/delta-cdc-to-scd2/06-complex-merges/tested-input.csv"
     )
 
-    getResult should contain theSameElementsAs loadDeltaEvents("/06-complex-merges/expected.csv")
+    getResult should contain theSameElementsAs DeltaEvent.loadFromFile("/delta-cdc-to-scd2/06-complex-merges/expected.csv")
   }
 
   def writeOneInput(testedInputPath: String): Unit = {
     val writer = createDeltaCDCToSCD2Writer()
 
-    memoryStream.addData(loadCDCEvents(testedInputPath))
+    memoryStream.addData(CDCEvent.loadFromFile(testedInputPath))
     writer.write(memoryStream.toDF()).processAllAvailable()
   }
 
   def writeTwoInputs(initialInputPath: String, testedInputPath: String): Unit = {
     val writer = createDeltaCDCToSCD2Writer()
 
-    memoryStream.addData(loadCDCEvents(initialInputPath))
+    memoryStream.addData(CDCEvent.loadFromFile(initialInputPath))
     writer.write(memoryStream.toDF()).processAllAvailable()
 
-    memoryStream.addData(loadCDCEvents(testedInputPath))
+    memoryStream.addData(CDCEvent.loadFromFile(testedInputPath))
     writer.write(memoryStream.toDF()).processAllAvailable()
   }
 
@@ -122,12 +122,6 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
     precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
     extraConfOptions = Map.empty[String, String]
   )
-
-  private def loadCDCEvents(path: String): Seq[CDCEvent] =
-    CDCEvent.loadFromFile(getClass.getResource(s"/delta-cdc-to-scd2$path").getPath)
-
-  private def loadDeltaEvents(path: String): Seq[DeltaEvent] =
-    DeltaEvent.loadFromFile(getClass.getResource(s"/delta-cdc-to-scd2$path").getPath)
 
   private def getResult: Seq[DeltaEvent] = {
     import spark.implicits._

@@ -22,7 +22,7 @@ case class CDCEvent(id: String, value: String, timestamp: Timestamp, eventType: 
 
 object CDCEvent {
   def loadFromFile(path: String): Seq[CDCEvent] = {
-    val lines = FileUtils.readFileLines(path)
+    val lines = FileUtils.readFileLines(getClass.getResource(path).getPath)
     for {
       line <- lines
       values = line.split(",").map(_.trim)
@@ -34,7 +34,7 @@ case class DeltaEvent(id: String, value: String, timestamp: Timestamp, eventType
 
 object DeltaEvent {
   def loadFromFile(path: String): Seq[DeltaEvent] = {
-    val lines = FileUtils.readFileLines(path)
+    val lines = FileUtils.readFileLines(getClass.getResource(path).getPath)
     for {
       line <- lines
       values = line.split(",").map(_.trim)
