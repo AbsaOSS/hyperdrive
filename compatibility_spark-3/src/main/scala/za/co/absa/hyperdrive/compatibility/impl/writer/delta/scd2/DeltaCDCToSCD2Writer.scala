@@ -18,18 +18,15 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions.{col, lag, lit, when}
-import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
+import org.apache.spark.sql.{Column, DataFrame, functions}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.types.{BooleanType, TimestampType}
 import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
-import za.co.absa.hyperdrive.shared.utils.FileUtils
-
-import java.net.URI
 
 private[writer] class DeltaCDCToSCD2Writer(destination: String,
                                            trigger: Trigger,
@@ -53,7 +50,6 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   private val IsCurrentColumn = "_is_current"
   private val IsOldDataColumn = "_is_old_data"
   private val SortFieldPrefix = "_tmp_hyperdrive_"
-  private val SortFieldCustomOrderColumn = "_sort_field_custom_order_"
   private val OldData = "_old_data"
   private val NewData = "_new_data"
 
@@ -65,27 +61,12 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    if (!DeltaTable.isDeltaTable(dataFrame.sparkSession, destination)) {
-      if (isDirEmptyOrDoesNotExist(dataFrame.sparkSession, destination)) {
-        logger.info(s"Destination: $destination is not a delta table. Creating new delta table.")
-        dataFrame.sparkSession
-          .createDataFrame(
-            dataFrame.sparkSession.sparkContext.emptyRDD[Row],
-            dataFrame.schema
-              .add(StartDateColumn, TimestampType, nullable = false)
-              .add(EndDateColumn, TimestampType, nullable = true)
-              .add(IsCurrentColumn, BooleanType, nullable = false)
-          )
-          .write
-          .format("delta")
-          .mode(SaveMode.Overwrite)
-          .option("overwriteSchema", "true")
-          .partitionBy(partitionColumns: _*)
-          .save(destination)
-      } else {
-        throw new IllegalArgumentException(s"Could not create new delta table. Directory $destination is not empty!")
-      }
-    }
+    val dataFrameSchema = dataFrame.schema
+      .add(StartDateColumn, TimestampType, nullable = false)
+      .add(EndDateColumn, TimestampType, nullable = true)
+      .add(IsCurrentColumn, BooleanType, nullable = false)
+
+    DeltaUtil.createDeltaTable(dataFrame.sparkSession, destination, dataFrameSchema, partitionColumns)
 
     dataFrame.writeStream
       .trigger(trigger)
@@ -212,7 +193,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   }
 
   private def removeDuplicates(inputDF: DataFrame): DataFrame = {
-    val dataFrameWithSortColumns = getDataFrameWithSortColumns(inputDF, SortFieldPrefix)
+    val dataFrameWithSortColumns = DeltaUtil.getDataFrameWithSortColumns(inputDF, SortFieldPrefix, precombineColumns, precombineColumnsCustomOrder)
 
     val originalFieldNames = inputDF.schema.fieldNames.mkString(",")
     val sortColumnsWithPrefix = dataFrameWithSortColumns.schema.fieldNames.filter(_.startsWith(SortFieldPrefix))
@@ -229,36 +210,6 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
       .selectExpr("latest.*")
       .drop(sortColumnsWithPrefix: _*)
-  }
-
-  private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
-    precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
-      val order = precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
-      order match {
-        case o if o.isEmpty =>
-          df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
-        case o =>
-          df
-            .withColumn(SortFieldCustomOrderColumn, lit(o.toArray))
-            .withColumn(
-              s"$sortFieldsPrefix$precombineColumn",
-              functions.expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
-            ).drop(SortFieldCustomOrderColumn)
-      }
-    }
-  }
-
-  private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
-    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
-    if (FileUtils.exists(destination)) {
-      if (FileUtils.isDirectory(destination)) {
-        FileUtils.isEmpty(destination)
-      } else {
-        false
-      }
-    } else {
-      true
-    }
   }
 }
 

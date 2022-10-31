@@ -20,6 +20,7 @@ import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.{CDCEvent, DeltaEvent}
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 import scala.reflect.io.Path

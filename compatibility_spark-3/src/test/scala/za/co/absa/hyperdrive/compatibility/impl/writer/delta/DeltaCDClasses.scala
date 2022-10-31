@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
-
-import za.co.absa.hyperdrive.compatibility.impl.writer.delta.FileUtils
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 
 import java.sql.Timestamp
 import scala.util.Try

@@ -20,10 +20,9 @@ import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.compatibility.impl.writer.delta.FileUtils
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.CDCEvent
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
-import java.sql.Timestamp
 import scala.reflect.io.Path
 
 class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Matchers with BeforeAndAfterEach with SparkTestBase {
@@ -45,11 +44,11 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
 
 
   it should "merge cdc events and create latest snapshot table" in {
-    writeOneInput("/test-data/first-input.csv")
-    getResult should contain theSameElementsAs loadCDCEvents("/test-data/first-expected.csv")
+    writeOneInput("/first-input.csv")
+    getResult should contain theSameElementsAs loadCDCEvents("/first-expected.csv")
 
-    writeOneInput("/test-data/second-input.csv")
-    getResult should contain theSameElementsAs loadCDCEvents("/test-data/second-expected.csv")
+    writeOneInput("/second-input.csv")
+    getResult should contain theSameElementsAs loadCDCEvents("/second-expected.csv")
   }
 
   def writeOneInput(testedInputPath: String): Unit = {
@@ -78,16 +77,5 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
   private def getResult: Seq[CDCEvent] = {
     import spark.implicits._
     spark.read.format("delta").load(destinationPath).as[CDCEvent].collect().toSeq
-  }
-}
-
-case class CDCEvent(id: String, value: String, timestamp: Timestamp, eventType: String)
-object CDCEvent {
-  def loadFromFile(path: String): Seq[CDCEvent] = {
-    val lines = FileUtils.readFileLines(path)
-    for {
-      line <- lines
-      values = line.split(",").map(_.trim)
-    } yield CDCEvent(values(0), values(1), Timestamp.valueOf(values(2)), values(3))
   }
 }
