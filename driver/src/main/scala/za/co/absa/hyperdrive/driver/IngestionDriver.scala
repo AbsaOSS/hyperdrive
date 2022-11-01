@@ -57,6 +57,8 @@ private[driver] abstract class IngestionDriver {
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
+  // TODO: Redact if starts with secret.
+
   private def printConfiguration(configuration: Configuration): Unit = {
     import scala.collection.JavaConverters._
     configuration
