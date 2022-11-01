@@ -27,10 +27,6 @@ object CommandLineIngestionDriver extends IngestionDriver {
 
   private val PropertyDelimiter = "="
 
-  def main(args: Array[String]): Unit = {
-    runMain(args)
-  }
-
   override def loadConfiguration(args: Array[String]): Configuration = {
     if (args.isEmpty) {
       throw new IllegalArgumentException("No configuration provided.")

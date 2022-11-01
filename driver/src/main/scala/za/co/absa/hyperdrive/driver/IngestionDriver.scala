@@ -29,7 +29,7 @@ private[driver] abstract class IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
 
-  final def runMain(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
     val configuration = loadConfiguration(args)
     logger.info("Configuration loaded.")

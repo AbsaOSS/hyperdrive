@@ -30,10 +30,6 @@ import java.nio.file.{Files, Paths}
 object PropertiesIngestionDriver extends IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  def main(args: Array[String]): Unit = {
-    runMain(args)
-  }
-
   override def loadConfiguration(args: Array[String]): Configuration = {
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
