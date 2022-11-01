@@ -24,7 +24,7 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
   it should "load all configuration" in {
     val settings = getSettings
 
-    val config = CommandLineIngestionDriver.parseConfiguration(settings)
+    val config = CommandLineIngestionDriver.loadConfiguration(settings)
 
     config.getStringArray("reader.kafka.brokers") shouldBe Array("localhost:9092", "otherhost:9093")
     config.getString("ssl.keystore.password") shouldBe "any-keystore!!@#$% password"
@@ -45,7 +45,7 @@ class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
   it should "throw if any configuration is malformed" in {
     val invalidSetting = "key2"
     val invalidConfString = Array("key1=value1,value2", invalidSetting, "key3=value3")
-    val throwable = intercept[IllegalArgumentException](CommandLineIngestionDriver.parseConfiguration(invalidConfString))
+    val throwable = intercept[IllegalArgumentException](CommandLineIngestionDriver.loadConfiguration(invalidConfString))
     assert(throwable.getMessage.toLowerCase.contains(invalidSetting))
   }
 

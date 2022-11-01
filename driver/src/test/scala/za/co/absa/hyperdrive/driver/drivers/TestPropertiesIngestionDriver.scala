@@ -22,9 +22,10 @@ class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
   behavior of PropertiesIngestionDriver.getClass.getSimpleName
 
   it should "load all configuration" in {
-    val configurationFile = getClass.getClassLoader.getResource("ingestion.properties").getPath
+    val configurationFilePath = getClass.getClassLoader.getResource("ingestion.properties").getPath
+    val args = Array(configurationFilePath)
 
-    val config = PropertiesIngestionDriver.loadConfiguration(configurationFile)
+    val config = PropertiesIngestionDriver.loadConfiguration(args)
 
     config.getStringArray("reader.kafka.brokers") shouldBe Array("localhost:9092", "otherhost:9093")
     config.getString("ssl.keystore.password") shouldBe "any-keystore!!@#$% password"
