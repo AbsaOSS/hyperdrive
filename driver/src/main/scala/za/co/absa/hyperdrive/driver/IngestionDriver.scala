@@ -29,7 +29,7 @@ private[driver] abstract class IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
 
-  def runMain(args: Array[String]): Unit = {
+  final def runMain(args: Array[String]): Unit = {
     logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
     val configuration = loadConfiguration(args)
     logger.info("Configuration loaded.")
@@ -39,7 +39,7 @@ private[driver] abstract class IngestionDriver {
 
   def loadConfiguration(args: Array[String]): Configuration
 
-  def ingest(configuration: Configuration): Unit = {
+  private def ingest(configuration: Configuration): Unit = {
     logger.info("Ingestion invoked. Going to instantiate components.")
 
     val sparkIngestor = SparkIngestor(configuration)
