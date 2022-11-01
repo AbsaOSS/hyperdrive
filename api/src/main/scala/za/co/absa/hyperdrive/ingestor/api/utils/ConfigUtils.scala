@@ -63,6 +63,15 @@ object ConfigUtils {
     }
   }
 
+  def getMapOrEmpty(key: String, configuration: Configuration): Map[String, Seq[String]] = {
+    import scala.collection.JavaConverters._
+
+    val subConfiguration = configuration.subset(key)
+    subConfiguration.getKeys.asScala.map(key => {
+      key -> getSeqOrNone(key, subConfiguration).getOrElse(Seq.empty[String])
+    }).toMap
+  }
+
   def getPropertySubset(configuration: Configuration, prefix: String): Map[String, String] = {
     val subset = Option(configuration.subset(prefix))
     subset match {
