@@ -103,4 +103,9 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
     precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "FI", "RR", "UB", "UP", "DL", "FD")),
     extraConfOptions = Map.empty[String, String]
   )
+
+  private def getResult: Seq[DeltaEvent] = {
+    import spark.implicits._
+    spark.read.format("delta").load(destinationPath).as[DeltaEvent].collect().toSeq
+  }
 }

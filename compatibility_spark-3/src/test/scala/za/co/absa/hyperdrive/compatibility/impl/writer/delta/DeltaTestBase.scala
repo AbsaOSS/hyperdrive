@@ -38,9 +38,4 @@ trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
     Path(checkpointPath).deleteRecursively()
     memoryStream.reset()
   }
-
-  def getResult: Seq[CDCEvent] = {
-    import spark.implicits._
-    spark.read.format("delta").load(destinationPath).as[CDCEvent].collect().toSeq
-  }
 }
