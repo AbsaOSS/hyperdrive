@@ -16,5 +16,5 @@
 package za.co.absa.hyperdrive.ingestor.api.secrets
 
 trait SecretsProvider {
-  def retrieveSecret(options: Map[String, String]): SecretString
+  def retrieveSecret(options: Map[String, String]): String
 }

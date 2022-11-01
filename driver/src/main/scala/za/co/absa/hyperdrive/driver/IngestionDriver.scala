@@ -28,13 +28,15 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWrit
 private[driver] abstract class IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
+  val RedactedSecret = "*****"
 
   def main(args: Array[String]): Unit = {
     logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
     val configuration = loadConfiguration(args)
+    val resolvedConf = resolveSecrets(configuration)
     logger.info("Configuration loaded.")
-    printConfiguration(configuration)
-    ingest(configuration)
+    printConfiguration(resolvedConf)
+    ingest(resolvedConf)
   }
 
   def loadConfiguration(args: Array[String]): Configuration
@@ -57,13 +59,26 @@ private[driver] abstract class IngestionDriver {
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
-  // TODO: Redact if starts with secret.
-
   private def printConfiguration(configuration: Configuration): Unit = {
     import scala.collection.JavaConverters._
     configuration
       .getKeys
       .asScala
-      .foreach(key => logger.info(s"\t$key = ${configuration.getProperty(key)}"))
+      .map { key =>
+        // TODO: Extract secretvalue to constant
+        val property = if (key.contains("secretvalue")) {
+          RedactedSecret
+        } else {
+          configuration.getProperty(key)
+        }
+        key -> property
+      }
+      .foreach {
+        case (key, value) => logger.info(s"\t$key = $value")
+      }
+  }
+
+  private def resolveSecrets(configuration: Configuration): Configuration = {
+
   }
 }
