@@ -28,7 +28,7 @@ import java.net.URI
 object DeltaUtil {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val SortFieldCustomOrderColumn = "_sort_field_custom_order_"
+  private val SortFieldCustomOrderColumn = "_tmp_hyperdrive_sort_field_custom_order_"
 
   def createDeltaTableIfNotExists(sparkSession: SparkSession, destination: String, schema: StructType, partitionColumns: Seq[String]): Unit = {
     if (!DeltaTable.isDeltaTable(sparkSession, destination)) {
