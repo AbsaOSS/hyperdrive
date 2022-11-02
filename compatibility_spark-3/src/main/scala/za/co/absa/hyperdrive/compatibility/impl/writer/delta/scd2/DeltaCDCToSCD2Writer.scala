@@ -19,8 +19,8 @@ import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, lag, lit, when}
-import org.apache.spark.sql.{Column, DataFrame, functions}
+import org.apache.spark.sql.functions.{col, lag, lit, when, min, max}
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.types.{BooleanType, TimestampType}
 import org.slf4j.LoggerFactory
@@ -127,7 +127,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
         s"struct($StartDateColumn, $OldData.$timestampColumn, ${fieldNames.mkString(",")}) as otherCols"
       )
       .groupBy(s"$keyColumn", s"$NewData.$timestampColumn")
-      .agg(functions.min("otherCols").as("latest"))
+      .agg(min("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
       .selectExpr("latest.*")
@@ -181,8 +181,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       )
       .withColumn(
         EndDateColumn,
-        functions
-          .when(col(operationColumn).isInCollection(operationDeleteValues), col(StartDateColumn))
+          when(col(operationColumn).isInCollection(operationDeleteValues), col(StartDateColumn))
           .when(!col(operationColumn).isInCollection(operationDeleteValues), col(EndDateColumn))
           .otherwise(null)
       )
@@ -205,7 +204,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
         s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols"
       )
       .groupBy(s"$keyColumn", s"$timestampColumn")
-      .agg(functions.max("otherCols").as("latest"))
+      .agg(max("otherCols").as("latest"))
       .filter(col("latest").isNotNull)
       .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
       .selectExpr("latest.*")

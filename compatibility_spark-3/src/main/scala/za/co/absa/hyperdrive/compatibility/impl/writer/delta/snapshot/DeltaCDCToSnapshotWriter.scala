@@ -19,8 +19,8 @@ import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, when}
-import org.apache.spark.sql.{Column, DataFrame, functions}
+import org.apache.spark.sql.functions.{col, when, max}
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
@@ -69,7 +69,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
         val latestChangeForEachKey = dataFrameWithSortColumns
           .selectExpr(s"$keyColumn", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols")
           .groupBy(s"$keyColumn")
-          .agg(functions.max("otherCols").as("latest"))
+          .agg(max("otherCols").as("latest"))
           .filter(col("latest").isNotNull)
           .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
           .selectExpr("latest.*")

@@ -17,8 +17,8 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 
 import io.delta.tables.DeltaTable
 import org.apache.hadoop.fs.FileSystem
-import org.apache.spark.sql.functions.{col, lit}
-import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession, functions}
+import org.apache.spark.sql.functions.{col, lit, expr}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.types.StructType
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.shared.utils.FileUtils
@@ -59,7 +59,7 @@ object DeltaUtil {
             .withColumn(SortFieldCustomOrderColumn, lit(o.toArray))
             .withColumn(
               s"$sortFieldsPrefix$precombineColumn",
-              functions.expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
+              expr(s"""array_position($SortFieldCustomOrderColumn,$precombineColumn)""")
             ).drop(SortFieldCustomOrderColumn)
       }
     }
