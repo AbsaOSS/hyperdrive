@@ -30,7 +30,7 @@ object DeltaUtil {
 
   private val SortFieldCustomOrderColumn = "_sort_field_custom_order_"
 
-  def createDeltaTable(sparkSession: SparkSession, destination: String, schema: StructType, partitionColumns: Seq[String]): Unit = {
+  def createDeltaTableIfNotExists(sparkSession: SparkSession, destination: String, schema: StructType, partitionColumns: Seq[String]): Unit = {
     if (!DeltaTable.isDeltaTable(sparkSession, destination)) {
       if (isDirEmptyOrDoesNotExist(sparkSession, destination)) {
         logger.info(s"Destination: $destination is not a delta table. Creating new delta table.")

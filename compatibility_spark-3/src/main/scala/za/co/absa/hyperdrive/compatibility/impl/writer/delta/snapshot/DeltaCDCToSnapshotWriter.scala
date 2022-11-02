@@ -49,7 +49,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    DeltaUtil.createDeltaTable(dataFrame.sparkSession, destination, dataFrame.schema, partitionColumns)
+    DeltaUtil.createDeltaTableIfNotExists(dataFrame.sparkSession, destination, dataFrame.schema, partitionColumns)
 
     dataFrame.writeStream
       .trigger(trigger)

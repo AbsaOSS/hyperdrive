@@ -69,7 +69,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       ).toArray ++ dataFrame.schema.fields
     )
 
-    DeltaUtil.createDeltaTable(dataFrame.sparkSession, destination, dataFrameSchema, partitionColumns)
+    DeltaUtil.createDeltaTableIfNotExists(dataFrame.sparkSession, destination, dataFrameSchema, partitionColumns)
 
     dataFrame.writeStream
       .trigger(trigger)
