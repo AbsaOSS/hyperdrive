@@ -15,11 +15,14 @@
 
 package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 
+import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
 
 import java.io.File
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaTestBase {
   behavior of "DeltaUtil"
@@ -46,6 +49,41 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
     new File(baseDirPath + "/filename.txt").createNewFile()
 
     assertThrows[IllegalArgumentException](DeltaUtil.createDeltaTableIfNotExists(spark, baseDirPath, schema, Seq()))
+  }
+
+  "getDataFrameWithSortColumns" should "return dataframe with sort columns" in {
+    import spark.implicits._
+    val timestamp = Timestamp.valueOf("2022-11-02 14:15:39.11973")
+
+    val testInput: DataFrame = Seq(
+      CDCEvent("1", "value1", timestamp, "PT"),
+      CDCEvent("2", "value2", timestamp, "UP"),
+      CDCEvent("3", "value3", timestamp, "DL"),
+      CDCEvent("4", "value4", timestamp, "XX")
+    ).toDF
+
+    val expected: Seq[Row] = Seq(
+      Row("1", "value1", timestamp, "PT", 1, "value1"),
+      Row("2", "value2", timestamp, "UP", 2, "value2"),
+      Row("3", "value3", timestamp, "DL", 3, "value3"),
+      Row("4", "value4", timestamp, "XX", 0, "value4")
+    )
+
+    val sortFieldsPrefix = "_tmp_hyperdrive_"
+    val precombineColumns = Seq(
+      "eventType",
+      "value"
+    )
+    val precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "UP", "DL"))
+
+    val result: Seq[Row] = DeltaUtil.getDataFrameWithSortColumns(
+      testInput,
+      sortFieldsPrefix,
+      precombineColumns,
+      precombineColumnsCustomOrder
+    ).collect().toSeq
+
+    result should contain theSameElementsAs expected
   }
 
   "isDirEmptyOrDoesNotExist" should "return true if directory is empty" in {
