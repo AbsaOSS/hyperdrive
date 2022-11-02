@@ -22,7 +22,6 @@ import org.scalatest.mockito.MockitoSugar
 
 import java.io.File
 import java.sql.Timestamp
-import java.time.LocalDateTime
 
 class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaTestBase {
   behavior of "DeltaUtil"
@@ -84,7 +83,7 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
     )
 
     result.collect().toSeq should contain theSameElementsAs expected
-    result.schema.fieldNames should contain allElementsOf precombineColumns.map(col => s"$sortFieldsPrefix$col")
+    result.schema.fieldNames should contain theSameElementsAs precombineColumns.map(col => s"$sortFieldsPrefix$col") ++ testInput.schema.fieldNames
   }
 
   "isDirEmptyOrDoesNotExist" should "return true if directory is empty" in {
