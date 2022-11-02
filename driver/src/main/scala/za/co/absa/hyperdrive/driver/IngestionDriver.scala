@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
 import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.driver.utils.DriverUtil
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -24,13 +25,22 @@ import za.co.absa.hyperdrive.ingestor.implementation.reader.factories.StreamRead
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.StreamTransformerAbstractFactory
 import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWriterAbstractFactory
 
-private[driver] class IngestionDriver {
+private[driver] abstract class IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
 
-  def ingest(configuration: Configuration): Unit = {
-    logger.info("Ingestion invoked using the configuration below. Going to instantiate components.")
+  def main(args: Array[String]): Unit = {
+    logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
+    val configuration = loadConfiguration(args)
+    logger.info("Configuration loaded.")
     printConfiguration(configuration)
+    ingest(configuration)
+  }
+
+  def loadConfiguration(args: Array[String]): Configuration
+
+  private def ingest(configuration: Configuration): Unit = {
+    logger.info("Ingestion invoked. Going to instantiate components.")
 
     val sparkIngestor = SparkIngestor(configuration)
     val streamReader = getStreamReader(configuration)

@@ -19,28 +19,23 @@ import org.apache.commons.configuration2.builder.BasicConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
-import org.apache.spark.internal.Logging
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.driver.IngestionDriver
-import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
-object CommandLineIngestionDriver extends IngestionDriver with Logging {
+object CommandLineIngestionDriver extends IngestionDriver {
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val PropertyDelimiter = "="
 
-  def main(args: Array[String]): Unit = {
+  override def loadConfiguration(args: Array[String]): Configuration = {
     if (args.isEmpty) {
       throw new IllegalArgumentException("No configuration provided.")
     }
-
-    logInfo(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
-
-    logInfo(s"Going to load ${args.length} configurations from command line.")
-    val configuration = parseConfiguration(args)
-    logInfo("Configuration loaded. Going to invoke ingestion.")
-    ingest(configuration)
+    logger.info(s"Going to load ${args.length} configurations from command line.")
+    parseConfiguration(args)
   }
 
-  def parseConfiguration(settings: Array[String]): Configuration = {
+  private def parseConfiguration(settings: Array[String]): Configuration = {
     val configuration = new BasicConfigurationBuilder[BaseConfiguration](classOf[BaseConfiguration])
         .configure(new Parameters()
           .basic()

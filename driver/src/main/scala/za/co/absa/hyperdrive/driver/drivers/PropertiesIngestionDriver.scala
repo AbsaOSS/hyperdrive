@@ -15,38 +15,36 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import java.nio.file.{Files, Paths}
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder
 import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
-import org.apache.spark.internal.Logging
+import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.driver.IngestionDriver
-import za.co.absa.hyperdrive.driver.utils.DriverUtil
+
+import java.nio.file.{Files, Paths}
 
 /**
   * This driver launches ingestion by loading the configurations from a properties file.
   */
-object PropertiesIngestionDriver extends IngestionDriver with Logging {
+object PropertiesIngestionDriver extends IngestionDriver {
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
-  def main(args: Array[String]): Unit = {
+  override def loadConfiguration(args: Array[String]): Configuration = {
     val propertiesFile = getPropertiesFilePath(args)
     if (propertiesFile.isEmpty) {
       throw new IllegalArgumentException("No properties file supplied.")
     }
-    logInfo(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
 
     if (isInvalid(propertiesFile.get)) {
       throw new IllegalArgumentException(s"Invalid properties file: '${propertiesFile.get}'.")
     }
 
-    logInfo(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
-    val configurations = loadConfiguration(propertiesFile.get)
-    logInfo(s"Configurations loaded. Going to invoke ingestion: [$configurations]")
-    ingest(configurations)
+    logger.info(s"Going to load ingestion configurations from '${propertiesFile.get}'.")
+    loadConfigurationFromFile(propertiesFile.get)
   }
 
-  def loadConfiguration(path: String): Configuration = {
+  private def loadConfigurationFromFile(path: String): Configuration = {
     val parameters = new Parameters()
     new FileBasedConfigurationBuilder[PropertiesConfiguration](classOf[PropertiesConfiguration])
       .configure(parameters.fileBased()
@@ -60,7 +58,7 @@ object PropertiesIngestionDriver extends IngestionDriver with Logging {
       case v if v == 0 => None
       case v =>
         if (v > 1) {
-          logWarning(s"Expected only properties file path, but got extra parameters. Returning first as the path. All parameters = [${args.mkString(",")}]")
+          logger.warn(s"Expected only properties file path, but got extra parameters. Returning first as the path. All parameters = [${args.mkString(",")}]")
         }
         Some(args(0))
     }
