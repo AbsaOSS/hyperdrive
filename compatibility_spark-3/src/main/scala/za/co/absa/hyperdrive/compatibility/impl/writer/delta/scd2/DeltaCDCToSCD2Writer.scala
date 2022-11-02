@@ -168,21 +168,11 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
             lag(keyColumn, 1, null).over(idWindowDesc).isNull
           ),
           col(EndDateColumn)
-        )
-          .when(
-            col(IsOldDataColumn).equalTo(true).and(
-              lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(true)
-            ),
-            col(EndDateColumn)
-          ).when(
+        ).when(
           col(IsOldDataColumn).equalTo(true).and(
-            lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(false)
-          ).and(
-            col(timestampColumn).equalTo(
-              lag(s"$timestampColumn", 1, null).over(idWindowDesc)
-            )
+            lag(IsOldDataColumn, 1, false).over(idWindowDesc).equalTo(true)
           ),
-          lag(StartDateColumn, 2, null).over(idWindowDesc)
+          col(EndDateColumn)
         ).otherwise(
           lag(StartDateColumn, 1, null).over(idWindowDesc)
         )
