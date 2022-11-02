@@ -76,14 +76,15 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
     )
     val precombineColumnsCustomOrder = Map("eventType" -> Seq("PT", "UP", "DL"))
 
-    val result: Seq[Row] = DeltaUtil.getDataFrameWithSortColumns(
+    val result = DeltaUtil.getDataFrameWithSortColumns(
       testInput,
       sortFieldsPrefix,
       precombineColumns,
       precombineColumnsCustomOrder
-    ).collect().toSeq
+    )
 
-    result should contain theSameElementsAs expected
+    result.collect().toSeq should contain theSameElementsAs expected
+    result.schema.fieldNames should contain allElementsOf precombineColumns.map(col => s"$sortFieldsPrefix$col")
   }
 
   "isDirEmptyOrDoesNotExist" should "return true if directory is empty" in {
