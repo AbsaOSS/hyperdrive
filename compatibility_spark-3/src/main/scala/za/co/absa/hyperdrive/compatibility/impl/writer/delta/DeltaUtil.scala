@@ -30,7 +30,7 @@ object DeltaUtil {
 
   private val SortFieldCustomOrderColumn = "_tmp_hyperdrive_sort_field_custom_order_"
 
-  def createDeltaTableIfNotExists(sparkSession: SparkSession, destination: String, schema: StructType, partitionColumns: Seq[String]): Unit = {
+  private[hyperdrive] def createDeltaTableIfNotExists(sparkSession: SparkSession, destination: String, schema: StructType, partitionColumns: Seq[String]): Unit = {
     if (!DeltaTable.isDeltaTable(sparkSession, destination)) {
       if (isDirEmptyOrDoesNotExist(sparkSession, destination)) {
         logger.info(s"Destination: $destination is not a delta table. Creating new delta table.")
@@ -48,7 +48,7 @@ object DeltaUtil {
     }
   }
 
-  def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String, precombineColumns: Seq[String], precombineColumnsCustomOrder: Map[String, Seq[String]]): DataFrame = {
+  private[hyperdrive] def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String, precombineColumns: Seq[String], precombineColumnsCustomOrder: Map[String, Seq[String]]): DataFrame = {
     precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
       val order = precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
       order match {
@@ -65,7 +65,7 @@ object DeltaUtil {
     }
   }
 
-  private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
+  private[hyperdrive] def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
     implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
     if (FileUtils.exists(destination)) {
       if (FileUtils.isDirectory(destination)) {

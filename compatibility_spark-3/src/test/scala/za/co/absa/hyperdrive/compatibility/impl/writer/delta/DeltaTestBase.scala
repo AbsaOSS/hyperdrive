@@ -20,12 +20,11 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
-import scala.reflect.io.Path
-
 trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
   this: FlatSpec =>
 
   val baseDir: TempDirectory = TempDirectory("DeltaTempDir").deleteOnExit()
+  val baseDirPath: String = baseDir.path.toAbsolutePath.toString
   val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
   val checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
 
@@ -34,8 +33,8 @@ trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
   val memoryStream: MemoryStream[CDCEvent] = MemoryStream[CDCEvent](1, spark.sqlContext)
 
   override def beforeEach(): Unit = {
-    Path(destinationPath).deleteRecursively()
-    Path(checkpointPath).deleteRecursively()
+    import org.apache.commons.io.FileUtils
+    FileUtils.cleanDirectory(baseDir.path.toAbsolutePath.toFile)
     memoryStream.reset()
   }
 }
