@@ -19,10 +19,10 @@ import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, lag, lit, when, min, max}
+import org.apache.spark.sql.functions.{col, lag, lit, max, min, when}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
-import org.apache.spark.sql.types.{BooleanType, TimestampType}
+import org.apache.spark.sql.types.{BooleanType, StructField, StructType, TimestampType}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -61,10 +61,13 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    val dataFrameSchema = dataFrame.schema
-      .add(StartDateColumn, TimestampType, nullable = false)
-      .add(EndDateColumn, TimestampType, nullable = true)
-      .add(IsCurrentColumn, BooleanType, nullable = false)
+    val dataFrameSchema = StructType(
+      Seq(
+        StructField(StartDateColumn, TimestampType, nullable = false),
+        StructField(EndDateColumn, TimestampType, nullable = true),
+        StructField(IsCurrentColumn, BooleanType, nullable = false)
+      ).toArray ++ dataFrame.schema.fields
+    )
 
     DeltaUtil.createDeltaTable(dataFrame.sparkSession, destination, dataFrameSchema, partitionColumns)
 
@@ -88,6 +91,11 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
             .withColumn(EndDateColumn, lit(null))
             .withColumn(IsCurrentColumn, lit(false))
             .withColumn(IsOldDataColumn, lit(false))
+            .selectExpr(
+              Seq(StartDateColumn, EndDateColumn, IsCurrentColumn) ++
+                uniqueChangesForEachKeyAndTimestamp.columns ++
+                Seq(IsOldDataColumn): _*
+            )
         )
 
         val uniqueEvents = removeDuplicates(union)
@@ -181,7 +189,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       )
       .withColumn(
         EndDateColumn,
-          when(col(operationColumn).isInCollection(operationDeleteValues), col(StartDateColumn))
+        when(col(operationColumn).isInCollection(operationDeleteValues), col(StartDateColumn))
           .when(!col(operationColumn).isInCollection(operationDeleteValues), col(EndDateColumn))
           .otherwise(null)
       )

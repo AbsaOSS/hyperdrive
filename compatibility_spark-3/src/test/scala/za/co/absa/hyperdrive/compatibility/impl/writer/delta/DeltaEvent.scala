@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.delta
 import java.sql.Timestamp
 import scala.util.Try
 
-case class DeltaEvent(id: String, value: String, timestamp: Timestamp, eventType: String, _start_date: Timestamp, _end_date: Timestamp, _is_current: Boolean)
+case class DeltaEvent(_start_date: Timestamp, _end_date: Timestamp, _is_current: Boolean, id: String, value: String, timestamp: Timestamp, eventType: String)
 
 object DeltaEvent {
   def loadFromFile(path: String): Seq[DeltaEvent] = {
@@ -27,13 +27,13 @@ object DeltaEvent {
       line <- lines
       values = line.split(",").map(_.trim)
     } yield DeltaEvent(
+      Timestamp.valueOf(values(4)),
+      Try(Timestamp.valueOf(values(5))).getOrElse(null),
+      values(6).toBoolean,
       values(0),
       values(1),
       Timestamp.valueOf(values(2)),
-      values(3),
-      Timestamp.valueOf(values(4)),
-      Try(Timestamp.valueOf(values(5))).getOrElse(null),
-      values(6).toBoolean
+      values(3)
     )
   }
 }
