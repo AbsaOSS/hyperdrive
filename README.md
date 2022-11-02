@@ -354,18 +354,18 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 - `writer.deltacdctosnapshot.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 ##### DeltaCDCToSCD2Writer
-| Property Name                                         | Required | Description                                                                                                                                |
-|:------------------------------------------------------| :---: |:-------------------------------------------------------------------------------------------------------------------------------------------|
-| `writer.deltacdctoscd2.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter`                                               |
-| `writer.deltacdctoscd2.partition.columns`             | No | Comma-separated list of columns to partition by.                                                                                           |
-| `writer.deltacdctoscd2.key.column`                    | Yes | A column with unique entity identifier.                                                                                                    |
-| `writer.deltacdctoscd2.timestamp.column`              | Yes | A column with timestamp.                                                                                                                   |
-| `writer.deltacdctoscd2.operation.column`              | Yes | A column containing value marking a record with an operation.                                                                              |
-| `writer.deltacdctoscd2.operation.deleted.values`      | Yes | Values marking a record for deletion in the operation column.                                                                              |
-| `writer.deltacdctoscd2.precombineColumns`             | Yes | When two records have the same key value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
-| `writer.deltacdctoscd2.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order.                                                                                       |
-| `writer.common.trigger.type`                          | No | See [Combination writer properties](#common-writer-properties)                                                                             |
-| `writer.common.trigger.processing.time`               | No | See [Combination writer properties](#common-writer-properties)                                                                             |
+| Property Name                                         | Required | Description                                                                                                                                              |
+|:------------------------------------------------------| :---: |:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `writer.deltacdctoscd2.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter`                                                             |
+| `writer.deltacdctoscd2.partition.columns`             | No | Comma-separated list of columns to partition by.                                                                                                         |
+| `writer.deltacdctoscd2.key.column`                    | Yes | A column with unique entity identifier.                                                                                                                  |
+| `writer.deltacdctoscd2.timestamp.column`              | Yes | A column with timestamp.                                                                                                                                 |
+| `writer.deltacdctoscd2.operation.column`              | Yes | A column containing value marking a record with an operation.                                                                                            |
+| `writer.deltacdctoscd2.operation.deleted.values`      | Yes | Values marking a record for deletion in the operation column.                                                                                            |
+| `writer.deltacdctoscd2.precombineColumns`             | Yes | When two records have the same key and timestamp value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.deltacdctoscd2.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order.                                                                                                     |
+| `writer.common.trigger.type`                          | No | See [Combination writer properties](#common-writer-properties)                                                                                           |
+| `writer.common.trigger.processing.time`               | No | See [Combination writer properties](#common-writer-properties)                                                                                           |
 
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctoscd2.options`, e.g. `writer.deltacdctoscd2.options.key=value`
 
