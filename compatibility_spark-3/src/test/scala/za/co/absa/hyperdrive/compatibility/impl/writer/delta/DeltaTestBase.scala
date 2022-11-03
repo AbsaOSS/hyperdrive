@@ -23,10 +23,10 @@ import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
   this: FlatSpec =>
 
-  var baseDir: TempDirectory = null
-  var baseDirPath: String = null
-  var destinationPath: String = null
-  var checkpointPath: String = null
+  var baseDir: TempDirectory = _
+  def baseDirPath: String = baseDir.path.toAbsolutePath.toString
+  def destinationPath: String = s"${baseDir.path.toAbsolutePath.toString}/destination"
+  def checkpointPath: String = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
 
   import spark.implicits._
 
@@ -34,9 +34,6 @@ trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
 
   override def beforeEach(): Unit = {
     baseDir = TempDirectory("DeltaTempDir").deleteOnExit()
-    baseDirPath = baseDir.path.toAbsolutePath.toString
-    destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
-    checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
     memoryStream.reset()
   }
 
