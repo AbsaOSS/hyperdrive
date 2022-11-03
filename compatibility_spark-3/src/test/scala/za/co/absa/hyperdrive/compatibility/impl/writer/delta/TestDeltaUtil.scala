@@ -31,7 +31,7 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
 
     DeltaUtil.createDeltaTableIfNotExists(spark, baseDirPath, schema, Seq())
 
-    FileUtils.readFileLines(s"$baseDirPath/_delta_log/00000000000000000000.json").nonEmpty should be(true)
+    FileUtils.readFileLines(s"$baseDirPath/_delta_log/00000000000000000000.json").nonEmpty shouldBe true
   }
 
   it should "create delta table if destination directory does not exist" in {
@@ -39,7 +39,26 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
 
     DeltaUtil.createDeltaTableIfNotExists(spark, destinationPath, schema, Seq())
 
-    FileUtils.readFileLines(s"$destinationPath/_delta_log/00000000000000000000.json").nonEmpty should be(true)
+    FileUtils.readFileLines(s"$destinationPath/_delta_log/00000000000000000000.json").nonEmpty shouldBe true
+  }
+
+  it should "do nothing if delta table already exists" in {
+    val schema = StructType(Seq(StructField("testColumn", StringType, nullable = false)))
+    val dataFolder = new File(destinationPath)
+    val deltaLogFolder = new File(s"$destinationPath/_delta_log/")
+
+    DeltaUtil.createDeltaTableIfNotExists(spark, dataFolder.getPath, schema, Seq())
+    FileUtils.readFileLines(s"${deltaLogFolder.getPath}/00000000000000000000.json").nonEmpty shouldBe true
+    val contentOfDataFolderFirstExec = dataFolder.list()
+    val contentOfDeltaLogFolderFirstExec = deltaLogFolder.list()
+
+    DeltaUtil.createDeltaTableIfNotExists(spark, dataFolder.getPath, schema, Seq())
+    FileUtils.readFileLines(s"${deltaLogFolder.getPath}/00000000000000000000.json").nonEmpty shouldBe true
+    val contentOfDataFolderSecondExec = dataFolder.list()
+    val contentOfDeltaLogFolderSecondExec = deltaLogFolder.list()
+
+    contentOfDataFolderFirstExec should contain theSameElementsAs contentOfDataFolderSecondExec
+    contentOfDeltaLogFolderFirstExec should contain theSameElementsAs contentOfDeltaLogFolderSecondExec
   }
 
   it should "throw exception if destination directory is not empty" in {
@@ -87,16 +106,23 @@ class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with DeltaT
   }
 
   "isDirEmptyOrDoesNotExist" should "return true if directory is empty" in {
-    DeltaUtil.isDirEmptyOrDoesNotExist(spark, baseDirPath) should be(true)
+    DeltaUtil.isDirEmptyOrDoesNotExist(spark, baseDirPath) shouldBe true
   }
 
   it should "return true if directory does not exist" in {
-    DeltaUtil.isDirEmptyOrDoesNotExist(spark, destinationPath) should be(true)
+    DeltaUtil.isDirEmptyOrDoesNotExist(spark, destinationPath) shouldBe true
   }
 
   it should "return false if directory contains a file" in {
     new File(baseDirPath + "/filename.txt").createNewFile()
 
-    DeltaUtil.isDirEmptyOrDoesNotExist(spark, baseDirPath) should be(false)
+    DeltaUtil.isDirEmptyOrDoesNotExist(spark, baseDirPath) shouldBe false
+  }
+
+  it should "return false if path is a file" in {
+    val file = new File(baseDirPath + "/filename.txt")
+    file.createNewFile()
+
+    DeltaUtil.isDirEmptyOrDoesNotExist(spark, file.getPath) shouldBe false
   }
 }

@@ -23,18 +23,24 @@ import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
   this: FlatSpec =>
 
-  val baseDir: TempDirectory = TempDirectory("DeltaTempDir").deleteOnExit()
-  val baseDirPath: String = baseDir.path.toAbsolutePath.toString
-  val destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
-  val checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
+  var baseDir: TempDirectory = null
+  var baseDirPath: String = null
+  var destinationPath: String = null
+  var checkpointPath: String = null
 
   import spark.implicits._
 
   val memoryStream: MemoryStream[CDCEvent] = MemoryStream[CDCEvent](1, spark.sqlContext)
 
   override def beforeEach(): Unit = {
-    import org.apache.commons.io.FileUtils
-    FileUtils.cleanDirectory(baseDir.path.toAbsolutePath.toFile)
+    baseDir = TempDirectory("DeltaTempDir").deleteOnExit()
+    baseDirPath = baseDir.path.toAbsolutePath.toString
+    destinationPath = s"${baseDir.path.toAbsolutePath.toString}/destination"
+    checkpointPath = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
     memoryStream.reset()
+  }
+
+  override def afterEach(): Unit = {
+    baseDir.delete()
   }
 }
