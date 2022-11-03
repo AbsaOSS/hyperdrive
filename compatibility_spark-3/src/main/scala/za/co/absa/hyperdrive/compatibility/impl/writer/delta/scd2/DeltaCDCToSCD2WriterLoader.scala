@@ -13,19 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.shared.utils
+package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
 
-import org.apache.spark.sql.SparkSession
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-trait SparkTestBase {
-  implicit val spark: SparkSession = SparkSession.builder()
-    .master("local[*]")
-    .appName(s"Commons unit testing SchemaUtils")
-    .config("spark.ui.enabled", "false")
-    .config("spark.debug.maxToStringFields", 100)
-    .config("spark.driver.bindAddress", "127.0.0.1")
-    .config("spark.driver.host", "127.0.0.1")
-    .config("spark.sql.hive.convertMetastoreParquet", false)
-    .config("fs.defaultFS", "file:/")
-    .getOrCreate()
+class DeltaCDCToSCD2WriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = DeltaCDCToSCD2Writer
 }

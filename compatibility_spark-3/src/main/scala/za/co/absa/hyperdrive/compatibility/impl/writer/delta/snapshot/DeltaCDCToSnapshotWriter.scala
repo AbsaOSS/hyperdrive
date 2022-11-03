@@ -18,17 +18,14 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, when}
-import org.apache.spark.sql.{Column, DataFrame, Row, SaveMode, SparkSession, functions}
+import org.apache.spark.sql.functions.{col, when, max}
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
-import za.co.absa.hyperdrive.shared.utils.FileUtils
-
-import java.net.URI
 
 private[writer] class DeltaCDCToSnapshotWriter(destination: String,
                                                trigger: Trigger,
@@ -41,44 +38,30 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
                                                precombineColumnsCustomOrder: Map[String, Seq[String]],
                                                val extraConfOptions: Map[String, String]) extends StreamWriter {
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val STRING_SEPARATOR = "#$@"
-  private val CHECKPOINT_LOCATION = "checkpointLocation"
+  private val StringSeparator = "#$@"
+  private val CheckpointLocation = "checkpointLocation"
 
   if (StringUtils.isBlank(destination)) {
     throw new IllegalArgumentException("Destination must not be blank!")
   }
-  if (precombineColumnsCustomOrder.values.flatten.toSeq.contains(STRING_SEPARATOR)) {
-    throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $STRING_SEPARATOR")
+  if (precombineColumnsCustomOrder.values.flatten.toSeq.contains(StringSeparator)) {
+    throw new IllegalArgumentException(s"Precombine columns custom order cannot contain string separator: $StringSeparator")
   }
 
   override def write(dataFrame: DataFrame): StreamingQuery = {
-    if (!DeltaTable.isDeltaTable(dataFrame.sparkSession, destination)) {
-      if (isDirEmptyOrDoesNotExist(dataFrame.sparkSession, destination)) {
-        logger.info(s"Destination: $destination is not a delta table. Creating new delta table.")
-        dataFrame.sparkSession
-          .createDataFrame(dataFrame.sparkSession.sparkContext.emptyRDD[Row], dataFrame.schema)
-          .write
-          .format("delta")
-          .mode(SaveMode.Overwrite)
-          .option("overwriteSchema", "true")
-          .partitionBy(partitionColumns: _*)
-          .save(destination)
-      } else {
-        throw new IllegalArgumentException(s"Could not create new delta table. Directory $destination is not empty!")
-      }
-    }
+    DeltaUtil.createDeltaTableIfNotExists(dataFrame.sparkSession, destination, dataFrame.schema, partitionColumns)
 
     dataFrame.writeStream
       .trigger(trigger)
       .outputMode(OutputMode.Append())
-      .option(CHECKPOINT_LOCATION, checkpointLocation)
+      .option(CheckpointLocation, checkpointLocation)
       .options(extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
         logger.info(s"Writing batchId: $batchId")
 
         val sortFieldsPrefix = "_tmp_hyperdrive_"
 
-        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix)
+        val dataFrameWithSortColumns = DeltaUtil.getDataFrameWithSortColumns(df, sortFieldsPrefix, precombineColumns, precombineColumnsCustomOrder)
 
         val originalFieldNames = df.schema.fieldNames.mkString(",")
         val sortColumnsWithPrefix = precombineColumns.map(precombineColumn => s"$sortFieldsPrefix$precombineColumn")
@@ -86,7 +69,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
         val latestChangeForEachKey = dataFrameWithSortColumns
           .selectExpr(s"$keyColumn", s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols")
           .groupBy(s"$keyColumn")
-          .agg(functions.max("otherCols").as("latest"))
+          .agg(max("otherCols").as("latest"))
           .filter(col("latest").isNotNull)
           .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
           .selectExpr("latest.*")
@@ -113,7 +96,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
             .whenMatched(s"changes.$precombineColumn > currentTable.$precombineColumn")
             .updateAll()
         case o =>
-          val orderString = o.mkString(STRING_SEPARATOR)
+          val orderString = o.mkString(StringSeparator)
           builder
             .whenMatched(s"""locate(changes.$precombineColumn, "$orderString") > locate(currentTable.$precombineColumn, "$orderString")""")
             .updateAll()
@@ -123,32 +106,6 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
     deltaBuilderWithSortColumns
       .whenNotMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), false).otherwise(true))
       .insertAll()
-  }
-
-  private def getDataFrameWithSortColumns(dataFrame: DataFrame, sortFieldsPrefix: String): DataFrame = {
-    precombineColumns.foldLeft(dataFrame) { (df, precombineColumn) =>
-      val order = precombineColumnsCustomOrder.getOrElse(precombineColumn, Seq.empty[String])
-      order match {
-        case o if o.isEmpty =>
-          df.withColumn(s"$sortFieldsPrefix$precombineColumn", col(precombineColumn))
-        case o =>
-          val orderString = o.mkString(STRING_SEPARATOR)
-          df.withColumn(s"$sortFieldsPrefix$precombineColumn", functions.expr(s"""locate($precombineColumn, "$orderString")"""))
-      }
-    }
-  }
-
-  private def isDirEmptyOrDoesNotExist(spark: SparkSession, destination: String): Boolean = {
-    implicit val fs: FileSystem = FileSystem.get(new URI(destination), spark.sparkContext.hadoopConfiguration)
-    if (FileUtils.exists(destination)) {
-      if (FileUtils.isDirectory(destination)) {
-        FileUtils.isEmpty(destination)
-      } else {
-        false
-      }
-    } else {
-      true
-    }
   }
 }
 
