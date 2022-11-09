@@ -15,6 +15,20 @@
 
 package za.co.absa.hyperdrive.ingestor.api.secrets
 
+import org.apache.commons.configuration2.Configuration
+
 trait SecretsProvider {
-  def retrieveSecret(options: Map[String, String]): String
+  def retrieveSecret(options: Configuration): String
+}
+
+object SecretsProvider {
+  val BaseKey = "secretsprovider"
+  val ConfigKey = s"${BaseKey}.config"
+  val ConfigProvidersKey = s"${ConfigKey}.providers"
+  val ConfigDefaultProviderKey = s"${ConfigKey}.defaultprovider"
+  val SecretsKey = s"${BaseKey}.secrets"
+  val PerSecretProviderKey = "provider"
+  val PerSecretSecretValueKey = "secretvalue"
+  val PerSecretOptionsKey = "options"
+  val PerProviderClassKey = "class"
 }

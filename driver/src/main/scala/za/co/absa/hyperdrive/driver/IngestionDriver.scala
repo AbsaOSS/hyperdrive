@@ -17,6 +17,7 @@ package za.co.absa.hyperdrive.driver
 
 import org.apache.commons.configuration2.Configuration
 import org.slf4j.LoggerFactory
+import za.co.absa.hyperdrive.driver.secrets.SecretsConfigUtils
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
@@ -28,15 +29,18 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.factories.StreamWrit
 private[driver] abstract class IngestionDriver {
   private val logger = LoggerFactory.getLogger(this.getClass)
   val ListDelimiter = ','
-  val RedactedSecret = "*****"
+
 
   def main(args: Array[String]): Unit = {
     logger.info(s"Starting Hyperdrive ${DriverUtil.getVersionString}")
     val configuration = loadConfiguration(args)
-    val resolvedConf = resolveSecrets(configuration)
+    SecretsConfigUtils.resolveSecrets(configuration)
     logger.info("Configuration loaded.")
-    printConfiguration(resolvedConf)
-    ingest(resolvedConf)
+    SecretsConfigUtils.getRedactedConfigurationAsMap(configuration)
+      .foreach {
+        case (key, value) => logger.info(s"\t$key = $value")
+      }
+    ingest(configuration)
   }
 
   def loadConfiguration(args: Array[String]): Configuration
@@ -59,26 +63,7 @@ private[driver] abstract class IngestionDriver {
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
 
-  private def printConfiguration(configuration: Configuration): Unit = {
-    import scala.collection.JavaConverters._
-    configuration
-      .getKeys
-      .asScala
-      .map { key =>
-        // TODO: Extract secretvalue to constant
-        val property = if (key.contains("secretvalue")) {
-          RedactedSecret
-        } else {
-          configuration.getProperty(key)
-        }
-        key -> property
-      }
-      .foreach {
-        case (key, value) => logger.info(s"\t$key = $value")
-      }
-  }
 
-  private def resolveSecrets(configuration: Configuration): Configuration = {
 
-  }
+
 }

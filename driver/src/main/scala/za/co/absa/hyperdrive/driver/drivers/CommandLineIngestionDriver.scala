@@ -46,14 +46,6 @@ object CommandLineIngestionDriver extends IngestionDriver {
     configuration
   }
 
-  // TODO
-  // Add secret. as top-level property, e.g. secret.awssecretsmanager.truststorepassword
-  // Reference in config as
-  // reader.option.kafka.ssl.truststore.password=${secret.awssecretsmanager.truststorepassword}
-  // Set secret.awssecretsmanager.truststorepassword=arn
-  // Any global configs go under
-  // secret.awssecretsmanager.options.
-  // First, resolve the secrets given the correct strategy
   private def setOrThrow(setting: String, configuration: Configuration): Unit = {
     if(!setting.contains(PropertyDelimiter)) {
       throw new IllegalArgumentException(s"Invalid setting format: $setting")

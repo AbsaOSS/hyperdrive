@@ -72,6 +72,7 @@
         <!--Configurations-->
         <commons.configuration2.version>2.7</commons.configuration2.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <aws.java.sdk.bom.version>2.18.7</aws.java.sdk.bom.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
 
@@ -217,6 +218,13 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${commons.beanutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.java.sdk.bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!--Tests-->

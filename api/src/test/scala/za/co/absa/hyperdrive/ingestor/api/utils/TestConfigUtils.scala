@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.api.utils
 
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.apache.commons.configuration2.{BaseConfiguration, Configuration}
+import org.apache.commons.configuration2.{BaseConfiguration, Configuration, ConfigurationConverter}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
@@ -385,5 +385,44 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
 
     filteredMap.size shouldBe 1
     filteredMap("normal.key") shouldBe "normal value"
+  }
+
+  "getSubsets" should "return a map of children keys to subset configs" in {
+    val config = new BaseConfiguration
+    config.addProperty("service.items.myItem1.name", "My Item 1")
+    config.addProperty("service.items.myItem1.description", "Very nice item 1")
+    config.addProperty("service.items.myItem2.name", "My Item 2")
+    config.addProperty("service.items.myItem2.description", "Very nice item 2")
+    config.addProperty("service.items.myItem2.options.color", "blue")
+    config.addProperty("service.items.myItem2.options.size", "large")
+    config.addProperty("service.items.myItem3", "The third item")
+    config.addProperty("service.name", "Item Service")
+
+    val subsets = ConfigUtils.getSubsets(config, "service.items")
+
+    import scala.collection.JavaConverters._
+    subsets.keys should contain theSameElementsAs Array("myItem1", "myItem2")
+    ConfigurationConverter.getMap(subsets("myItem1")).asScala should contain theSameElementsAs Map(
+      "name" -> "My Item 1",
+      "description" -> "Very nice item 1"
+    )
+    ConfigurationConverter.getMap(subsets("myItem2")).asScala should contain theSameElementsAs Map(
+      "name" -> "My Item 2",
+      "description" -> "Very nice item 2",
+      "options.color" -> "blue",
+      "options.size" -> "large"
+    )
+  }
+
+  "getSubsets" should "return the correct subsets if the parent key ends with a dot" in {
+    val config = new BaseConfiguration
+    config.addProperty("service.items.myItem1.name", "My Item 1")
+
+    val subsets = ConfigUtils.getSubsets(config, "service.items.")
+
+    import scala.collection.JavaConverters._
+    subsets.keys should contain theSameElementsAs Array("myItem1")
+    subsets("myItem1").getKeys.asScala.toSeq should contain theSameElementsAs Array("name")
+    subsets("myItem1").getString("name") shouldBe "My Item 1"
   }
 }
