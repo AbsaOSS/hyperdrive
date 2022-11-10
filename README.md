@@ -433,7 +433,7 @@ available for string interpolation to be used by other configuration properties.
 - `secretsprovider.config.providers.awssecretsmanager.class=za.co.absa.hyperdrive.driver.secrets.implementation.aws.AwsSecretsManagerSecretsProvider`
 - `secretsprovider.secrets.truststorepassword.provider=awssecretsmanager`
 - `secretsprovider.secrets.truststorepassword.options.secretname=<the-secret-name>`
-- `secretsprovider.secrets.truststorepassword.options.secretkey=<the-secret-key>`
+- `secretsprovider.secrets.truststorepassword.options.key=<the-secret-key>`
 - `secretsprovider.secrets.truststorepassword.options.encoding=base64`
 - `reader.option.kafka.ssl.truststore.password=${secretsprovider.secrets.truststorepassword.secretvalue}`
 

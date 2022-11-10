@@ -62,8 +62,4 @@ private[driver] abstract class IngestionDriver {
   private def getStreamTransformers(conf: Configuration): Seq[StreamTransformer] = StreamTransformerAbstractFactory.build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
-
-
-
-
 }
