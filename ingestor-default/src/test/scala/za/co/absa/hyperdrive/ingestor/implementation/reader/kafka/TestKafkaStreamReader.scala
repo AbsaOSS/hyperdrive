@@ -25,6 +25,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReaderProps._
 
+import java.net.URI
 import java.nio.file.{Files, Paths}
 
 class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
@@ -39,12 +40,14 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     "failOnDataLoss"          -> "false")
   private var tempDir: TempDirectory = _
   private var tempDirPath: String = _
+  private var tempDirURI: String = _
 
   behavior of "KafkaStreamReader"
 
   override def beforeEach: Unit = {
     tempDir = TempDirectory()
     tempDirPath = tempDir.path.toAbsolutePath.toString
+    tempDirURI = tempDir.path.toAbsolutePath.toUri.toString
   }
 
   override def afterEach: Unit = tempDir.delete()
@@ -62,7 +65,7 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
   }
 
   it should "throw if SparkSession is stopped" in {
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, validExtraConfs)
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirURI, validExtraConfs)
     val sparkContext = getMockedSparkContext(stopped = true)
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
@@ -74,7 +77,7 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, validExtraConfs)
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirURI, validExtraConfs)
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
@@ -89,7 +92,7 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     val dataStreamReader = getMockedDataStreamReader
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map[String,String]())
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirURI, Map[String,String]())
     reader.read(sparkSession)
 
     verify(sparkSession).readStream
@@ -117,7 +120,7 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
     Files.createDirectories(Paths.get(s"$tempDirPath/empty1/empty2/empty3"))
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map())
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirURI, Map())
     reader.read(sparkSession)
 
     verify(dataStreamReader).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
@@ -129,7 +132,7 @@ class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with Mockit
     val sparkSession = getConfiguredMockedSparkSession(sparkContext, dataStreamReader)
     Files.createFile(Paths.get(s"$tempDirPath/anyFile"))
 
-    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirPath, Map())
+    val reader = new KafkaStreamReader(validTopic, validBrokers, tempDirURI, Map())
     reader.read(sparkSession)
 
     verify(dataStreamReader, never()).option(WORD_STARTING_OFFSETS, STARTING_OFFSETS_EARLIEST)
