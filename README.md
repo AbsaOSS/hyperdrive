@@ -449,3 +449,12 @@ To execute them, build using the profile `all-tests`
 ```
 mvn clean test -Pall-tests
 ```
+
+### How to measure code coverage
+```shell
+./>mvn clean install -Pscala-2.ZY,spark-Z,code-coverage
+```
+If module contains measurable data the code coverage report will be generated on path:
+```
+{project-path}\hyperdrive\{module}\target\site\jacoco
+```

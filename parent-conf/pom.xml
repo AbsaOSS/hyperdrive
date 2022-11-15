@@ -77,6 +77,7 @@
 
         <!--Other properties-->
         <skip.docker.tests>true</skip.docker.tests>
+        <jacoco.plugin.version>0.8.8</jacoco.plugin.version>
     </properties>
 
     <dependencies>
@@ -385,6 +386,42 @@
             <properties>
                 <skip.docker.tests>false</skip.docker.tests>
             </properties>
+        </profile>
+        <profile>
+            <id>code-coverage</id>
+            <properties>
+                <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.plugin.version}</version>
+                        <configuration>
+                            <!-- examples of class excluding -->
+                            <excludes>
+                                <!-- exclude>za/co/absa/hyperdrive/ingestor/api/utils/ConfigUtils.class</exclude>
+                                <exclude>za/co/absa/hyperdrive/ingestor/api/utils/StreamWriterUtil*</exclude -->
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>jacoco-prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
