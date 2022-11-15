@@ -91,9 +91,9 @@ class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers 
   }
 
   private def createDeltaCDCToSCD2Writer(): DeltaCDCToSCD2Writer = new DeltaCDCToSCD2Writer(
-    destination = destinationPath,
+    destination = destinationUri,
     trigger = Trigger.Once(),
-    checkpointLocation = checkpointPath,
+    checkpointLocation = checkpointUri,
     partitionColumns = Seq.empty,
     keyColumn = "id",
     timestampColumn = "timestamp",
