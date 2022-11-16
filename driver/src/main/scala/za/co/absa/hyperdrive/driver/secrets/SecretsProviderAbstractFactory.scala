@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.driver.secrets
 
 import org.apache.commons.configuration2.Configuration
-import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProvider.{PerProviderClassKey, ConfigProvidersKey}
+import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProviderCommonAttributes.{perProviderClassKey, configProvidersKey}
 import za.co.absa.hyperdrive.ingestor.api.secrets.{SecretsProvider, SecretsProviderFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
@@ -24,10 +24,10 @@ import za.co.absa.hyperdrive.shared.utils.ClassLoaderUtils
 object SecretsProviderAbstractFactory {
 
   def build(config: Configuration): Map[String, SecretsProvider] = {
-    ConfigUtils.getSubsets(config, ConfigProvidersKey)
+    ConfigUtils.getSubsets(config, configProvidersKey)
       .mapValues { subsetConfig =>
         val factory = ClassLoaderUtils.loadSingletonClassOfType[SecretsProviderFactory](
-          subsetConfig.getString(PerProviderClassKey)
+          subsetConfig.getString(perProviderClassKey)
         )
         factory.apply(subsetConfig)
       }

@@ -15,7 +15,7 @@
 
 package za.co.absa.hyperdrive.driver.secrets.implementation.aws
 
-import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProvider._
+import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProviderCommonAttributes._
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
 trait AwsSecretsManagerSecretsProviderAttributes extends HasComponentAttributes {
@@ -40,40 +40,40 @@ trait AwsSecretsManagerSecretsProviderAttributes extends HasComponentAttributes 
    *         name clashes with properties from other components.
    */
   override def getProperties: Map[String, PropertyMetadata] = Map(
-    s"${ConfigProvidersKey}.<provider-id>.${PerProviderClassKey}" -> PropertyMetadata(
+    s"${configProvidersKey}.<provider-id>.${perProviderClassKey}" -> PropertyMetadata(
       "Secrets Provider class",
       Some("The fully qualified class name of the secrets provider. <provider-id> is an arbitrary string." +
         " Multiple secrets providers can be configured by supplying multiple <provider-id>s"),
       required = true
     ),
-    s"${ConfigDefaultProviderKey}" -> PropertyMetadata(
+    s"${configDefaultProviderKey}" -> PropertyMetadata(
       "Default secrets provider",
       Some("The <provider-id> of the secrets provider to be used by default"),
       required = false
     ),
-    s"${SecretsKey}.<secret-id>.${PerSecretOptionsKey}.${SecretName}" -> PropertyMetadata(
+    s"${secretsKey}.<secret-id>.${perSecretOptionsKey}.${SecretName}" -> PropertyMetadata(
       "Secret Name",
       Some("The Secret name of the secret in AWS Secrets Manager. <secret-id> is an arbitrary string." +
         " Multiple secrets can be configured by supplying multiple <secret-id>s"),
       required = true
     ),
-    s"${SecretsKey}.<secret-id>.${PerSecretOptionsKey}.${PerSecretProviderKey}" -> PropertyMetadata(
+    s"${secretsKey}.<secret-id>.${perSecretOptionsKey}.${perSecretProviderKey}" -> PropertyMetadata(
       "Secrets Provider",
       Some("The <provider-id> of the secrets provider to be used for this specific secret."),
       required = true
     ),
-    s"${SecretsKey}.<secret-id>.${PerSecretOptionsKey}.${ReadAsMap}" -> PropertyMetadata(
+    s"${secretsKey}.<secret-id>.${perSecretOptionsKey}.${ReadAsMap}" -> PropertyMetadata(
       "Read as map",
       Some("Set to true if the secret should be interpreted as a json map, set to false if the value should be read as is." +
         "Default: true"),
       required = false
     ),
-    s"${SecretsKey}.<secret-id>.${PerSecretOptionsKey}.${Key}" -> PropertyMetadata(
+    s"${secretsKey}.<secret-id>.${perSecretOptionsKey}.${Key}" -> PropertyMetadata(
       "Map Key",
       Some("If the secret should be read as a map, specify the key whose value should be extracted as the secret"),
       required = false
     ),
-    s"${SecretsKey}.<secret-id>.${PerSecretOptionsKey}.${Encoding}" -> PropertyMetadata(
+    s"${secretsKey}.<secret-id>.${perSecretOptionsKey}.${Encoding}" -> PropertyMetadata(
       "Encoding",
       Some(s"Decodes the secret. Valid values: `${Base64Encoding}`."),
       required = false

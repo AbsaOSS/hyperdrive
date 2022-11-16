@@ -15,8 +15,8 @@
 
 package za.co.absa.hyperdrive.driver.secrets
 
-import org.apache.commons.configuration2.{Configuration, ConfigurationConverter}
-import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProvider._
+import org.apache.commons.configuration2.Configuration
+import za.co.absa.hyperdrive.ingestor.api.secrets.SecretsProviderCommonAttributes._
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 
 import scala.util.Try
@@ -26,22 +26,22 @@ object SecretsConfigUtils {
 
   def resolveSecrets(config: Configuration): Unit = {
     val secretsProviders = SecretsProviderAbstractFactory.build(config)
-    val defaultProvider = Option(config.getString(ConfigDefaultProviderKey))
-    val secretDescriptors = ConfigUtils.getSubsets(config, SecretsKey)
+    val defaultProvider = Option(config.getString(configDefaultProviderKey))
+    val secretDescriptors = ConfigUtils.getSubsets(config, secretsKey)
     secretDescriptors.foreach { case (name, subsetConfig) =>
-      val provider = Option(subsetConfig.getString(PerSecretProviderKey))
+      val provider = Option(subsetConfig.getString(perSecretProviderKey))
         .getOrElse(defaultProvider
           .getOrElse(
-            throw new NoSuchElementException(s"Either ${SecretsKey}.$name.${PerSecretProviderKey} or " +
-              s"$ConfigDefaultProviderKey must be set")
+            throw new NoSuchElementException(s"Either ${secretsKey}.$name.${perSecretProviderKey} or " +
+              s"$configDefaultProviderKey must be set")
           )
         )
       val secretsProvider = Try(secretsProviders(provider)).getOrElse(throw new NoSuchElementException(
         s"Secrets Provider $provider does not exist. Existing providers: ${secretsProviders.keys}")
       )
 
-      val secret = secretsProvider.retrieveSecret(subsetConfig.subset(PerSecretOptionsKey))
-      config.addProperty(s"${SecretsKey}.$name.${PerSecretSecretValueKey}", secret)
+      val secret = secretsProvider.retrieveSecret(subsetConfig.subset(perSecretOptionsKey))
+      config.addProperty(s"${secretsKey}.$name.${perSecretSecretValueKey}", secret)
     }
   }
 
@@ -51,7 +51,7 @@ object SecretsConfigUtils {
       .getKeys
       .asScala
       .map { key =>
-        val property = if (key.contains(PerSecretSecretValueKey)) {
+        val property = if (key.contains(perSecretSecretValueKey)) {
           RedactedSecret
         } else {
           configuration.getProperty(key)

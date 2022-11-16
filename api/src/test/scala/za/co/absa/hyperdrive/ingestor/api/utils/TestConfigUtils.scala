@@ -414,15 +414,24 @@ class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
     )
   }
 
-  "getSubsets" should "return the correct subsets if the parent key ends with a dot" in {
+  "getSubsets" should "return the correct subsets if the prefix ends with a dot" in {
     val config = new BaseConfiguration
-    config.addProperty("service.items.myItem1.name", "My Item 1")
+    config.addProperty("parent.child.grandchild.someStuff.value", "Anything")
 
-    val subsets = ConfigUtils.getSubsets(config, "service.items.")
+    val subsets = ConfigUtils.getSubsets(config, "parent.child.grandchild.")
 
     import scala.collection.JavaConverters._
-    subsets.keys should contain theSameElementsAs Array("myItem1")
-    subsets("myItem1").getKeys.asScala.toSeq should contain theSameElementsAs Array("name")
-    subsets("myItem1").getString("name") shouldBe "My Item 1"
+    subsets.keys should contain theSameElementsAs Array("someStuff")
+    subsets("someStuff").getKeys.asScala.toSeq should contain theSameElementsAs Array("value")
+    subsets("someStuff").getString("value") shouldBe "Anything"
+  }
+
+  "getSubsets" should "return an empty map if the prefix does not exist" in {
+    val config = new BaseConfiguration
+    config.addProperty("parent.child.grandchild.someStuff.value", "Anything")
+
+    val subsets = ConfigUtils.getSubsets(config, "child.grandchild")
+
+    subsets shouldBe Map()
   }
 }

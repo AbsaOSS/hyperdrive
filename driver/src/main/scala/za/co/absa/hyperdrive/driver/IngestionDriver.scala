@@ -36,10 +36,9 @@ private[driver] abstract class IngestionDriver {
     val configuration = loadConfiguration(args)
     SecretsConfigUtils.resolveSecrets(configuration)
     logger.info("Configuration loaded.")
-    SecretsConfigUtils.getRedactedConfigurationAsMap(configuration)
-      .foreach {
-        case (key, value) => logger.info(s"\t$key = $value")
-      }
+    val configMap = SecretsConfigUtils.getRedactedConfigurationAsMap(configuration)
+    printConfiguration(configMap)
+
     ingest(configuration)
   }
 
@@ -62,4 +61,10 @@ private[driver] abstract class IngestionDriver {
   private def getStreamTransformers(conf: Configuration): Seq[StreamTransformer] = StreamTransformerAbstractFactory.build(conf)
 
   private def getStreamWriter(conf: Configuration): StreamWriter = StreamWriterAbstractFactory.build(conf)
+  
+  private def printConfiguration(configMap: Map[String, AnyRef]): Unit = {
+    configMap.foreach {
+      case (key, value) => logger.info(s"\t$key = $value")
+    }
+  }
 }
