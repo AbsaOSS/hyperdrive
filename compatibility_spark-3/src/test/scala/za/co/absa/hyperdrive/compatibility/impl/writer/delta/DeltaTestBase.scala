@@ -25,8 +25,11 @@ trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
 
   var baseDir: TempDirectory = _
   def baseDirPath: String = baseDir.path.toAbsolutePath.toString
+  def baseDirUri: String = baseDir.path.toAbsolutePath.toUri.toString
   def destinationPath: String = s"${baseDir.path.toAbsolutePath.toString}/destination"
+  def destinationUri: String = s"${baseDir.path.toAbsolutePath.toUri.toString}/destination"
   def checkpointPath: String = s"${baseDir.path.toAbsolutePath.toString}/checkpoint"
+  def checkpointUri: String = s"${baseDir.path.toAbsolutePath.toUri.toString}/checkpoint"
 
   import spark.implicits._
 

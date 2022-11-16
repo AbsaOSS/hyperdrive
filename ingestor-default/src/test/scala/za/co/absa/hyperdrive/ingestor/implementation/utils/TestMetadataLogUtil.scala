@@ -33,7 +33,7 @@ class TestMetadataLogUtil extends FlatSpec with Matchers with SparkTestBase with
 
   before {
     baseDir = TempDirectory("TestMetadataLogUtil").deleteOnExit()
-    baseDirPath = baseDir.path.toAbsolutePath.toString
+    baseDirPath = baseDir.path.toAbsolutePath.toUri.toString
   }
 
   after {
@@ -73,7 +73,7 @@ class TestMetadataLogUtil extends FlatSpec with Matchers with SparkTestBase with
 
   it should "return the empty set if the root folder is empty" in {
     val dir = TempDirectory()
-    val diff = MetadataLogUtil.getParquetFilesNotListedInMetadataLog(spark, dir.path.toAbsolutePath.toString)
+    val diff = MetadataLogUtil.getParquetFilesNotListedInMetadataLog(spark, dir.path.toAbsolutePath.toUri.toString)
 
     diff.isSuccess shouldBe true
     diff.get shouldBe empty

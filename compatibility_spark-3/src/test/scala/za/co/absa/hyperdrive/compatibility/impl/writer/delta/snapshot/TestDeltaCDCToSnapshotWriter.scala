@@ -39,9 +39,9 @@ class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Match
   }
 
   private def createDeltaCDCToSnapshotWriter(): DeltaCDCToSnapshotWriter = new DeltaCDCToSnapshotWriter(
-      destination = destinationPath,
+      destination = destinationUri,
       trigger = Trigger.Once(),
-      checkpointLocation = checkpointPath,
+      checkpointLocation = checkpointUri,
       partitionColumns = Seq.empty,
       keyColumn = "id",
       operationColumn = "eventType",

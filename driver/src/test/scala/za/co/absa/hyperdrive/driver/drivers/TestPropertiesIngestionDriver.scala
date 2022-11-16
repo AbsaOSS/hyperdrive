@@ -17,12 +17,14 @@ package za.co.absa.hyperdrive.driver.drivers
 
 import org.scalatest.{FlatSpec, Matchers}
 
+import java.nio.file.Paths
+
 class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
 
   behavior of PropertiesIngestionDriver.getClass.getSimpleName
 
   it should "load all configuration" in {
-    val configurationFilePath = getClass.getClassLoader.getResource("ingestion.properties").getPath
+    val configurationFilePath = Paths.get(getClass.getClassLoader.getResource("ingestion.properties").toURI).toString
     val args = Array(configurationFilePath)
 
     val config = PropertiesIngestionDriver.loadConfiguration(args)
