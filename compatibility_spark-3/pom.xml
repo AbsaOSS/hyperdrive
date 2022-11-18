@@ -60,5 +60,10 @@
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark3-bundle_${scala.compat.version}</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
