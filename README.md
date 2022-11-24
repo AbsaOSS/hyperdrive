@@ -413,6 +413,30 @@ where the key is a string and the value can be of any type. The following contex
 | key.column.prefix | String | If `ConfluentAvroDecodingTransformer` is configured to consume keys, it prefixes the key columns with `key__` such that they can be distinguished in the dataframe. If `key__` happens to be a prefix of a value column, a random alphanumeric string is used instead. |
 | key.column.names | Seq[String] | If `ConfluentAvroDecodingTransformer` is configured to consume keys, it contains the original column names (without prefix) in the key schema. |
  
+#### Secrets Providers
+
+##### AWS SecretsManager
+| Property Name                                            | Required | Description                                                                                                                                                                     |
+|:---------------------------------------------------------|:--------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `secretsprovider.config.providers.<provider-id>.class`   |   Yes    | The fully qualified class name of the secrets provider. <provider-id> is an arbitrary string. Multiple secrets providers can be configured by supplying multiple <provider-id>s |
+| `secretsprovider.config.defaultprovider`                 |    No    | The <provider-id> of the secrets provider to be used by default                                                                                                                 |
+| `secretsprovider.secrets.<secret-id>.options.secretname` |   Yes    | The Secret name of the secret in AWS Secrets Manager. <secret-id> is an arbitrary string. Multiple secrets can be configured by supplying multiple <secret-id>s                 |
+| `secretsprovider.secrets.<secret-id>.options.provider`   |    No    | The <provider-id> of the secrets provider to be used for this specific secret.                                                                                                  |
+| `secretsprovider.secrets.<secret-id>.options.readasmap`  |    No    | Set to true if the secret should be interpreted as a json map, set to false if the value should be read as is. Default: true                                                    |
+| `secretsprovider.secrets.<secret-id>.options.key`        |    No    | If the secret should be read as a map, specify the key whose value should be extracted as the secret                                                                            |
+| `secretsprovider.secrets.<secret-id>.options.encoding`   |    No    | Decodes the secret. Valid values: `base64`                                                                                                                                       |
+
+The Secrets Provider will fill the configuration property `secretsprovider.secrets.<secret-id>.secretvalue` with the secret value. This configuration key will be
+available for string interpolation to be used by other configuration properties.
+
+**Example**
+- `secretsprovider.config.providers.awssecretsmanager.class=za.co.absa.hyperdrive.driver.secrets.implementation.aws.AwsSecretsManagerSecretsProvider`
+- `secretsprovider.secrets.truststorepassword.provider=awssecretsmanager`
+- `secretsprovider.secrets.truststorepassword.options.secretname=<the-secret-name>`
+- `secretsprovider.secrets.truststorepassword.options.key=<the-secret-key>`
+- `secretsprovider.secrets.truststorepassword.options.encoding=base64`
+- `reader.option.kafka.ssl.truststore.password=${secretsprovider.secrets.truststorepassword.secretvalue}`
+
 #### Other
 Hyperdrive uses [Apache Commons Configuration 2](https://github.com/apache/commons-configuration). This allows
 properties to be referenced, e.g. like so

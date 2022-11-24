@@ -18,7 +18,6 @@ package za.co.absa.hyperdrive.ingestor.api.utils
 import org.apache.commons.configuration2.{Configuration, ConfigurationConverter}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 
-import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object ConfigUtils {
@@ -123,4 +122,18 @@ object ConfigUtils {
   }
 
   def filterKeysContaining(map: Map[String, String], exclusionToken: String): Map[String, String] = map.filterKeys(!_.contains(exclusionToken))
+
+  def getSubsets(config: Configuration, prefix: String): Map[String, Configuration] = {
+    import scala.collection.JavaConverters._
+    val sep = "."
+    val prefixWithDot = if (prefix.endsWith(sep)) prefix else prefix + sep
+    val childKeys = config.getKeys.asScala.toSeq
+      .filter(_.startsWith(prefixWithDot))
+      .map(_.replace(prefixWithDot, ""))
+      .filter(_.contains(sep))
+      .map(key => key.substring(0, key.indexOf(sep)))
+      .toSet
+
+    childKeys.map(key => key -> config.subset(s"$prefixWithDot$key")).toMap
+  }
 }
