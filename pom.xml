@@ -346,6 +346,7 @@
                             <excludes>
                                 <exclude>**/build.yml</exclude>
                                 <exclude>**/CODEOWNERS</exclude>
+                                <exclude>**/ISSUE_TEMPLATE/*.md</exclude>
                                 <exclude>.editorconfig</exclude>
                                 <exclude>**/*.MockMaker</exclude>
                                 <exclude>**/*.json</exclude>
