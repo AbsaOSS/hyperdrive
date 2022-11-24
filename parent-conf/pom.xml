@@ -57,7 +57,7 @@
         <kafka.spark.version>0-10</kafka.spark.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
 
-        <embedded.mongo.version>2.1.2</embedded.mongo.version>
+        <embedded.mongo.version>3.5.2</embedded.mongo.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>

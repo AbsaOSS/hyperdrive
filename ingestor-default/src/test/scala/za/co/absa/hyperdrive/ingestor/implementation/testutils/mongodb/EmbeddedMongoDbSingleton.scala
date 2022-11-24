@@ -15,10 +15,10 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb
 
-import de.flapdoodle.embed.mongo.config.{MongodConfigBuilder, Net, RuntimeConfigBuilder}
+import de.flapdoodle.embed.mongo.config.{Defaults, MongodConfig, Net}
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.{Command, MongodExecutable, MongodStarter}
-import de.flapdoodle.embed.process.config.io.ProcessOutput
+import de.flapdoodle.embed.process.config.process.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
 import org.slf4j.LoggerFactory
 
@@ -38,14 +38,14 @@ object EmbeddedMongoDbSingleton {
     val mongoPort: Int = Network.getFreeServerPort()
 
     // Do not print Embedded MongoDB logs
-    val runtimeConfig = new RuntimeConfigBuilder()
-      .defaults(Command.MongoD)
-      .processOutput(ProcessOutput.getDefaultInstanceSilent)
+    val command = Command.MongoD
+    val runtimeConfig = Defaults.runtimeConfigFor(command)
+      .processOutput(ProcessOutput.silent())
       .build()
 
     val starter = MongodStarter.getInstance(runtimeConfig)
 
-    val mongodConfig = new MongodConfigBuilder()
+    val mongodConfig = MongodConfig.builder()
       .version(Version.Main.V4_0)
       .net(new Net("localhost", mongoPort, Network.localhostIsIPv6()))
       .build()
