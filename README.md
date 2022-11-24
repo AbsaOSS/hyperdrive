@@ -64,6 +64,12 @@ git clone git@github.com:AbsaOSS/hyperdrive.git
 mvn clean package
 ```
 
+For Apple M1 users
+```bash
+mvn clean package -Pspark-3,scala-2.12,m1
+```
+
+
 Given a configuration file has already been created, hyperdrive can be executed as follows:
 ```
 spark-submit --class za.co.absa.hyperdrive.driver.drivers.PropertiesIngestionDriver driver/target/driver*.jar config.properties

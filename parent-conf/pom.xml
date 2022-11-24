@@ -76,6 +76,7 @@
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
 
         <!--Other properties-->
+        <skip.mongodb.tests>false</skip.mongodb.tests>
         <skip.docker.tests>true</skip.docker.tests>
         <jacoco.plugin.version>0.8.8</jacoco.plugin.version>
     </properties>
@@ -324,6 +325,18 @@
                         </goals>
                         <configuration>
                             <suffixes>(?&lt;!DockerTest)</suffixes>
+                            <tagsToExclude>za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb.MongoDbTest</tagsToExclude>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>mongo-db-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <suffixes>(?&lt;!DockerTest)</suffixes>
+                            <tagsToInclude>za.co.absa.hyperdrive.ingestor.implementation.testutils.mongodb.MongoDbTest</tagsToInclude>
+                            <skipTests>${skip.mongodb.tests}</skipTests>
                         </configuration>
                     </execution>
                     <execution>
@@ -385,6 +398,12 @@
             <id>all-tests</id>
             <properties>
                 <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>m1</id>
+            <properties>
+                <skip.mongodb.tests>true</skip.mongodb.tests>
             </properties>
         </profile>
         <profile>

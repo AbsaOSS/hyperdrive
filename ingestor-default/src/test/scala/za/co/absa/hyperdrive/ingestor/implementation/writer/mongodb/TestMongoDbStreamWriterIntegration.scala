@@ -39,7 +39,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
     clearDb()
   }
 
-  it should "write data to MongoDB" in {
+  it should "write data to MongoDB" taggedAs (MongoDbTest) in {
     // given
     val inputData = Range(0, 100).toDF
 
@@ -57,7 +57,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
     }
   }
 
-  it should "support checkpoints" in {
+  it should "support checkpoints" taggedAs (MongoDbTest) in {
     // given
     val inputData1 = Range(0, 100).toDF
     val inputData2 = Range(0, 150).toDF
@@ -87,7 +87,7 @@ class TestMongoDbStreamWriterIntegration extends FlatSpec with SparkTestBase wit
 
   }
 
-  it should "write structured data to MongoDB" in {
+  it should "write structured data to MongoDB" taggedAs (MongoDbTest) in {
     // given
     val inputData = Seq(
       ("John Doe", 48, 181.5, BigDecimal(10500.22), List(1, 10, 100)),

@@ -22,14 +22,9 @@ trait MongoDbFixture extends BeforeAndAfterAll {
 
   this: Suite =>
 
-  // Workaround to fix version not supported error
-  if (System.getProperty("os.arch") == "aarch64" && System.getProperty("os.name") == "Mac OS X") {
-    System.setProperty("os.arch", "i686_64")
-  }
-
   import ScalaMongoImplicits._
 
-  private val (mongoDbExecutable, mongoPort) = EmbeddedMongoDbSingleton.embeddedMongoDb
+  private lazy val (mongoDbExecutable, mongoPort) = EmbeddedMongoDbSingleton.embeddedMongoDb
 
   def uri: String = s"mongodb://localhost:$mongoPort"
 
