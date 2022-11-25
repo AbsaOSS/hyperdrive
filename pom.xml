@@ -119,6 +119,8 @@
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
         <hadoop_3.version>3.3.1</hadoop_3.version>
         <delta.spark_3.version>2.1.0</delta.spark_3.version>
+        <snappy.java.spark_2.version>1.1.7.5</snappy.java.spark_2.version>
+        <snappy.java.spark_3.version>1.1.8.4</snappy.java.spark_3.version>
 
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
@@ -131,6 +133,7 @@
         <spark.version />
         <spark.sql.mongo.version />
         <mongodb.driver.version />
+        <snappy.java.version>${snappy.java.spark_2.version}</snappy.java.version>
 
     </properties>
 
@@ -217,6 +220,7 @@
             <properties>
                 <spark.compat.version>spark-3</spark.compat.version>
                 <spark.version>${spark_3.version}</spark.version>
+                <snappy.java.version>${snappy.java.spark_3.version}</snappy.java.version>
                 <spark.sql.mongo.version>${spark_3.sql.mongo.version}</spark.sql.mongo.version>
                 <mongodb.driver.version>${spark_3.mongodb.driver.version}</mongodb.driver.version>
                 <abris.version>${abris_spark_32.version}</abris.version>
@@ -264,7 +268,19 @@
                 <module>hyperdrive-release_spark-3</module>
             </modules>
         </profile>
-
+        <profile>
+            <id>apple-m1</id>
+<!--            <activation>-->
+<!--                <os>-->
+<!--                    <name>mac os x</name>-->
+<!--                    <family>mac</family>-->
+<!--                    <arch>aarch64</arch>-->
+<!--                </os>-->
+<!--            </activation>-->
+            <properties>
+                <snappy.java.version>${snappy.java.spark_3.version}</snappy.java.version>
+            </properties>
+        </profile>
         <profile>
             <id>deploy</id>
             <build>

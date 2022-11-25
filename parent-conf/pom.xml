@@ -86,6 +86,10 @@
             <groupId>com.thoughtworks.paranamer</groupId>
             <artifactId>paranamer</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+        </dependency>
         <!--END Enforced dependency versions-->
 
         <!--Spark-->
@@ -130,7 +134,12 @@
                 <artifactId>paranamer</artifactId>
                 <version>${paranamer.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy.java.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <!--END Enforced dependency versions-->
 
             <!--ABRiS-->
