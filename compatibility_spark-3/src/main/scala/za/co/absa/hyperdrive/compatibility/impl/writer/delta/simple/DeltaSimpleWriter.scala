@@ -58,7 +58,7 @@ private[writer] class DeltaSimpleWriter(destination: String, trigger: Trigger,
         DeltaTable
           .forPath(destination)
           .as("currentTable")
-          .merge(df.as("changes"), s"currentTable.$keyColumn = changes.$keyColumn")
+          .merge(df.dropDuplicates(keyColumn).as("changes"), s"currentTable.$keyColumn = changes.$keyColumn")
           .whenMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), true).otherwise(false))
           .delete()
           .whenMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), false).otherwise(true))
