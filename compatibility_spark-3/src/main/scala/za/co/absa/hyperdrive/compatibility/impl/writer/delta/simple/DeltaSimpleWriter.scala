@@ -15,10 +15,12 @@
 
 package za.co.absa.hyperdrive.compatibility.impl.writer.delta.simple
 
+import io.delta.tables.DeltaTable
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.{col, when}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -27,6 +29,9 @@ import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFact
 private[writer] class DeltaSimpleWriter(destination: String, trigger: Trigger,
                                         checkpointLocation: String,
                                         partitionColumns: Option[Seq[String]],
+                                        keyColumn: String,
+                                        operationColumn: String,
+                                        operationDeleteValues: Seq[String],
                                         val extraConfOptions: Map[String, String]) extends StreamWriter {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -50,7 +55,17 @@ private[writer] class DeltaSimpleWriter(destination: String, trigger: Trigger,
       .option(StreamWriterProperties.CheckpointLocation, checkpointLocation)
       .options(extraConfOptions)
       .foreachBatch((df: DataFrame, batchId: Long) => {
-        df.write.format("delta").mode("append").save(destination)
+        DeltaTable
+          .forPath(destination)
+          .as("currentTable")
+          .merge(df.as("changes"), s"currentTable.$keyColumn = changes.$keyColumn")
+          .whenMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), true).otherwise(false))
+          .delete()
+          .whenMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), false).otherwise(true))
+          .updateAll()
+          .whenNotMatched(when(col(s"changes.$operationColumn").isInCollection(operationDeleteValues), false).otherwise(true))
+          .insertAll()
+          .execute()
       }).start()
   }
 
@@ -64,11 +79,14 @@ object DeltaSimpleWriter extends StreamWriterFactory with DeltaSimpleWriterAttri
     val checkpointLocation = StreamWriterUtil.getCheckpointLocation(config)
     val partitionColumns = ConfigUtils.getSeqOrNone(KEY_PARTITION_COLUMNS, config)
     val extraOptions = getExtraOptions(config)
+    val keyColumn = ConfigUtils.getOrThrow(KEY_KEY_COLUMN, config)
+    val operationColumn = ConfigUtils.getOrThrow(KEY_OPERATION_COLUMN, config)
+    val operationDeleteValues = ConfigUtils.getSeqOrThrow(KEY_OPERATION_DELETED_VALUES, config)
 
     LoggerFactory.getLogger(this.getClass).info(s"Going to create ParquetStreamWriter instance using: " +
       s"destination directory='$destinationDirectory', trigger='$trigger', checkpointLocation='$checkpointLocation', extra options='$extraOptions'")
 
-    new DeltaSimpleWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, extraOptions)
+    new DeltaSimpleWriter(destinationDirectory, trigger, checkpointLocation, partitionColumns, keyColumn, operationColumn, operationDeleteValues, extraOptions)
   }
 
   def getDestinationDirectory(configuration: Configuration): String = ConfigUtils.getOrThrow(KEY_DESTINATION_DIRECTORY, configuration, errorMessage = s"Destination directory not found. Is '$KEY_DESTINATION_DIRECTORY' defined?")

@@ -23,6 +23,9 @@ trait DeltaSimpleWriterAttributes extends HasComponentAttributes {
   val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
+  val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
+  val KEY_OPERATION_COLUMN = s"$rootFactoryConfKey.operation.column"
+  val KEY_OPERATION_DELETED_VALUES = s"$rootFactoryConfKey.operation.deleted.values"
 
   override def getName: String = "Parquet Stream Writer"
 
@@ -31,6 +34,9 @@ trait DeltaSimpleWriterAttributes extends HasComponentAttributes {
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true),
     KEY_PARTITION_COLUMNS -> PropertyMetadata("Partition columns", Some("Comma-separated list of columns to partition by"), required = false),
+    KEY_KEY_COLUMN -> PropertyMetadata("Key column", Some("A column with unique entity identifier"), required = true),
+    KEY_OPERATION_COLUMN -> PropertyMetadata("Operation column", Some("A column containing value marking a record with an operation"), required = true),
+    KEY_OPERATION_DELETED_VALUES -> PropertyMetadata("Delete value for Operation column", Some("Values marking a record for deletion in the operation column"), required = true),
     StreamWriterCommonAttributes.keyTriggerProcessingTime -> StreamWriterCommonAttributes.triggerProcessingTimeMetadata,
     StreamWriterCommonAttributes.keyCheckpointBaseLocation -> StreamWriterCommonAttributes.checkpointBaseLocation
   )
