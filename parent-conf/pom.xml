@@ -130,6 +130,11 @@
                 <artifactId>paranamer</artifactId>
                 <version>${paranamer.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy.java.version}</version>
+            </dependency>
 
             <!--END Enforced dependency versions-->
 

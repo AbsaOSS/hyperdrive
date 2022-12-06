@@ -119,6 +119,8 @@
         <spark_3.mongodb.driver.version>4.0.5</spark_3.mongodb.driver.version>
         <hadoop_3.version>3.3.1</hadoop_3.version>
         <delta.spark_3.version>2.1.0</delta.spark_3.version>
+        <snappy.java.spark_2.version>1.1.7.3</snappy.java.spark_2.version>
+        <snappy.java.spark_3.version>1.1.8.4</snappy.java.spark_3.version><!-- Required also for Spark 2 on Mac M1 -->
 
         <!-- ABRiS versions -->
         <abris_spark_24.version>5.1.1</abris_spark_24.version>
@@ -131,6 +133,7 @@
         <spark.version />
         <spark.sql.mongo.version />
         <mongodb.driver.version />
+        <snappy.java.version>${snappy.java.spark_3.version}</snappy.java.version>
 
     </properties>
 
@@ -264,7 +267,12 @@
                 <module>hyperdrive-release_spark-3</module>
             </modules>
         </profile>
-
+        <profile>
+            <id>no-upgraded-snappy</id>
+            <properties>
+                <snappy.java.version>${snappy.java.spark_2.version}</snappy.java.version>
+            </properties>
+        </profile>
         <profile>
             <id>deploy</id>
             <build>
