@@ -57,7 +57,7 @@
         <kafka.spark.version>0-10</kafka.spark.version>
         <testcontainers.kafka.version>1.15.1</testcontainers.kafka.version>
 
-        <embedded.mongo.version>2.1.2</embedded.mongo.version>
+        <embedded.mongo.version>3.5.2</embedded.mongo.version>
 
         <!--Mockito-->
         <mockito.version>2.25.0</mockito.version>
@@ -72,11 +72,13 @@
         <!--Configurations-->
         <commons.configuration2.version>2.7</commons.configuration2.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <aws.java.sdk.bom.version>2.18.7</aws.java.sdk.bom.version>
 
         <buildnumber.maven.version>1.4</buildnumber.maven.version>
 
         <!--Other properties-->
         <skip.docker.tests>true</skip.docker.tests>
+        <jacoco.plugin.version>0.8.8</jacoco.plugin.version>
     </properties>
 
     <dependencies>
@@ -127,6 +129,11 @@
                 <groupId>com.thoughtworks.paranamer</groupId>
                 <artifactId>paranamer</artifactId>
                 <version>${paranamer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy.java.version}</version>
             </dependency>
 
             <!--END Enforced dependency versions-->
@@ -217,6 +224,13 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${commons.beanutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.java.sdk.bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!--Tests-->
@@ -385,6 +399,42 @@
             <properties>
                 <skip.docker.tests>false</skip.docker.tests>
             </properties>
+        </profile>
+        <profile>
+            <id>code-coverage</id>
+            <properties>
+                <skip.docker.tests>false</skip.docker.tests>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.plugin.version}</version>
+                        <configuration>
+                            <!-- examples of class excluding -->
+                            <excludes>
+                                <!-- exclude>za/co/absa/hyperdrive/ingestor/api/utils/ConfigUtils.class</exclude>
+                                <exclude>za/co/absa/hyperdrive/ingestor/api/utils/StreamWriterUtil*</exclude -->
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>jacoco-prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
