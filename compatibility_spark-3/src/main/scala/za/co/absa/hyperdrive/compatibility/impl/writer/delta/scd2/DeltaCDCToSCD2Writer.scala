@@ -19,8 +19,9 @@ import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{col, lag, lit, max, min, when}
-import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.{Column, DataFrame, functions}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.types.{BooleanType, StructField, StructType, TimestampType}
 import org.slf4j.LoggerFactory
@@ -79,7 +80,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       .foreachBatch((df: DataFrame, batchId: Long) => {
         logger.info(s"Writing batchId: $batchId")
 
-        val deltaTable = DeltaTable.forPath(destination)
+        val deltaTable = df.sparkSession.read.format("delta").load(destination)
 
         val uniqueChangesForEachKeyAndTimestamp = removeDuplicates(df)
         val previousEvents = getPreviousEvents(deltaTable, uniqueChangesForEachKeyAndTimestamp)
@@ -105,8 +106,8 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
       .start()
   }
 
-  private def getPreviousEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
-    deltaTable.toDF.as(OldData).join(
+  private def getPreviousEvents(deltaTable: DataFrame, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
+    deltaTable.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
       col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
         .and(col(s"$NewData.$timestampColumn").>=(col(s"$OldData.$StartDateColumn")))
@@ -119,12 +120,17 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
     ).select(s"$OldData.*").withColumn(s"$IsOldDataColumn", lit(true))
   }
 
-  private def getNextEvents(deltaTable: DeltaTable, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
-    val fieldNames = deltaTable.toDF.schema.fieldNames
+  private def getNextEvents(deltaTable: DataFrame, uniqueChangesForEachKeyAndTimestamp: DataFrame): DataFrame = {
+    val fieldNames = deltaTable.schema.fieldNames
       .filter(_ != StartDateColumn)
       .filter(_ != timestampColumn)
-    val originalFieldNames = deltaTable.toDF.schema.fieldNames
-    deltaTable.toDF.as(OldData).join(
+    val originalFieldNames = deltaTable.schema.fieldNames
+
+    val window = Window
+      .partitionBy(col(s"$keyColumn").asc, col(s"$NewData.$timestampColumn").asc)
+      .orderBy(s"otherCols.$StartDateColumn", s"otherCols.$timestampColumn")
+
+    deltaTable.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
       col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
         .and(col(s"$NewData.$timestampColumn").<(col(s"$OldData.$StartDateColumn")))
@@ -134,11 +140,11 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
         s"$NewData.$timestampColumn",
         s"struct($StartDateColumn, $OldData.$timestampColumn, ${fieldNames.mkString(",")}) as otherCols"
       )
-      .groupBy(s"$keyColumn", s"$NewData.$timestampColumn")
-      .agg(min("otherCols").as("latest"))
-      .filter(col("latest").isNotNull)
-      .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-      .selectExpr("latest.*")
+      .withColumn("rank", functions.row_number().over(window))
+      .where("rank == 1")
+      .drop("rank")
+
+      .selectExpr("otherCols.*")
       .select(originalFieldNames.head, originalFieldNames.tail: _*)
       .withColumn(s"$IsOldDataColumn", lit(true))
   }
@@ -191,21 +197,14 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
 
   private def removeDuplicates(inputDF: DataFrame): DataFrame = {
     val dataFrameWithSortColumns = DeltaUtil.getDataFrameWithSortColumns(inputDF, SortFieldPrefix, precombineColumns, precombineColumnsCustomOrder)
-
-    val originalFieldNames = inputDF.schema.fieldNames.mkString(",")
     val sortColumnsWithPrefix = dataFrameWithSortColumns.schema.fieldNames.filter(_.startsWith(SortFieldPrefix))
-
+    val window = Window
+      .partitionBy(s"$keyColumn", s"$timestampColumn")
+      .orderBy(sortColumnsWithPrefix.map(col(_).desc): _*)
     dataFrameWithSortColumns
-      .selectExpr(
-        s"$keyColumn",
-        s"$timestampColumn",
-        s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols"
-      )
-      .groupBy(s"$keyColumn", s"$timestampColumn")
-      .agg(max("otherCols").as("latest"))
-      .filter(col("latest").isNotNull)
-      .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-      .selectExpr("latest.*")
+      .withColumn("rank", functions.row_number().over(window))
+      .where("rank == 1")
+      .drop("rank")
       .drop(sortColumnsWithPrefix: _*)
   }
 }

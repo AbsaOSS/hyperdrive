@@ -21,10 +21,11 @@ import org.apache.hudi.DataSourceWriteOptions.{HIVE_STYLE_PARTITIONING, PARTITIO
 import org.apache.hudi.QuickstartUtils.getQuickstartWriteConfigs
 import org.apache.hudi.exception.TableNotFoundException
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.apache.spark.sql.types.{BooleanType, StructField, StructType, TimestampType}
-import org.apache.spark.sql.{Column, DataFrame, DataFrameWriter, Row, SaveMode}
+import org.apache.spark.sql.{Column, DataFrame, DataFrameWriter, Row, SaveMode, functions}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.compatibility.impl.writer.hudi.HudiUtil
 import za.co.absa.hyperdrive.compatibility.impl.writer.hudi.scd2.HudiCDCToSCD2Writer.logger
@@ -140,6 +141,11 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
       .filter(_ != StartDateColumn)
       .filter(_ != timestampColumn)
     val originalFieldNames = hudiTable.schema.fieldNames
+
+    val window = Window
+      .partitionBy(col(s"$keyColumn").asc, col(s"$NewData.$timestampColumn").asc)
+      .orderBy(s"otherCols.$StartDateColumn", s"otherCols.$timestampColumn")
+
     hudiTable.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
       col(s"$NewData.$keyColumn").equalTo(col(s"$OldData.$keyColumn"))
@@ -150,11 +156,11 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
         s"$NewData.$timestampColumn",
         s"struct($StartDateColumn, $OldData.$timestampColumn, ${fieldNames.mkString(",")}) as otherCols"
       )
-      .groupBy(s"$keyColumn", s"$NewData.$timestampColumn")
-      .agg(min("otherCols").as("latest"))
-      .filter(col("latest").isNotNull)
-      .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-      .selectExpr("latest.*")
+      .withColumn("rank", functions.row_number().over(window))
+      .where("rank == 1")
+      .drop("rank")
+
+      .selectExpr("otherCols.*")
       .select(originalFieldNames.head, originalFieldNames.tail: _*)
       .withColumn(s"$IsOldDataColumn", lit(true))
   }
@@ -208,21 +214,14 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
 
   private def removeDuplicates(inputDF: DataFrame): DataFrame = {
     val dataFrameWithSortColumns = HudiUtil.getDataFrameWithSortColumns(inputDF, SortFieldPrefix, precombineColumns, precombineColumnsCustomOrder)
-
-    val originalFieldNames = inputDF.schema.fieldNames.mkString(",")
     val sortColumnsWithPrefix = dataFrameWithSortColumns.schema.fieldNames.filter(_.startsWith(SortFieldPrefix))
-
+    val window = Window
+      .partitionBy(s"$keyColumn", s"$timestampColumn")
+      .orderBy(sortColumnsWithPrefix.map(col(_).desc): _*)
     dataFrameWithSortColumns
-      .selectExpr(
-        s"$keyColumn",
-        s"$timestampColumn",
-        s"struct(${sortColumnsWithPrefix.mkString(",")}, $originalFieldNames) as otherCols"
-      )
-      .groupBy(s"$keyColumn", s"$timestampColumn")
-      .agg(max("otherCols").as("latest"))
-      .filter(col("latest").isNotNull)
-      .withColumn("latest", new Column(AssertNotNull(col("latest").expr)))
-      .selectExpr("latest.*")
+      .withColumn("rank", functions.row_number().over(window))
+      .where("rank == 1")
+      .drop("rank")
       .drop(sortColumnsWithPrefix: _*)
   }
 }
