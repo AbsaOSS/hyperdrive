@@ -13,17 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2
 
-import scala.io.Source
+import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-private[hyperdrive] object FileUtils {
-  def readFileLines(file: String): Vector[String] = {
-    val source = Source.fromFile(file)
-    try {
-      source.getLines().toVector
-    } finally {
-      source.close()
-    }
-  }
+class HudiCDCToSCD2WriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = HudiCDCToSCD2Writer
 }

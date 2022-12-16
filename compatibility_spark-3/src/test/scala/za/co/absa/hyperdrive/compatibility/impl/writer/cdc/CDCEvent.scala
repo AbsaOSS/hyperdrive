@@ -13,27 +13,18 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
 import java.sql.Timestamp
-import scala.util.Try
 
-case class DeltaEvent(_start_date: Timestamp, _end_date: Timestamp, _is_current: Boolean, id: String, value: String, timestamp: Timestamp, eventType: String)
+case class CDCEvent(id: String, value: String, timestamp: Timestamp, eventType: String)
 
-object DeltaEvent {
-  def loadFromFile(path: String): Seq[DeltaEvent] = {
+object CDCEvent {
+  def loadFromFile(path: String): Seq[CDCEvent] = {
     val lines = FileUtils.readFileLines(getClass.getResource(path).getPath)
     for {
       line <- lines
       values = line.split(",").map(_.trim)
-    } yield DeltaEvent(
-      Timestamp.valueOf(values(4)),
-      Try(Timestamp.valueOf(values(5))).getOrElse(null),
-      values(6).toBoolean,
-      values(0),
-      values(1),
-      Timestamp.valueOf(values(2)),
-      values(3)
-    )
+    } yield CDCEvent(values(0), values(1), Timestamp.valueOf(values(2)), values(3))
   }
 }

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.scd2
 
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
 
-class DeltaCDCToSnapshotWriterLoader extends StreamWriterFactoryProvider {
-  override def getComponentFactory: StreamWriterFactory = DeltaCDCToSnapshotWriter
+class DeltaCDCToSCD2WriterLoader extends StreamWriterFactoryProvider {
+  override def getComponentFactory: StreamWriterFactory = DeltaCDCToSCD2Writer
 }
