@@ -24,7 +24,7 @@ import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCEvent, CDCTestBas
 class TestHudiCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
   behavior of "HudiCDCToSCD2Writer"
 
-  it should "merge unique by timestamp scd2 rows into empty delta table" in {
+  it should "merge unique by timestamp scd2 rows into empty hudi table" in {
     writeOneInput("/cdc-to-scd2/01-empty-table-conflicting-dates/tested-input.csv")
 
     getResult should contain theSameElementsAs SCD2Event.loadFromFile("/cdc-to-scd2/01-empty-table-conflicting-dates/expected.csv")

@@ -46,6 +46,7 @@ The data ingestion pipeline of Hyperdrive consists of four components: readers, 
 - `KafkaStreamWriter` - writes to a Kafka topic.
 - `DeltaCDCToSnapshotWriter` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates the latest snapshot table.
 - `DeltaCDCToSCD2Writer` - writes the DataFrame in Delta format. It expects CDC events and performs merge logic and creates SCD2 table.
+- `HudiCDCToSCD2Writer` - writes the DataFrame in Hudi format. It expects CDC events and performs merge logic and creates SCD2 table.
 
 ### Custom components
 Custom components can be implemented using the [Component Archetype](component-archetype) following the API defined in the package `za.co.absa.hyperdrive.ingestor.api`
@@ -345,7 +346,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 
 **Example**
 
-- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot.DeltaCDCToSnapshotWriter`
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.snapshot.DeltaCDCToSnapshotWriter`
 - `writer.deltacdctosnapshot.destination.directory=/tmp/destination`
 - `writer.deltacdctosnapshot.key.column=key`
 - `writer.deltacdctosnapshot.operation.column=ENTTYP`
@@ -370,7 +371,7 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.deltacdctoscd2.options`, e.g. `writer.deltacdctoscd2.options.key=value`
 
 **Example**
-- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2.DeltaCDCToSCD2Writer`
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.scd2.DeltaCDCToSCD2Writer`
 - `writer.deltacdctoscd2.destination.directory=/tmp/destination`
 - `writer.deltacdctoscd2.key.column=key`
 - `writer.deltacdctoscd2.timestamp.column=TIMSTAMP`
@@ -378,6 +379,32 @@ Any additional properties for the `DataStreamWriter` can be added with the prefi
 - `writer.deltacdctoscd2.operation.deleted.values=DL,FD`
 - `writer.deltacdctoscd2.precombineColumns=ENTTYP`
 - `writer.deltacdctoscd2.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
+
+##### HudiCDCToSCD2Writer
+| Property Name                                         | Required | Description                                                                                                                                              |
+|:------------------------------------------------------| :---: |:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `writer.hudicdctoscd2.destination.directory`         | Yes | Destination path of the sink. Equivalent to Spark property `path` for the `DataStreamWriter`                                                             |
+| `writer.hudicdctoscd2.partition.columns`             | No | Comma-separated list of columns to partition by.                                                                                                         |
+| `writer.hudicdctoscd2.key.column`                    | Yes | A column with unique entity identifier.                                                                                                                  |
+| `writer.hudicdctoscd2.timestamp.column`              | Yes | A column with timestamp.                                                                                                                                 |
+| `writer.hudicdctoscd2.operation.column`              | Yes | A column containing value marking a record with an operation.                                                                                            |
+| `writer.hudicdctoscd2.operation.deleted.values`      | Yes | Values marking a record for deletion in the operation column.                                                                                            |
+| `writer.hudicdctoscd2.precombineColumns`             | Yes | When two records have the same key and timestamp value, we will pick the one with the largest value for precombine columns. Evaluated in provided order. |
+| `writer.hudicdctoscd2.precombineColumns.customOrder` | No | Precombine column's custom order in ascending order.                                                                                                     |
+| `writer.common.trigger.type`                          | No | See [Combination writer properties](#common-writer-properties)                                                                                           |
+| `writer.common.trigger.processing.time`               | No | See [Combination writer properties](#common-writer-properties)                                                                                           |
+
+Any additional properties for the `DataStreamWriter` can be added with the prefix `writer.hudicdctoscd2.options`, e.g. `writer.hudicdctoscd2.options.key=value`
+
+**Example**
+- `component.writer=za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2.HudiCDCToSCD2Writer`
+- `writer.hudicdctoscd2.destination.directory=/tmp/destination`
+- `writer.hudicdctoscd2.key.column=key`
+- `writer.hudicdctoscd2.timestamp.column=TIMSTAMP`
+- `writer.hudicdctoscd2.operation.column=ENTTYP`
+- `writer.hudicdctoscd2.operation.deleted.values=DL,FD`
+- `writer.hudicdctoscd2.precombineColumns=ENTTYP`
+- `writer.hudicdctoscd2.precombineColumns.customOrder.ENTTYP=PT,FI,RR,UB,UP,DL,FD`
 
 #### Common writer properties
 
