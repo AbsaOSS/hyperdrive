@@ -19,7 +19,6 @@ import java.util.UUID
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
 class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
