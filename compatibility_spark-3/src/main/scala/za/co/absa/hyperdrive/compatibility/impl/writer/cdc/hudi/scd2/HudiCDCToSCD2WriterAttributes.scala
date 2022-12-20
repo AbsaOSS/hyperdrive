@@ -17,8 +17,9 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2
 
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.CDCToSCD2WriterAttributes
 
-trait HudiCDCToSCD2WriterAttributes extends CDCToSCD2WriterAttributes {
-  override val rootFactoryConfKey = "writer.hudicdctoscd2"
+class HudiCDCToSCD2WriterAttributes extends {
+  val rootFactoryConfKey = "writer.hudicdctoscd2"
+} with CDCToSCD2WriterAttributes {
 
   override def getName: String = "Hudi Stream Writer"
 

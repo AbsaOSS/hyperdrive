@@ -22,7 +22,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 import java.sql.Timestamp
 
-class TestDeltaHudiUtil extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestCDCUtil extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+
   import spark.implicits._
 
   "getDataFrameWithSortColumns" should "return dataframe with sort columns" in {

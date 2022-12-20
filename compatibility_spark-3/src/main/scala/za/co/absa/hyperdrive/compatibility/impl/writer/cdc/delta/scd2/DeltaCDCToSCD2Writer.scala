@@ -79,7 +79,7 @@ private[writer] class DeltaCDCToSCD2Writer(destination: String,
   }
 }
 
-object DeltaCDCToSCD2Writer extends StreamWriterFactory with DeltaCDCToSCD2WriterAttributes {
+object DeltaCDCToSCD2Writer extends DeltaCDCToSCD2WriterAttributes with StreamWriterFactory {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(config: Configuration): StreamWriter = {

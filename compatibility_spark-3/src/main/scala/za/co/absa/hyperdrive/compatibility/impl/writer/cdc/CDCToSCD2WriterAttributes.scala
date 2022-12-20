@@ -20,15 +20,15 @@ import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetad
 
 trait CDCToSCD2WriterAttributes extends HasComponentAttributes {
   val rootFactoryConfKey: String
-  lazy val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
-  lazy val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
-  lazy val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
-  lazy val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
-  lazy val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
-  lazy val KEY_OPERATION_COLUMN = s"$rootFactoryConfKey.operation.column"
-  lazy val KEY_OPERATION_DELETED_VALUES = s"$rootFactoryConfKey.operation.deleted.values"
-  lazy val KEY_PRECOMBINE_COLUMNS = s"$rootFactoryConfKey.precombineColumns"
-  lazy val KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER = s"$rootFactoryConfKey.precombineColumns.customOrder"
+  val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
+  val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
+  val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
+  val KEY_KEY_COLUMN = s"$rootFactoryConfKey.key.column"
+  val KEY_TIMESTAMP_COLUMN = s"$rootFactoryConfKey.timestamp.column"
+  val KEY_OPERATION_COLUMN = s"$rootFactoryConfKey.operation.column"
+  val KEY_OPERATION_DELETED_VALUES = s"$rootFactoryConfKey.operation.deleted.values"
+  val KEY_PRECOMBINE_COLUMNS = s"$rootFactoryConfKey.precombineColumns"
+  val KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER = s"$rootFactoryConfKey.precombineColumns.customOrder"
 
   override def getName: String
 

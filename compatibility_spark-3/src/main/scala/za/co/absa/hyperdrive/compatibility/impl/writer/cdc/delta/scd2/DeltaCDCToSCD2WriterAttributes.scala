@@ -17,8 +17,9 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.scd2
 
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.CDCToSCD2WriterAttributes
 
-trait DeltaCDCToSCD2WriterAttributes extends CDCToSCD2WriterAttributes {
-  override val rootFactoryConfKey = "writer.deltacdctoscd2"
+class DeltaCDCToSCD2WriterAttributes extends {
+  val rootFactoryConfKey = "writer.deltacdctoscd2"
+} with CDCToSCD2WriterAttributes {
 
   override def getName: String = "Delta Stream Writer"
 

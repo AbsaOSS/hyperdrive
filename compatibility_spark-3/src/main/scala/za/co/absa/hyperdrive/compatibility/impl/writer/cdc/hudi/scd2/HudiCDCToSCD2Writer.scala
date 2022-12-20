@@ -21,7 +21,8 @@ import org.apache.hudi.DataSourceWriteOptions._
 import org.apache.hudi.QuickstartUtils.getQuickstartWriteConfigs
 import org.apache.hudi.exception.TableNotFoundException
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
-import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SaveMode}
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SaveMode, SparkSession}
 import org.slf4j.LoggerFactory
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.CDCUtil.{SCD2Fields, getSchemaWithSCD2Fields, getStagedDataForSCD2, isDirEmptyOrDoesNotExist}
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
@@ -65,24 +66,27 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
         val spark = input.sparkSession
         val dataFrameSchema = getSchemaWithSCD2Fields(dataFrame)
 
-        var hudiTable: DataFrame = null
-        try {
-          hudiTable = input.sparkSession.read.format("hudi").load(destination)
-            .drop(HoodieCommitTime, HoodieCommitSeqno, HoodieRecordKey, HoodiePartitionPath, HoodieFileName)
-        } catch {
-          case _: TableNotFoundException | _: FileNotFoundException =>
-            if (isDirEmptyOrDoesNotExist(input.sparkSession, destination)) {
-              hudiTable = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], dataFrameSchema)
-            } else {
-              throw new IllegalArgumentException(s"Could not create new hudi table. Directory $destination is not empty!")
-            }
-        }
+        val hudiTable: DataFrame = createDeltaTableIfNotExists(spark, dataFrameSchema)
 
         val scd2Fields = SCD2Fields(keyColumn, timestampColumn, operationColumn, operationDeleteValues, precombineColumns, precombineColumnsCustomOrder)
         val stagedData = getStagedDataForSCD2(hudiTable, input, scd2Fields)
 
         generateDataFrameWriter(stagedData).save(destination)
       }).start()
+  }
+
+  private def createDeltaTableIfNotExists(sparkSession: SparkSession, dataFrameSchema: StructType): DataFrame = {
+    try {
+      sparkSession.read.format("hudi").load(destination)
+        .drop(HoodieCommitTime, HoodieCommitSeqno, HoodieRecordKey, HoodiePartitionPath, HoodieFileName)
+    } catch {
+      case _: TableNotFoundException | _: FileNotFoundException =>
+        if (isDirEmptyOrDoesNotExist(sparkSession, destination)) {
+          sparkSession.createDataFrame(sparkSession.sparkContext.emptyRDD[Row], dataFrameSchema)
+        } else {
+          throw new IllegalArgumentException(s"Could not create new hudi table. Directory $destination is not empty!")
+        }
+    }
   }
 
   private def generateDataFrameWriter(latestChanges: DataFrame): DataFrameWriter[Row] = {
@@ -100,7 +104,7 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
   }
 }
 
-object HudiCDCToSCD2Writer extends StreamWriterFactory with HudiCDCToSCD2WriterAttributes {
+object HudiCDCToSCD2Writer extends HudiCDCToSCD2WriterAttributes with StreamWriterFactory {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(config: Configuration): StreamWriter = {

@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2
 
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2.HudiCDCToSCD2Writer
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCEvent, CDCTestBase, SCD2Event}
 
 class TestHudiCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
