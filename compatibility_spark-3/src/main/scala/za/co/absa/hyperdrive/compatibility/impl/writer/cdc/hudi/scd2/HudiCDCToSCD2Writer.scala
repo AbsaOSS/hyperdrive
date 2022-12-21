@@ -66,7 +66,7 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
         val spark = input.sparkSession
         val dataFrameSchema = getSchemaWithSCD2Fields(dataFrame)
 
-        val hudiTable: DataFrame = createDeltaTableIfNotExists(spark, dataFrameSchema)
+        val hudiTable: DataFrame = createHudiTableIfNotExists(spark, dataFrameSchema)
 
         val scd2Fields = SCD2Fields(keyColumn, timestampColumn, operationColumn, operationDeleteValues, precombineColumns, precombineColumnsCustomOrder)
         val stagedData = getStagedDataForSCD2(hudiTable, input, scd2Fields)
@@ -75,7 +75,7 @@ private[writer] class HudiCDCToSCD2Writer(destination: String,
       }).start()
   }
 
-  private def createDeltaTableIfNotExists(sparkSession: SparkSession, dataFrameSchema: StructType): DataFrame = {
+  private def createHudiTableIfNotExists(sparkSession: SparkSession, dataFrameSchema: StructType): DataFrame = {
     try {
       sparkSession.read.format("hudi").load(destination)
         .drop(HoodieCommitTime, HoodieCommitSeqno, HoodieRecordKey, HoodiePartitionPath, HoodieFileName)

@@ -132,31 +132,19 @@ object CDCUtil {
   }
 
   private def getNextEvents(history: DataFrame, uniqueChangesForEachKeyAndTimestamp: DataFrame, scd2Fields: SCD2Fields): DataFrame = {
-    val fieldNames = history.schema.fieldNames
-      .filter(_ != StartDateColumn)
-      .filter(_ != scd2Fields.timestampColumn)
-    val originalFieldNames = history.schema.fieldNames
-
     val window = Window
-      .partitionBy(col(s"${scd2Fields.keyColumn}"), col(s"$NewData.${scd2Fields.timestampColumn}"))
-      .orderBy(col(s"otherCols.$StartDateColumn").asc, col(s"otherCols.${scd2Fields.timestampColumn}").asc)
+      .partitionBy(col(s"$OldData.${scd2Fields.keyColumn}"), col(s"$NewData.${scd2Fields.timestampColumn}"))
+      .orderBy(col(s"$OldData.$StartDateColumn").asc, col(s"$OldData.${scd2Fields.timestampColumn}").asc)
 
     history.as(OldData).join(
       uniqueChangesForEachKeyAndTimestamp.as(NewData),
       col(s"$NewData.${scd2Fields.keyColumn}").equalTo(col(s"$OldData.${scd2Fields.keyColumn}"))
         .and(col(s"$NewData.${scd2Fields.timestampColumn}").<(col(s"$OldData.$StartDateColumn")))
     ).select(s"$OldData.*", s"$NewData.${scd2Fields.timestampColumn}")
-      .selectExpr(
-        s"${scd2Fields.keyColumn}",
-        s"$NewData.${scd2Fields.timestampColumn}",
-        s"struct($StartDateColumn, $OldData.${scd2Fields.timestampColumn}, ${fieldNames.mkString(",")}) as otherCols"
-      )
       .withColumn("rank", row_number().over(window))
       .where("rank == 1")
       .drop("rank")
-
-      .selectExpr("otherCols.*")
-      .select(originalFieldNames.head, originalFieldNames.tail: _*)
+      .select(s"$OldData.*")
       .withColumn(s"$IsOldDataColumn", lit(true))
   }
 
