@@ -23,7 +23,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import za.co.absa.hyperdrive.driver.TerminationMethodEnum.AwaitTermination
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
@@ -41,6 +40,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   private val configuration = new BaseConfiguration
 
   override def beforeEach(): Unit = {
+    spark.sparkContext
     reset(
       streamReader,
       streamTransformer,
