@@ -40,6 +40,7 @@ class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSug
   private val configuration = new BaseConfiguration
 
   override def beforeEach(): Unit = {
+    // Used to initialize spark session
     spark.sparkContext
     reset(
       streamReader,
