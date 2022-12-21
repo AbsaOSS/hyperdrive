@@ -27,7 +27,7 @@ import org.scalatest.mockito.MockitoSugar.mock
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.PrunedConsumerRecord
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
+import za.co.absa.spark.commons.test.SparkTestBase
 
 import java.time.Duration
 import java.util

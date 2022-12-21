@@ -20,7 +20,7 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{OutputMode, Trigger}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
+import za.co.absa.spark.commons.test.SparkTestBase
 
 class TestMetadataLogUtil extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 

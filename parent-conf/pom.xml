@@ -119,6 +119,12 @@
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
         </dependency>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>spark-commons-test_${scala.compat.version}</artifactId>
+            <version>0.4.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
