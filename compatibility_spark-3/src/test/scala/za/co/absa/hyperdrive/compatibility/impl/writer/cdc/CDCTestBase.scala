@@ -13,15 +13,27 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
 
-trait DeltaTestBase extends BeforeAndAfterEach with SparkTestBase {
+trait CDCTestBase extends BeforeAndAfterEach {
   this: FlatSpec =>
+
+  implicit val spark: SparkSession = SparkSession.builder()
+    .master("local[*]")
+    .appName(s"CDC tests")
+    .config("spark.ui.enabled", "false")
+    .config("spark.debug.maxToStringFields", 100)
+    .config("spark.driver.bindAddress", "127.0.0.1")
+    .config("spark.driver.host", "127.0.0.1")
+    .config("spark.sql.hive.convertMetastoreParquet", false)
+    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    .config("fs.defaultFS", "file:/")
+    .getOrCreate()
 
   var baseDir: TempDirectory = _
   def baseDirPath: String = baseDir.path.toAbsolutePath.toString

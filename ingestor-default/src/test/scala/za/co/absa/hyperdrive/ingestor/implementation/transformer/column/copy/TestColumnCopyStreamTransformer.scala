@@ -22,7 +22,7 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.types.{ArrayType, IntegerType, StringType, StructType}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
+import za.co.absa.spark.commons.test.SparkTestBase
 
 class TestColumnCopyStreamTransformer extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
 

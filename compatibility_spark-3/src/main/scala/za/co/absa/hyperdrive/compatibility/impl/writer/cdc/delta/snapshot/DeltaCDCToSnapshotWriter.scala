@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta.snapshot
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.snapshot
 
 import io.delta.tables.{DeltaMergeBuilder, DeltaTable}
 import org.apache.commons.configuration2.Configuration
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
-import org.apache.spark.sql.functions.{col, when, max}
+import org.apache.spark.sql.functions.{col, max, when}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 import org.slf4j.LoggerFactory
-import za.co.absa.hyperdrive.compatibility.impl.writer.delta.DeltaUtil
+import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.CDCUtil.getDataFrameWithSortColumns
+import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.DeltaUtil
 import za.co.absa.hyperdrive.ingestor.api.utils.{ConfigUtils, StreamWriterUtil}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriter, StreamWriterFactory}
 
@@ -61,7 +62,7 @@ private[writer] class DeltaCDCToSnapshotWriter(destination: String,
 
         val sortFieldsPrefix = "_tmp_hyperdrive_"
 
-        val dataFrameWithSortColumns = DeltaUtil.getDataFrameWithSortColumns(df, sortFieldsPrefix, precombineColumns, precombineColumnsCustomOrder)
+        val dataFrameWithSortColumns = getDataFrameWithSortColumns(df, sortFieldsPrefix, precombineColumns, precombineColumnsCustomOrder)
 
         val originalFieldNames = df.schema.fieldNames.mkString(",")
         val sortColumnsWithPrefix = precombineColumns.map(precombineColumn => s"$sortFieldsPrefix$precombineColumn")
