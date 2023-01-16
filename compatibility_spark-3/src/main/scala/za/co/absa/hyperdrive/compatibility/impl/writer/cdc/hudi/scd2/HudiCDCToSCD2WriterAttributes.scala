@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2
 
-import scala.io.Source
+import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.CDCToSCD2WriterAttributes
 
-private[hyperdrive] object FileUtils {
-  def readFileLines(file: String): Vector[String] = {
-    val source = Source.fromFile(file)
-    try {
-      source.getLines().toVector
-    } finally {
-      source.close()
-    }
-  }
+class HudiCDCToSCD2WriterAttributes extends {
+  val rootFactoryConfKey = "writer.hudicdctoscd2"
+} with CDCToSCD2WriterAttributes {
+
+  override def getName: String = "Hudi Stream Writer"
+
+  override def getDescription: String = "This writer saves ingested data in Hudi format on a filesystem (e.g. HDFS)"
 }

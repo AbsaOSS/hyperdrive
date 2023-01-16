@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.hyperdrive.compatibility.impl.writer.delta.scd2
+package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.api.{HasComponentAttributes, PropertyMetadata}
 
-trait DeltaCDCToSCD2WriterAttributes extends HasComponentAttributes {
-  private val rootFactoryConfKey = "writer.deltacdctoscd2"
+trait CDCToSCD2WriterAttributes extends HasComponentAttributes {
+  val rootFactoryConfKey: String
   val KEY_DESTINATION_DIRECTORY = s"$rootFactoryConfKey.destination.directory"
   val KEY_EXTRA_CONFS_ROOT = s"$rootFactoryConfKey.options"
   val KEY_PARTITION_COLUMNS = s"$rootFactoryConfKey.partition.columns"
@@ -30,9 +30,9 @@ trait DeltaCDCToSCD2WriterAttributes extends HasComponentAttributes {
   val KEY_PRECOMBINE_COLUMNS = s"$rootFactoryConfKey.precombineColumns"
   val KEY_PRECOMBINE_COLUMNS_CUSTOM_ORDER = s"$rootFactoryConfKey.precombineColumns.customOrder"
 
-  override def getName: String = "Delta Stream Writer"
+  override def getName: String
 
-  override def getDescription: String = "This writer saves ingested data in Delta format on a filesystem (e.g. HDFS)"
+  override def getDescription: String
 
   override def getProperties: Map[String, PropertyMetadata] = Map(
     KEY_DESTINATION_DIRECTORY -> PropertyMetadata("Destination directory", Some("A path to a directory"), required = true),

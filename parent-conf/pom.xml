@@ -79,6 +79,7 @@
         <!--Other properties-->
         <skip.docker.tests>true</skip.docker.tests>
         <jacoco.plugin.version>0.8.8</jacoco.plugin.version>
+        <spark-commons-test>0.4.0</spark-commons-test>
     </properties>
 
     <dependencies>
@@ -118,6 +119,12 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>spark-commons-test_${scala.compat.version}</artifactId>
+            <version>${spark-commons-test}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

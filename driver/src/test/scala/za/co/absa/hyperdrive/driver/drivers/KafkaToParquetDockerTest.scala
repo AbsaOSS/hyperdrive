@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import java.util.Properties
-
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -24,7 +23,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, Produce
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
-import za.co.absa.hyperdrive.shared.utils.SparkTestBase
+import za.co.absa.spark.commons.test.SparkTestBase
 
 /**
  * This e2e test requires a Docker installation on the executing machine.
