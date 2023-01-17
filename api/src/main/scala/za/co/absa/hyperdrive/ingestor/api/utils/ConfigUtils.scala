@@ -116,9 +116,14 @@ object ConfigUtils {
     val transformerPrefixMap = ConfigurationConverter.getMap(transformerPrefixConfig).asScala
     transformerPrefixMap.find {
       case (_: String, value: String) => value == className
+      case (key: AnyRef, value: AnyRef) => throwUnexpectedTypeException(key, value)
     }.map {
       case (key: String, _) => key
+      case (key: AnyRef, value: AnyRef) => throwUnexpectedTypeException(key, value)
     }
+  }
+  private def throwUnexpectedTypeException(key: AnyRef, value: AnyRef)={
+    throw new IllegalArgumentException(s"Unexpected type for key $key and value $value")
   }
 
   def filterKeysContaining(map: Map[String, String], exclusionToken: String): Map[String, String] = map.filterKeys(!_.contains(exclusionToken))

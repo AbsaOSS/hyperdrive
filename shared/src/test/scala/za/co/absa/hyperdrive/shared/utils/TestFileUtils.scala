@@ -21,6 +21,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.spark.commons.test.SparkTestBase
 
+
 class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   behavior of "FileUtils"
