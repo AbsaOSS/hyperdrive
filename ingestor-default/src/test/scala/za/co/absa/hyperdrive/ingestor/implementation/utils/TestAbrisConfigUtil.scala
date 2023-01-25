@@ -26,7 +26,7 @@ import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSchemaRegistryClient
-import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.{getAbrisConfig, getFromSchemaString, getSchemaId, getSchemaRegistryConf}
+import za.co.absa.abris.avro.sql.AbrisTestUtil.{getAbrisConfig, getFromSchemaString, getSchemaId, getSchemaRegistryConf}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, AdvancedSparkToAvroConverter, SparkMetadataKeys}
 
 class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {

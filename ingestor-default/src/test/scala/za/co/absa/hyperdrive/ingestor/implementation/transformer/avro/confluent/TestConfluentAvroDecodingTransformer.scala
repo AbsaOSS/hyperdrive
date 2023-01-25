@@ -33,7 +33,7 @@ import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.spark.commons.test.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.KEY_TOPIC
-import za.co.absa.hyperdrive.ingestor.implementation.testutils.abris.AbrisTestUtil.getSchemaRegistryConf
+import za.co.absa.abris.avro.sql.AbrisTestUtil.getSchemaRegistryConf
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroDecodingTransformer._
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.ConfluentAvroEncodingTransformer.{KEY_SCHEMA_REGISTRY_URL, KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY}
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
