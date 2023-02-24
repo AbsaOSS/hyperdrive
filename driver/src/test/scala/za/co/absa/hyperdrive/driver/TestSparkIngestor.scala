@@ -21,7 +21,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

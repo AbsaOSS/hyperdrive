@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
 import org.apache.spark.sql.{DataFrame, Row}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

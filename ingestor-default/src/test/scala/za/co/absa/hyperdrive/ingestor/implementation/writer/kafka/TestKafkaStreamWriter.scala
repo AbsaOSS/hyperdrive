@@ -27,7 +27,7 @@ import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.Mockito._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyCheckpointBaseLocation, keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties

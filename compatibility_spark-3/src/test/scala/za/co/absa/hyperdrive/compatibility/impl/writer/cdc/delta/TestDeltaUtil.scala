@@ -18,7 +18,7 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCTestBase, FileUtils}
 
 import java.io.File

@@ -16,7 +16,7 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.factories
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

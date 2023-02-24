@@ -19,7 +19,7 @@ import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 
 class TestStreamWriterUtil extends AnyFlatSpec with Matchers with MockitoSugar {
