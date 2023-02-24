@@ -17,7 +17,8 @@ package ${package}
 
 import java.util.ServiceLoader
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
@@ -25,7 +26,7 @@ import ${package}.reader.mycomponent.MyStreamReaderImpl
 import ${package}.transformer.mycomponent.MyStreamTransformerImpl
 import ${package}.writer.mycomponent.MyStreamWriterImpl
 
-class ServiceProviderConfigurationTest extends FlatSpec with Matchers {
+class ServiceProviderConfigurationTest extends AnyFlatSpec with Matchers {
   behavior of "Service Provider Configuration (META-INF/services)"
 
   it should "load configured factories" in {

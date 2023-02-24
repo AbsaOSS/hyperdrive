@@ -16,11 +16,13 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.parquet
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter.KEY_DESTINATION_DIRECTORY
 
-class TestParquetStreamWriterObject extends FlatSpec with Matchers with BeforeAndAfterEach {
+class TestParquetStreamWriterObject extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
 
   behavior of ParquetStreamWriter.getClass.getSimpleName
 

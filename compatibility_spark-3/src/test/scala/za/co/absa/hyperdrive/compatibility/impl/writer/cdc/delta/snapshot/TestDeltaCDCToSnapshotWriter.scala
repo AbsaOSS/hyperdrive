@@ -17,10 +17,11 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.snapshot
 
 import org.apache.spark.sql.streaming.Trigger
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCEvent, CDCTestBase}
 
-class TestDeltaCDCToSnapshotWriter extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestDeltaCDCToSnapshotWriter extends AnyFlatSpec with MockitoSugar with Matchers with CDCTestBase {
   behavior of "DeltaCDCToSnapshotWriter"
 
   it should "merge cdc events and create latest snapshot table" in {

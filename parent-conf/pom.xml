@@ -46,7 +46,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--Scala-->
-        <scalatest.version>3.0.5</scalatest.version>
+        <scalatest.version>3.2.14</scalatest.version>
         <scalatest.maven.version>2.0.2</scalatest.maven.version>
         <specs.version>2.4.16</specs.version>
         <scalastyle.maven.version>1.0.0</scalastyle.maven.version>

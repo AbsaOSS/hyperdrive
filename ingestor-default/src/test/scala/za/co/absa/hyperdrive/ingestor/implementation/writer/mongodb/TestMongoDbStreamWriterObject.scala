@@ -16,11 +16,13 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.mongodb
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.writer.mongodb.MongoDbStreamWriter.KEY_URI
 
-class TestMongoDbStreamWriterObject extends FlatSpec with Matchers with BeforeAndAfterEach {
+class TestMongoDbStreamWriterObject extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
   private val checkpointDir = "/tmp/checkpoint"
   private val mongoDbUri = "mongodb://127.0.0.1"
 

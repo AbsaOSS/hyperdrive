@@ -15,12 +15,12 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
-import java.net.{URL, URLClassLoader}
+import org.scalatest.flatspec.AnyFlatSpec
 
-import org.scalatest.FlatSpec
+import java.net.{URL, URLClassLoader}
 import za.co.absa.hyperdrive.shared.utils.classloaderutils.{TestClassLoaderUtilsNoSingleton, TestClassLoaderUtilsNotInstanceOf, TestClassLoaderUtilsSingletonInstanceOf, TestClassLoaderUtilsTestTrait}
 
-class TestClassLoaderUtils extends FlatSpec {
+class TestClassLoaderUtils extends AnyFlatSpec {
 
   behavior of s"${ClassLoaderUtils.getClass.getSimpleName}.loadSingletonClassOfType"
 

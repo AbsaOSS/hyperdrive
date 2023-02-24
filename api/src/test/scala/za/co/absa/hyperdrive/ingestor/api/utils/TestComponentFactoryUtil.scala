@@ -16,10 +16,11 @@
 package za.co.absa.hyperdrive.ingestor.api.utils
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.PropertyMetadata
 
-class TestComponentFactoryUtil extends FlatSpec with Matchers {
+class TestComponentFactoryUtil extends AnyFlatSpec with Matchers {
   behavior of ComponentFactoryUtil.getClass.getName
 
   "validateConfiguration" should "not throw an error if the configuration is valid" in {

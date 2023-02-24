@@ -15,11 +15,14 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import org.scalatest.{FlatSpec, Matchers}
+
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.nio.file.Paths
 
-class TestPropertiesIngestionDriver extends FlatSpec with Matchers {
+class TestPropertiesIngestionDriver extends AnyFlatSpec with Matchers {
 
   behavior of PropertiesIngestionDriver.getClass.getSimpleName
 

@@ -21,14 +21,15 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReaderProps._
 
 import java.net.URI
 import java.nio.file.{Files, Paths}
 
-class TestKafkaStreamReader extends FlatSpec with BeforeAndAfterEach with MockitoSugar {
+class TestKafkaStreamReader extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val validTopic = "test-topic"
   private val validBrokers = "PLAINTEXT://localhost:9092"

@@ -15,9 +15,11 @@
 
 package za.co.absa.hyperdrive.driver.drivers
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestCommandLineIngestionDriver extends FlatSpec with Matchers {
+
+class TestCommandLineIngestionDriver extends AnyFlatSpec with Matchers {
 
   behavior of CommandLineIngestionDriver.getClass.getSimpleName
 

@@ -23,7 +23,9 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.types.{IntegerType, MetadataBuilder, StringType, StructField, StructType}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
@@ -36,7 +38,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.
 import za.co.absa.hyperdrive.ingestor.implementation.utils.AbrisConfigUtil
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 
-class TestConfluentAvroEncodingTransformer extends FlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
+class TestConfluentAvroEncodingTransformer extends AnyFlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
 
   private val topic = "topic"
   private val SchemaRegistryURL = "http://localhost:8081"

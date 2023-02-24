@@ -16,10 +16,12 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.parquet
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.implementation.reader.parquet.ParquetStreamReader._
 
-class TestParquetStreamReaderObject extends FlatSpec with Matchers with BeforeAndAfterEach {
+class TestParquetStreamReaderObject extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
 
   behavior of ParquetStreamReader.getClass.getSimpleName
 

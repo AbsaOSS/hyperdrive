@@ -17,12 +17,14 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.factories
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.factories.DummyStreamTransformer._
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory._
 
-class TestStreamTransformerAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
+class TestStreamTransformerAbstractFactory extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamTransformerAbstractFactory.getClass.getSimpleName
 

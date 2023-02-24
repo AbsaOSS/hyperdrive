@@ -21,10 +21,11 @@ import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.spark.commons.test.SparkTestBase
 
-class TestMongoDbStreamWriter extends FlatSpec with MockitoSugar with Matchers with SparkTestBase {
+class TestMongoDbStreamWriter extends AnyFlatSpec with MockitoSugar with Matchers with SparkTestBase {
 
   private val connectionString = s"mongodb://localhost:1234"
   private val dbName = "unit_test_database"

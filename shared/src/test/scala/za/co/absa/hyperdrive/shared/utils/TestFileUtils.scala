@@ -17,12 +17,14 @@ package za.co.absa.hyperdrive.shared.utils
 
 import java.util.UUID
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.spark.commons.test.SparkTestBase
 
 
-class TestFileUtils extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+class TestFileUtils extends AnyFlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   behavior of "FileUtils"
   private var baseDirectory: TempDirectory = _

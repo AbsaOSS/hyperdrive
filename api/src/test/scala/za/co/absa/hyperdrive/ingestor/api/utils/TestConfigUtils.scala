@@ -17,11 +17,12 @@ package za.co.absa.hyperdrive.ingestor.api.utils
 
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.apache.commons.configuration2.{BaseConfiguration, Configuration, ConfigurationConverter}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactory
 
-class TestConfigUtils extends FlatSpec with Matchers with MockitoSugar {
+class TestConfigUtils extends AnyFlatSpec with Matchers with MockitoSugar {
 
   behavior of s"ConfigUtils"
 

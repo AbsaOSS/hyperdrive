@@ -16,13 +16,14 @@
 package za.co.absa.hyperdrive.ingestor.implementation.utils
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempFile
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SchemaRegistryAttributes
 
 import java.nio.file.Files
 
-class TestSchemaRegistryConfigUtil extends FlatSpec with Matchers {
+class TestSchemaRegistryConfigUtil extends AnyFlatSpec with Matchers {
 
   "getSchemaRegistryConfig" should "extract the schema registry config in a map" in {
     // given

@@ -15,10 +15,12 @@
 
 package za.co.absa.hyperdrive.driver.util
 
-import org.scalatest.{FlatSpec, Matchers}
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.driver.utils.DriverUtil
 
-class TestDriverUtil extends FlatSpec with Matchers {
+class TestDriverUtil extends AnyFlatSpec with Matchers {
   behavior of "DriverUtil"
 
   it should "print the implementation version" in {

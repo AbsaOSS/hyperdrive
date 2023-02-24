@@ -22,14 +22,16 @@ import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReader
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriter
 import za.co.absa.hyperdrive.shared.exceptions.{IngestionException, IngestionStartException}
 import za.co.absa.spark.commons.test.SparkTestBase
 
-class TestSparkIngestor extends FlatSpec with BeforeAndAfterEach with MockitoSugar with SparkTestBase with Matchers {
+class TestSparkIngestor extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar with SparkTestBase with Matchers {
 
   private val streamReader: StreamReader = mock[StreamReader]
   private val streamTransformer: StreamTransformer = mock[StreamTransformer]
