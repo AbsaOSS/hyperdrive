@@ -38,7 +38,6 @@ class TestClassLoaderUtils extends AnyFlatSpec {
   it should "return the singleton class for a given trait and fully qualified class name from other jar" in {
     // given
 
-    //TODO test fails with the new scalatest version 3.2
     val jarPath: URL = getClass.getClassLoader.getResource("TestClassLoaderUtilsOther.jar")
     val classLoader = ClassLoaderUtils.getClass.getClassLoader.asInstanceOf[URLClassLoader]
     val method = classLoader.getClass.getSuperclass.getDeclaredMethod("addURL", classOf[URL])
