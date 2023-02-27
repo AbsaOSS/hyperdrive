@@ -17,11 +17,12 @@ package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MemoryStream
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.commons.io.TempDirectory
 
 trait CDCTestBase extends BeforeAndAfterEach {
-  this: FlatSpec =>
+  this: AnyFlatSpec =>
 
   implicit val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
