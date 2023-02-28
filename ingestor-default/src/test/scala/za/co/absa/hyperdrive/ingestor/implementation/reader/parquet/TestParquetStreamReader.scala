@@ -16,14 +16,15 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.parquet
 
 import java.nio.file.Path
-
 import org.apache.spark.sql.SaveMode
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.spark.commons.test.SparkTestBase
 
-class TestParquetStreamReader extends FlatSpec with MockitoSugar with Matchers with SparkTestBase with BeforeAndAfterEach {
+class TestParquetStreamReader extends AnyFlatSpec with MockitoSugar with Matchers with SparkTestBase with BeforeAndAfterEach {
   behavior of "ParquetStreamReader"
 
   private var tempDir: TempDirectory = _

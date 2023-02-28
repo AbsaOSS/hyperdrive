@@ -17,9 +17,11 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.copy
 
 import org.apache.commons.configuration2.DynamicCombinedConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestColumnCopyStreamTransformerObject extends FlatSpec with Matchers {
+
+class TestColumnCopyStreamTransformerObject extends AnyFlatSpec with Matchers {
   behavior of ColumnCopyStreamTransformer.getClass.getSimpleName
 
   it should "create ColumnCopyStreamTransformer for column pairs specified in configurations" in {

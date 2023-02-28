@@ -19,9 +19,11 @@ import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericData, GenericRecord, GenericRecordBuilder}
 import org.apache.avro.util.Utf8
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestAvroUtil extends FlatSpec with Matchers with BeforeAndAfter {
+class TestAvroUtil extends AnyFlatSpec with Matchers with BeforeAndAfter {
 
   private val valueSchemaString = raw"""
       {"type": "record", "name": "schemaName", "fields": [

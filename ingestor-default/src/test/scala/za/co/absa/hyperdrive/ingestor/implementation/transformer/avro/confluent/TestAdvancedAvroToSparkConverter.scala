@@ -18,12 +18,13 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 
 import org.apache.avro.Schema
 import org.apache.spark.sql.types._
-import org.scalatest.{FlatSpec, Matchers}
-import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys.{DefaultValueKey, AvroTypeKey}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.SparkMetadataKeys.{AvroTypeKey, DefaultValueKey}
 
 import scala.io.Source
 
-class TestAdvancedAvroToSparkConverter extends FlatSpec with Matchers {
+class TestAdvancedAvroToSparkConverter extends AnyFlatSpec with Matchers {
   private val underTest = new AdvancedAvroToSparkConverter()
 
   it should "create the same avro schema for non-nullable types as the default implementation" in {

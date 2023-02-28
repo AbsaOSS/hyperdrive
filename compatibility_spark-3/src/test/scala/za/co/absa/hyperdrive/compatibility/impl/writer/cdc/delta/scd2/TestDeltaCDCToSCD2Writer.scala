@@ -14,13 +14,13 @@
  */
 
 package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta.scd2
-
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.apache.spark.sql.streaming.Trigger
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCEvent, CDCTestBase, SCD2Event}
 
-class TestDeltaCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestDeltaCDCToSCD2Writer extends AnyFlatSpec with MockitoSugar with Matchers with CDCTestBase {
   behavior of "DeltaCDCToSCD2Writer"
 
   it should "merge unique by timestamp scd2 rows into empty delta table" in {

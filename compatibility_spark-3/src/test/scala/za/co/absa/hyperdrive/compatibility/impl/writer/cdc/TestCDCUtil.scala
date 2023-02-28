@@ -16,13 +16,14 @@
 package za.co.absa.hyperdrive.compatibility.impl.writer.cdc
 
 import org.apache.spark.sql.{DataFrame, Row}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.io.File
 import java.sql.Timestamp
 
-class TestCDCUtil extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestCDCUtil extends AnyFlatSpec with MockitoSugar with Matchers with CDCTestBase {
 
   import spark.implicits._
 

@@ -16,8 +16,9 @@
 package za.co.absa.hyperdrive.scanner
 
 import java.nio.file.{Files, Paths}
-
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.reader.StreamReaderFactoryProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformerFactoryProvider
@@ -25,7 +26,7 @@ import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterFactoryProvider
 import za.co.absa.hyperdrive.scanner.dummyjar._
 
 
-class TestComponentScanner extends FlatSpec with Matchers with BeforeAndAfter {
+class TestComponentScanner extends AnyFlatSpec with Matchers with BeforeAndAfter {
 
   behavior of "ComponentScanner"
 

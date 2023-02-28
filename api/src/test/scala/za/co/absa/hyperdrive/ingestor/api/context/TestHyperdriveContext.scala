@@ -15,9 +15,11 @@
 
 package za.co.absa.hyperdrive.ingestor.api.context
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestHyperdriveContext extends FlatSpec with Matchers {
+
+class TestHyperdriveContext extends AnyFlatSpec with Matchers {
   behavior of HyperdriveContext.getClass.getName
 
   "put" should "overwrite the value for the same key" in {

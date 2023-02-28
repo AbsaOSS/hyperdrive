@@ -16,14 +16,16 @@
 package za.co.absa.hyperdrive.ingestor.implementation.reader.factories
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
-import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.{KEY_TOPIC, KEY_BROKERS}
+import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.{KEY_BROKERS, KEY_TOPIC}
 
-class TestStreamReaderAbstractFactory extends FlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
+class TestStreamReaderAbstractFactory extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar with Matchers {
 
   behavior of StreamReaderAbstractFactory.getClass.getSimpleName
   private val baseDir = TempDirectory("TestStreamReaderAbstractFactory").deleteOnExit()

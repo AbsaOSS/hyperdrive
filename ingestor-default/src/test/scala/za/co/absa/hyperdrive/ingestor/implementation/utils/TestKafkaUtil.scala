@@ -23,8 +23,10 @@ import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.{times, verify, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.mockito.MockitoSugar.mock
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.PrunedConsumerRecord
 import za.co.absa.spark.commons.test.SparkTestBase
@@ -32,7 +34,7 @@ import za.co.absa.spark.commons.test.SparkTestBase
 import java.time.Duration
 import java.util
 
-class TestKafkaUtil extends FlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
+class TestKafkaUtil extends AnyFlatSpec with Matchers with BeforeAndAfter with SparkTestBase {
   private var baseDir: TempDirectory = _
   private val kafkaSufficientTimeout = Duration.ofSeconds(5L)
 

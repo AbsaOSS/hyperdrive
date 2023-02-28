@@ -16,11 +16,12 @@
 package za.co.absa.hyperdrive.driver.drivers.secrets.implementation.dummy
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.driver.drivers.secrets.implementation.dummy.DummySecretsProvider.{DummyKey, DummySecret}
 import za.co.absa.hyperdrive.driver.secrets.SecretsConfigUtils
 
-class TestSecretsConfigUtils extends FlatSpec with Matchers {
+class TestSecretsConfigUtils extends AnyFlatSpec with Matchers {
   it should "resolve secrets in the configuration" in {
     val config = new BaseConfiguration
     config.addProperty("secretsprovider.config.providers.dummysecretsmanager.class",

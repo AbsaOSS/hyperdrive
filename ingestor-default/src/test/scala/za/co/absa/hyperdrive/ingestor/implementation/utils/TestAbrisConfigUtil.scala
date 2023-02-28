@@ -20,7 +20,9 @@ import org.apache.avro.JsonProperties
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{BooleanType, IntegerType, MetadataBuilder, StringType}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.ConfluentMockRegistryClient
@@ -29,7 +31,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.testutils.HyperdriveMockSch
 import za.co.absa.abris.avro.sql.AbrisTestUtil.{getAbrisConfig, getFromSchemaString, getSchemaId, getSchemaRegistryConf}
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{AdvancedAvroToSparkConverter, AdvancedSparkToAvroConverter, SparkMetadataKeys}
 
-class TestAbrisConfigUtil extends FlatSpec with Matchers with BeforeAndAfter {
+class TestAbrisConfigUtil extends AnyFlatSpec with Matchers with BeforeAndAfter {
 
   import scala.collection.JavaConverters._
 

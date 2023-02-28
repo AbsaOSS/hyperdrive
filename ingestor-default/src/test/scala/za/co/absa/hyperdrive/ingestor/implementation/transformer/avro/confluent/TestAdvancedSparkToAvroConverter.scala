@@ -19,11 +19,12 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent
 import org.apache.avro.Schema
 import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.io.Source
 
-class TestAdvancedSparkToAvroConverter extends FlatSpec with Matchers {
+class TestAdvancedSparkToAvroConverter extends AnyFlatSpec with Matchers {
   it should "create the same avro schema for non-nullable types as the default implementation" in {
     val schema = StructType(Seq(
       StructField("booleanCol", BooleanType, nullable = false),

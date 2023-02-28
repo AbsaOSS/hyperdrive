@@ -16,7 +16,6 @@
 package za.co.absa.hyperdrive.ingestor.implementation.writer.kafka
 
 import java.util.concurrent.TimeUnit
-
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkContext
@@ -26,14 +25,15 @@ import org.mockito.AdditionalAnswers._
 import org.mockito.ArgumentMatchers._
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyCheckpointBaseLocation, keyTriggerProcessingTime, keyTriggerType}
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter._
 
-class TestKafkaStreamWriter extends FlatSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
+class TestKafkaStreamWriter extends AnyFlatSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
 
   behavior of KafkaStreamWriter.getClass.getSimpleName
 

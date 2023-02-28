@@ -17,11 +17,10 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.renamin
 
 import org.apache.commons.configuration2.{BaseConfiguration, DynamicCombinedConfiguration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.scalatest.FlatSpec
-
 import ColumnRenamingStreamTransformer._
+import org.scalatest.flatspec.AnyFlatSpec
 
-class TestColumnRenamingStreamTransformerObject extends FlatSpec {
+class TestColumnRenamingStreamTransformerObject extends AnyFlatSpec {
   behavior of ColumnRenamingStreamTransformer.getClass.getSimpleName
 
   it should "create ColumnRenamingStreamTransformer for column pairs specified in configurations" in {

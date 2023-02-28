@@ -16,13 +16,14 @@
 package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.delta
 
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.scalatest.{FlatSpec, Matchers}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCTestBase, FileUtils}
 
 import java.io.File
 
-class TestDeltaUtil extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestDeltaUtil extends AnyFlatSpec with MockitoSugar with Matchers with CDCTestBase {
   behavior of "DeltaUtil"
 
   "createDeltaTableIfNotExists" should "create delta table if destination directory is empty" in {

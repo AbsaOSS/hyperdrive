@@ -16,10 +16,11 @@
 package za.co.absa.hyperdrive.driver.drivers.secrets.implementation.aws
 
 import org.apache.commons.configuration2.BaseConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.driver.secrets.implementation.aws.AwsSecretsManagerSecretsProvider
 
-class TestAwsSecretsManagerSecretsProvider extends FlatSpec with Matchers {
+class TestAwsSecretsManagerSecretsProvider extends AnyFlatSpec with Matchers {
 
   it should "retrieve a secret value in a map" in {
     val options = new BaseConfiguration

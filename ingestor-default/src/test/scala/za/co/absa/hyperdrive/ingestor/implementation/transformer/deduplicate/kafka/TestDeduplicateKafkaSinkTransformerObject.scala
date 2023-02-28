@@ -19,13 +19,14 @@ import java.time.Duration
 
 import org.apache.commons.configuration2.DynamicCombinedConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.avro.confluent.{ConfluentAvroDecodingTransformer, ConfluentAvroEncodingTransformer}
 import za.co.absa.hyperdrive.ingestor.implementation.writer.kafka.KafkaStreamWriter
 
-class TestDeduplicateKafkaSinkTransformerObject extends FlatSpec with Matchers {
+class TestDeduplicateKafkaSinkTransformerObject extends AnyFlatSpec with Matchers {
   behavior of DeduplicateKafkaSinkTransformer.getClass.getSimpleName
 
   private val decoderPrefix = "deduplicateKafkaSinkTransformer.decoder" // copied from DeduplicateKafkaSinkTransformer

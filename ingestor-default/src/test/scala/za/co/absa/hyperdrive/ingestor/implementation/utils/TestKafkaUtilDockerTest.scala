@@ -24,14 +24,16 @@ import org.apache.kafka.clients.consumer.{ConsumerRecord, KafkaConsumer}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
-import org.scalatest.{AppendedClues, BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.{AppendedClues, BeforeAndAfter}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.deduplicate.kafka.PrunedConsumerRecord
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-class TestKafkaUtilDockerTest extends FlatSpec with Matchers with BeforeAndAfter with AppendedClues {
+class TestKafkaUtilDockerTest extends AnyFlatSpec with Matchers with BeforeAndAfter with AppendedClues {
 
   private val confluentPlatformVersion = "5.3.4" // should be same as kafka.avro.serializer.version property in pom file
   private val kafka = new KafkaContainer(DockerImageName.parse(s"confluentinc/cp-kafka:$confluentPlatformVersion"))

@@ -15,12 +15,12 @@
 
 package za.co.absa.hyperdrive.shared.utils
 
-import java.net.{URL, URLClassLoader}
+import org.scalatest.flatspec.AnyFlatSpec
 
-import org.scalatest.FlatSpec
+import java.net.{URL, URLClassLoader}
 import za.co.absa.hyperdrive.shared.utils.classloaderutils.{TestClassLoaderUtilsNoSingleton, TestClassLoaderUtilsNotInstanceOf, TestClassLoaderUtilsSingletonInstanceOf, TestClassLoaderUtilsTestTrait}
 
-class TestClassLoaderUtils extends FlatSpec {
+class TestClassLoaderUtils extends AnyFlatSpec {
 
   behavior of s"${ClassLoaderUtils.getClass.getSimpleName}.loadSingletonClassOfType"
 
@@ -37,6 +37,7 @@ class TestClassLoaderUtils extends FlatSpec {
   // If this test fails, you might have to check TestClassLoaderUtilsOther.jar and createTestClassLoaderUtilsOtherJar.sh
   it should "return the singleton class for a given trait and fully qualified class name from other jar" in {
     // given
+
     val jarPath: URL = getClass.getClassLoader.getResource("TestClassLoaderUtilsOther.jar")
     val classLoader = ClassLoaderUtils.getClass.getClassLoader.asInstanceOf[URLClassLoader]
     val method = classLoader.getClass.getSuperclass.getDeclaredMethod("addURL", classOf[URL])

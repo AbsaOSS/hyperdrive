@@ -21,10 +21,12 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.types.{ArrayType, IntegerType, StringType, StructType}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.spark.commons.test.SparkTestBase
 
-class TestColumnCopyStreamTransformer extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
+class TestColumnCopyStreamTransformer extends AnyFlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
 
   it should "copy columns while leaving existing columns intact" in {
     // given

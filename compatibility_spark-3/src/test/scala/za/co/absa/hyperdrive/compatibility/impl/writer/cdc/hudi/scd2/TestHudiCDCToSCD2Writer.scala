@@ -16,11 +16,12 @@
 package za.co.absa.hyperdrive.compatibility.impl.writer.cdc.hudi.scd2
 
 import org.apache.spark.sql.streaming.Trigger
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.hyperdrive.compatibility.impl.writer.cdc.{CDCEvent, CDCTestBase, SCD2Event}
 
-class TestHudiCDCToSCD2Writer extends FlatSpec with MockitoSugar with Matchers with CDCTestBase {
+class TestHudiCDCToSCD2Writer extends AnyFlatSpec with MockitoSugar with Matchers with CDCTestBase {
   behavior of "HudiCDCToSCD2Writer"
 
   it should "merge unique by timestamp scd2 rows into empty hudi table" in {

@@ -17,11 +17,11 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selecti
 
 import org.apache.spark.sql.DataFrame
 import org.mockito.Mockito._
-import org.scalatest.FlatSpec
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.transformer.StreamTransformer
 
-class TestColumnSelectorStreamTransformer extends FlatSpec with MockitoSugar {
+class TestColumnSelectorStreamTransformer extends AnyFlatSpec with MockitoSugar {
 
   behavior of createTransformer(Seq("*")).getClass.getName
 

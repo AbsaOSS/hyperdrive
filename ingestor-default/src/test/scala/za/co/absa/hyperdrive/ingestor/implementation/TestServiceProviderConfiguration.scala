@@ -15,9 +15,10 @@
 
 package za.co.absa.hyperdrive.ingestor.implementation
 
-import java.util.ServiceLoader
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import org.scalatest.{FlatSpec, Matchers}
+import java.util.ServiceLoader
 import za.co.absa.hyperdrive.ingestor.api.reader.{StreamReaderFactory, StreamReaderFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformerFactory, StreamTransformerFactoryProvider}
 import za.co.absa.hyperdrive.ingestor.api.writer.{StreamWriterFactory, StreamWriterFactoryProvider}
@@ -35,7 +36,7 @@ import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStrea
 
 import scala.reflect.ClassTag
 
-class TestServiceProviderConfiguration extends FlatSpec with Matchers {
+class TestServiceProviderConfiguration extends AnyFlatSpec with Matchers {
 
   behavior of "Service Provider Interface (META-INF/services)"
 

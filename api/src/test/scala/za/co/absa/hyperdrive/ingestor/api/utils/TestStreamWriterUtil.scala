@@ -17,11 +17,12 @@ package za.co.absa.hyperdrive.ingestor.api.utils
 
 import org.apache.commons.configuration2.BaseConfiguration
 import org.apache.spark.sql.streaming.Trigger
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes.{keyTriggerProcessingTime, keyTriggerType}
 
-class TestStreamWriterUtil extends FlatSpec with Matchers with MockitoSugar {
+class TestStreamWriterUtil extends AnyFlatSpec with Matchers with MockitoSugar {
 
   behavior of s"StreamWriterUtil"
 

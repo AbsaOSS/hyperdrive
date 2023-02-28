@@ -17,10 +17,10 @@ package za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selecti
 
 import org.apache.commons.configuration2.{BaseConfiguration, DynamicCombinedConfiguration}
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.scalatest.FlatSpec
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.mockito.MockitoSugar
 import za.co.absa.hyperdrive.ingestor.implementation.transformer.column.selection.ColumnSelectorStreamTransformer.KEY_COLUMNS_TO_SELECT
-class TestColumnSelectorStreamTransformerObject extends FlatSpec with MockitoSugar {
+class TestColumnSelectorStreamTransformerObject extends AnyFlatSpec with MockitoSugar {
 
   behavior of ColumnSelectorStreamTransformer.getClass.getSimpleName
 

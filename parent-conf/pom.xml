@@ -46,7 +46,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--Scala-->
-        <scalatest.version>3.0.5</scalatest.version>
+        <scalatest.version>3.2.14</scalatest.version>
+        <scalatestplus.version>3.2.14.0</scalatestplus.version>
         <scalatest.maven.version>2.0.2</scalatest.maven.version>
         <specs.version>2.4.16</specs.version>
         <scalastyle.maven.version>1.0.0</scalastyle.maven.version>
@@ -60,7 +61,7 @@
         <embedded.mongo.version>3.5.2</embedded.mongo.version>
 
         <!--Mockito-->
-        <mockito.version>2.25.0</mockito.version>
+        <mockito.version>4.6.1</mockito.version>
 
         <absa.commons.version>1.0.0</absa.commons.version>
         <!--Shade Maven plug-in-->
@@ -88,6 +89,13 @@
             <artifactId>paranamer</artifactId>
         </dependency>
         <!--END Enforced dependency versions-->
+
+        <dependency>
+            <groupId>org.scalatestplus</groupId>
+            <artifactId>mockito-4-6_${scala.compat.version}</artifactId>
+            <version>${scalatestplus.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!--Spark-->
         <dependency>

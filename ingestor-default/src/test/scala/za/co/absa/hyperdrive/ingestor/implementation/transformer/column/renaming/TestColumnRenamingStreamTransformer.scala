@@ -21,13 +21,15 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{OutputMode, Trigger}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.spark.commons.test.SparkTestBase
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterProperties
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
 
-class TestColumnRenamingStreamTransformer extends FlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
+class TestColumnRenamingStreamTransformer extends AnyFlatSpec with SparkTestBase with Matchers with BeforeAndAfter {
   import spark.implicits._
 
   private var baseDir: TempDirectory = _

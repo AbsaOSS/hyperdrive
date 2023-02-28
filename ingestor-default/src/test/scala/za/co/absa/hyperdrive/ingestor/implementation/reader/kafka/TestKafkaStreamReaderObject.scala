@@ -17,12 +17,13 @@ package za.co.absa.hyperdrive.ingestor.implementation.reader.kafka
 
 import org.apache.commons.configuration2.DynamicCombinedConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.hyperdrive.ingestor.api.writer.StreamWriterCommonAttributes
 import za.co.absa.hyperdrive.ingestor.implementation.reader.kafka.KafkaStreamReader.{KEY_TOPIC, KEY_BROKERS}
 
-class TestKafkaStreamReaderObject extends FlatSpec with BeforeAndAfterEach {
+class TestKafkaStreamReaderObject extends AnyFlatSpec with BeforeAndAfterEach {
   private val rootFactoryOptionalConfKey = KafkaStreamReader.getExtraConfigurationPrefix.get
   private val rootFactoryOptionalKafkaKey = s"$rootFactoryOptionalConfKey.kafka"
   private val KEY_SECURITY_PROTOCOL = s"$rootFactoryOptionalKafkaKey.security.protocol"

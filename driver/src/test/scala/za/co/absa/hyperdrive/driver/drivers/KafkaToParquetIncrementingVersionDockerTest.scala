@@ -16,13 +16,14 @@
 package za.co.absa.hyperdrive.driver.drivers
 
 import java.util.Properties
-
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.commons.io.TempDirectory
 import za.co.absa.spark.commons.test.SparkTestBase
@@ -30,7 +31,7 @@ import za.co.absa.spark.commons.test.SparkTestBase
 /**
  * This e2e test requires a Docker installation on the executing machine.
  */
-class KafkaToParquetIncrementingVersionDockerTest extends FlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
+class KafkaToParquetIncrementingVersionDockerTest extends AnyFlatSpec with Matchers with SparkTestBase with BeforeAndAfter {
 
   private val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
   private val baseDir = TempDirectory("hyperdriveE2eTest").deleteOnExit()
