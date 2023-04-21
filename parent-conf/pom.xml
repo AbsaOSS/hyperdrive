@@ -79,7 +79,7 @@
 
         <!--Other properties-->
         <skip.docker.tests>true</skip.docker.tests>
-        <jacoco.plugin.version>0.8.8</jacoco.plugin.version>
+        <jacoco.plugin.version>0.8.9</jacoco.plugin.version>
         <spark-commons-test>0.4.0</spark-commons-test>
     </properties>
 
@@ -418,12 +418,12 @@
         <profile>
             <id>code-coverage</id>
             <properties>
-                <skip.docker.tests>false</skip.docker.tests>
+                <skip.docker.tests>true</skip.docker.tests>
             </properties>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.jacoco</groupId>
+                        <groupId>za.co.absa.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>${jacoco.plugin.version}</version>
                         <configuration>
@@ -445,6 +445,11 @@
                                 <goals>
                                     <goal>report</goal>
                                 </goals>
+                                <configuration>
+                                    <title>${project.name} - ${scala.version}</title>
+                                    <doMethodFiltration>true</doMethodFiltration>
+                                    <doScalaMethodFiltration>true</doScalaMethodFiltration>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
