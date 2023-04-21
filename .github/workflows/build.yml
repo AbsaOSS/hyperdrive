@@ -51,7 +51,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 0.0
           min-coverage-changed-files: 80.0
-          title: JaCoCo code coverage report
+          title: JaCoCo code coverage report - Scala ${{ matrix.scala }} * Spark ${{ matrix.spark }}
           update-comment: true
       - name: Get the Coverage info
         run: |
