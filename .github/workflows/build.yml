@@ -43,7 +43,7 @@ jobs:
           paths: >
             ${{ github.workspace }}/api/target/site/jacoco/jacoco.xml,
             ${{ github.workspace }}/compatibility-provider/target/site/jacoco/jacoco.xml,
-            ${{ github.workspace }}/compatibility_spark-${{ matrix.scala }}/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/compatibility_spark-${{ matrix.spark }}/target/site/jacoco/jacoco.xml,
             ${{ github.workspace }}/component-scanner/target/site/jacoco/jacoco.xml,
             ${{ github.workspace }}/driver/target/site/jacoco/jacoco.xml,
             ${{ github.workspace }}/ingestor-default/target/site/jacoco/jacoco.xml,
