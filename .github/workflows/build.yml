@@ -35,4 +35,31 @@ jobs:
       - name: Switch scala version
         run: ./mvnw scala-cross-build:change-version --no-transfer-progress -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
       - name: Build and run tests
-        run: ./mvnw clean verify --no-transfer-progress -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests,no-upgraded-snappy
+        run: ./mvnw clean verify --no-transfer-progress -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }},all-tests,no-upgraded-snappy,code-coverage
+      - name: Add coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.3
+        with:
+          paths: >
+            ${{ github.workspace }}/api/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/compatibility-provider/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/compatibility_spark-${{ matrix.spark }}/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/component-scanner/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/driver/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/ingestor-default/target/site/jacoco/jacoco.xml,
+            ${{ github.workspace }}/shared/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 0.0
+          min-coverage-changed-files: 80.0
+          title: JaCoCo code coverage report - Scala ${{ matrix.scala }} & Spark ${{ matrix.spark }}
+          update-comment: true
+      - name: Get the Coverage info
+        run: |
+          echo "Total coverage ${{ steps.jacoco.outputs.coverage-overall }}"
+          echo "Changed Files coverage ${{ steps.jacoco.outputs.coverage-changed-files }}"
+      - name: Fail PR if changed files coverage is less than 80%
+        if: ${{ steps.jacoco.outputs.coverage-changed-files < 80.0 }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.setFailed('Changed files coverage is less than 80%!')
