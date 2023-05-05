@@ -79,7 +79,7 @@
 
         <!--Other properties-->
         <skip.docker.tests>true</skip.docker.tests>
-        <jacoco.plugin.version>0.8.9</jacoco.plugin.version>
+        <jacoco.plugin.version>0.8.10</jacoco.plugin.version>
         <spark-commons-test>0.4.0</spark-commons-test>
     </properties>
 
