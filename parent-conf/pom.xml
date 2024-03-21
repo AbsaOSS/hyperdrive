@@ -71,7 +71,7 @@
         <maven.surefire.plugin.version>3.0.0-M3</maven.surefire.plugin.version>
 
         <!--Configurations-->
-        <commons.configuration2.version>2.7</commons.configuration2.version>
+        <commons.configuration2.version>2.10.1</commons.configuration2.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <aws.java.sdk.bom.version>2.18.7</aws.java.sdk.bom.version>
 
