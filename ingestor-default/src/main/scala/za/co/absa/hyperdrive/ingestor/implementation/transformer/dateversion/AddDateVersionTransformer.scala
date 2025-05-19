@@ -16,16 +16,21 @@
 package za.co.absa.hyperdrive.ingestor.implementation.transformer.dateversion
 
 import org.apache.commons.configuration2.Configuration
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
 import org.slf4j.LoggerFactory
 import org.apache.spark.sql.functions.{lit, to_date}
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import za.co.absa.hyperdrive.compatibility.provider.CompatibleSparkUtilProvider
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 import za.co.absa.hyperdrive.ingestor.implementation.writer.parquet.ParquetStreamWriter
+import org.apache.spark.sql.types.{DateType, StructField}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import org.apache.spark.sql.types._
 
 private[transformer] class AddDateVersionTransformer(val reportDate: String, val destination: String) extends StreamTransformer {
 
@@ -44,21 +49,26 @@ private[transformer] class AddDateVersionTransformer(val reportDate: String, val
     if (noCommittedParquetFilesExist(spark)) {
       initialVersion
     } else {
-      import spark.implicits._
-      val df = spark.read.parquet(destination)
-      val versions = df.select(df(ColumnVersion))
-        .filter(df(ColumnDate) === lit(reportDate))
-        .distinct()
-        .as[Int]
-        .collect().toList
-
+      val versions = getVersions(spark, ColumnDate, ColumnVersion, reportDate)
       if (versions.nonEmpty) versions.max + 1 else initialVersion
     }
   }
 
   private def noCommittedParquetFilesExist(spark: SparkSession): Boolean = {
-    val fileCatalog = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, destination)
+    val fileCatalog = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, destination, None)
     !CompatibleSparkUtilProvider.hasMetadata(spark, destination) || fileCatalog.allFiles().isEmpty
+  }
+
+  private def getVersions(spark: SparkSession, ColumnDate: String, ColumnVersion: String, reportDate: String): Seq[Int] = {
+    val fileCatalog: MetadataLogFileIndex = CompatibleSparkUtilProvider.createMetadataLogFileIndex(spark, destination, Some(StructType(Seq(
+      StructField(ColumnDate, StringType, nullable = true),
+      StructField(ColumnVersion, IntegerType, nullable = true)
+    ))))
+
+    fileCatalog.partitionSpec().partitions.map { partition =>
+      val row: InternalRow = partition.values
+      (row.get(0, DateType), row.getInt(1))
+    }.filter { case (date, _) => date.toString == reportDate }.map { case (_, version) => version }.toList
   }
 }
 
