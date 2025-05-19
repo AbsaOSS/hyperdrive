@@ -67,8 +67,8 @@ private[transformer] class AddDateVersionTransformer(val reportDate: String, val
 
     fileCatalog.partitionSpec().partitions.map { partition =>
       val row: InternalRow = partition.values
-      (row.get(0, DateType), row.getInt(1))
-    }.filter { case (date, _) => date.toString == reportDate }.map { case (_, version) => version }.toList
+      (row.getString(0), row.getInt(1))
+    }.filter { case (date, _) => date == reportDate }.map { case (_, version) => version }.toList
   }
 }
 
