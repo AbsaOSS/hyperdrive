@@ -1,4 +1,4 @@
-name: Build
+name: Build3
 
 on:
   pull_request:
@@ -17,12 +17,15 @@ jobs:
             spark: 3
     name: Scala ${{ matrix.scala }}, Spark ${{ matrix.spark }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+      - uses: actions/checkout@v4
         with:
-          java-version: 1.8
-      - uses: actions/cache@v2
+          persist-credentials: false
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 8
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-${{ matrix.scala }}-${{ matrix.spark }}-${{ hashFiles('**/pom.xml') }}
