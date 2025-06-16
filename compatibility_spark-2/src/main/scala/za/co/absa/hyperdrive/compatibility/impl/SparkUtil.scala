@@ -19,6 +19,7 @@ import org.apache.avro.util.internal.JacksonUtils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, MetadataLogFileIndex}
+import org.apache.spark.sql.types.StructType
 import org.codehaus.jackson.map.ObjectMapper
 import za.co.absa.hyperdrive.compatibility.api.CompatibleSparkUtil
 
@@ -27,8 +28,8 @@ import java.io.ByteArrayOutputStream
 object SparkUtil extends CompatibleSparkUtil {
   private lazy val objectMapper = new ObjectMapper()
 
-  override def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex =
-    new MetadataLogFileIndex(spark, new Path(destination), None)
+  override def createMetadataLogFileIndex(spark: SparkSession, destination: String, userSpecifiedSchema: Option[StructType]): MetadataLogFileIndex =
+    new MetadataLogFileIndex(spark, new Path(destination), userSpecifiedSchema)
 
   override def hasMetadata(spark: SparkSession, destination: String): Boolean =
     FileStreamSink.hasMetadata(Seq(destination), spark.sparkContext.hadoopConfiguration)

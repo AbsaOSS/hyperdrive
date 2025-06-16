@@ -17,12 +17,13 @@ package za.co.absa.hyperdrive.compatibility.provider
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
+import org.apache.spark.sql.types.StructType
 import za.co.absa.hyperdrive.compatibility.api.CompatibleSparkUtil
 import za.co.absa.hyperdrive.compatibility.impl.SparkUtil
 
 object CompatibleSparkUtilProvider extends CompatibleSparkUtil {
-  def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex =
-    SparkUtil.createMetadataLogFileIndex(spark, destination)
+  def createMetadataLogFileIndex(spark: SparkSession, destination: String, userSpecifiedSchema: Option[StructType]): MetadataLogFileIndex =
+    SparkUtil.createMetadataLogFileIndex(spark, destination, userSpecifiedSchema)
 
   def hasMetadata(spark: SparkSession, destination: String): Boolean =
     SparkUtil.hasMetadata(spark, destination)

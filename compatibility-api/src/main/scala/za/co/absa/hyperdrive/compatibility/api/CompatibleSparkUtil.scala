@@ -17,9 +17,10 @@ package za.co.absa.hyperdrive.compatibility.api
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MetadataLogFileIndex
+import org.apache.spark.sql.types.StructType
 
 trait CompatibleSparkUtil {
-  def createMetadataLogFileIndex(spark: SparkSession, destination: String): MetadataLogFileIndex
+  def createMetadataLogFileIndex(spark: SparkSession, destination: String, userSpecifiedSchema: Option[StructType]): MetadataLogFileIndex
   def hasMetadata(spark: SparkSession, destination: String): Boolean
   def jsonStringToObject(jsonString: String): Object
   def objectToJsonString(obj: Object): Option[String]
