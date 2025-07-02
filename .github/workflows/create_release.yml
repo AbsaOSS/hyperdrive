@@ -1,0 +1,134 @@
+#
+# Copyright 2018 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: Create a new release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: "Define the release version (e.g., v4.7.0)"
+        required: true
+        default: ""
+      development-version:
+        description: "Define the snapshot version (e.g., v4.7.0)"
+        required: true
+        default: ""
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history for all tags and branches
+
+      - name: Validate format of received tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const releaseVersion = core.getInput('release-version');
+            const developmentVersion = core.getInput('development-version');
+            const regex = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
+            if (!regex.test(releaseVersion)) {
+              core.setFailed('Release version does not match the required format "v[0-9]+.[0-9]+.[0-9]+". Valid example: v0.5.2');
+              return;
+            }
+            if (!regex.test(developmentVersion)) {
+              core.setFailed('Development version does not match the required format "v[0-9]+.[0-9]+.[0-9]+". Valid example: v0.5.2');
+              return;
+            }
+          release-version: ${{ github.event.inputs.release-version }}
+          development-version: ${{ github.event.inputs.development-version }}
+
+      - name: Define semantic version number
+        id: semantic_version
+        run: |
+          RELEASE_VERSION="${{ github.event.inputs.release-version }}"
+          RELEASE_VERSION_WITHOUT_V=${RELEASE_VERSION#v}
+
+          DEVELOPMENT_VERSION="${{ github.event.inputs.development-version }}"
+          DEVELOPMENT_VERSION_WITHOUT_V=${DEVELOPMENT_VERSION#v}
+
+          echo "RELEASE_VERSION_WITHOUT_V=${RELEASE_VERSION_WITHOUT_V}" >> "${GITHUB_ENV}"
+          echo "DEVELOPMENT_VERSION_WITHOUT_V=${DEVELOPMENT_VERSION_WITHOUT_V}" >> "${GITHUB_ENV}"
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+      - name: Create release branch
+        run: |
+          git checkout -b release/${RELEASE_VERSION_WITHOUT_V}
+          git push origin release/${RELEASE_VERSION_WITHOUT_V}
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+
+      - name: Set Maven project version, create tag
+        run: |
+          git pull origin release/${RELEASE_VERSION_WITHOUT_V}
+          mvn versions:set -DnewVersion=${RELEASE_VERSION_WITHOUT_V} --no-transfer-progress
+          mvn versions:commit
+          git commit -am "Set project version to ${RELEASE_VERSION_WITHOUT_V}"
+          git push origin release/${RELEASE_VERSION_WITHOUT_V}
+      - name: Create tag
+        run: |
+          git tag ${{ github.event.inputs.release-version }}
+          git push origin ${{ github.event.inputs.release-version }}
+      - name: Set next development version
+        run: |
+          # Assumes semantic versioning and increments the minor version. Adjust the awk command as needed for different versioning schemes.
+          NEXT_VERSION=$(echo ${DEVELOPMENT_VERSION_WITHOUT_V} | awk -F. '{print $1"."$2"."$3"-SNAPSHOT"}')
+          mvn versions:set -DnewVersion=$NEXT_VERSION --no-transfer-progress
+          mvn versions:commit
+          git commit -am "Set project version to $NEXT_VERSION"
+          git push origin release/${RELEASE_VERSION_WITHOUT_V}
+      - name: Get Default Branch
+        id: get_default_branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return response.data.default_branch;
+      - name: Create Pull Request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const branch = `release/${process.env.RELEASE_VERSION_WITHOUT_V}`;
+            await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Release ${{ github.event.inputs.release-version }}',
+              head: branch,
+              base: ${{ steps.get_default_branch.outputs.result }},
+              body: 'Pull request to merge release ${{ github.event.inputs.release-version }} into default branch',
+              draft: false
+            });
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ github.event.inputs.release-version }}
+          body: ${{ steps.generate_release_notes.outputs.releaseNotes }}
+          tag_name: ${{ github.event.inputs.release-version }}
+          draft: true
+          prerelease: false
