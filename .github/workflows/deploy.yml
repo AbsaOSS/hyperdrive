@@ -17,10 +17,6 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      tag-name:
-        description: 'Tag for deployment (e.g., v4.7.0)'
-        required: true
 
 jobs:
   deploy:
@@ -37,29 +33,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
+          fetch-tags: true
           fetch-depth: 0 # Fetch all history for all tags and branches
 
-      - name: Validate format of received tag
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const newTag = core.getInput('tag-name');
-            const regex = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
-            if (!regex.test(newTag)) {
-              core.setFailed('Tag does not match the required format "v[0-9]+.[0-9]+.[0-9]+". Valid example: v4.7.0');
-              return;
-            }
-          tag-name: ${{ github.event.inputs.tag-name }}
-
-      - name: Define semantic version number
-        id: semantic_version
-        run: |
-          TAG_NAME="${{ github.event.inputs.tag-name }}"
-          VERSION=${TAG_NAME#v}
-          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
-      - name: Checkout to tag
-        run: |
-          git checkout ${{ github.event.inputs.tag-name }}
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
