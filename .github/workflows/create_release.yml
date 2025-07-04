@@ -23,7 +23,7 @@ on:
         required: true
         default: ""
       development-version:
-        description: "Define the snapshot version (e.g., v4.7.0)"
+        description: "Define the snapshot version (e.g., v4.7.1)"
         required: true
         default: ""
 
