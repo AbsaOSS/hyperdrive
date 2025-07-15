@@ -37,8 +37,28 @@ jobs:
 
       - name: Import GPG keys
         run: |
-          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          # Set up GPG directory with proper permissions
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+
+          # Configure gpg for CI use
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+
+          # Import private key
+          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+
+          # Set trust level (required or GPG won't sign)
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
+          echo "5:$GPG_KEY_ID:1" | gpg --import-ownertrust
+
+          # Fix permissions explicitly
+          chmod 600 ~/.gnupg/*
+          chmod 700 ~/.gnupg
+
+          # Restart agent
+          gpgconf --kill gpg-agent
           echo RELOADAGENT | gpg-connect-agent
       - name: Create settings.xml
         run: |
