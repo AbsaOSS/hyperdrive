@@ -332,7 +332,7 @@
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
-                            <nexusUrl>https://ossrh-staging-api.central.sonatype.com/</nexusUrl>
+                            <nexusUrl>https://ossrh-staging-api.central.sonatype.com/service/local/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
                             <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
                         </configuration>
