@@ -37,29 +37,29 @@ jobs:
 
       - name: Import GPG keys
         run: |
-          # Set up GPG directory with proper permissions
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
 
-          # Configure gpg for CI use
+          # Configure GPG for CI
           echo "use-agent" >> ~/.gnupg/gpg.conf
           echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
 
-          # Import private key
+          # Import the private key
           echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
 
-          # Set trust level (required or GPG won't sign)
-          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
-          echo "5:$GPG_KEY_ID:1" | gpg --import-ownertrust
+          # Extract and trust the fingerprint
+          FINGERPRINT=$(gpg --with-colons --list-secret-keys | awk -F: '/^fpr:/ { print $10; exit }')
+          echo "$FINGERPRINT:6:" | gpg --import-ownertrust
 
-          # Fix permissions explicitly
+          # Set permissions
           chmod 600 ~/.gnupg/*
           chmod 700 ~/.gnupg
 
-          # Restart agent
+          # Restart GPG agent
           gpgconf --kill gpg-agent
           echo RELOADAGENT | gpg-connect-agent
+
       - name: Create settings.xml
         run: |
           echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd\">
