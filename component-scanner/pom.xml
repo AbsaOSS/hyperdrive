@@ -30,7 +30,7 @@
         <dependency>
             <groupId>za.co.absa.hyperdrive</groupId>
             <artifactId>api_${scala.compat.version}</artifactId>
-            <version>4.7.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
