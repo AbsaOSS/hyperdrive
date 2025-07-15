@@ -78,7 +78,7 @@ jobs:
           GPG_TTY: /dev/console
         run: |
           mvn scala-cross-build:change-version -Pscala-2.11,spark-2
-          mvn -B -e -DskipTests -Dmanual-release -Ddeploy,scala-2.11,spark-2 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.11,spark-2 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
 #          mvn scala-cross-build:restore-version
 #          git clean -f
