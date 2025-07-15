@@ -15,9 +15,9 @@
 # Hyperdrive - An extensible streaming ingestion pipeline on top of Apache Spark
 
 ### Build Status
-| master | develop |
-| ------------- | ------------- |
-| [![Build Status](https://opensource.bigusdatus.com/jenkins/buildStatus/icon?job=Absa-OSS-Projects%2Fhyperdrive%2Fmaster)](https://opensource.bigusdatus.com/jenkins/job/Absa-OSS-Projects/job/hyperdrive/job/master/) | [![Build Status](https://opensource.bigusdatus.com/jenkins/buildStatus/icon?job=Absa-OSS-Projects%2Fhyperdrive%2Fdevelop)](https://opensource.bigusdatus.com/jenkins/job/Absa-OSS-Projects/job/hyperdrive/job/develop/) | 
+| master                                                                                                                                                                   | develop |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ------------- |
+| [![Build](https://github.com/AbsaOSS/hyperdrive/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/AbsaOSS/hyperdrive/actions/workflows/build.yml) | [![Build](https://github.com/AbsaOSS/hyperdrive/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/AbsaOSS/hyperdrive/actions/workflows/build.yml) | 
 
 ## What is Hyperdrive?
 
