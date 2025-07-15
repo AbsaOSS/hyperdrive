@@ -23,12 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        scala: [ 2.11, 2.12 ]
-        spark: [ 2, 3 ]
-        exclude:
-          - scala: 2.11
-            spark: 3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -43,8 +37,9 @@ jobs:
 
       - name: Import GPG keys
         run: |
-          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --keyserver https://keyserver.ubuntu.com/
-          echo "${{ secrets.MAVEN_GPG_PASSPHRASE }}" | gpg --passphrase-fd 0 --batch --pinentry-mode loopback --import-ownertrust <<< .
+          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo RELOADAGENT | gpg-connect-agent
       - name: Create settings.xml
         run: |
           echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd\">
@@ -60,6 +55,17 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GPG_TTY: $(tty)
         run: |
-          mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
-          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-${{ matrix.scala }},spark-${{ matrix.spark }} -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn scala-cross-build:change-version -Pscala-2.11,spark-2
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.11,spark-2 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn scala-cross-build:restore-version
+          git clean -f
+#      - name: Build and deploy artifact
+#        env:
+#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+#          GPG_TTY: $(tty)
+#        run: |
+#          mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }},spark-${{ matrix.spark }}
+#          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-${{ matrix.scala }},spark-${{ matrix.spark }} -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
