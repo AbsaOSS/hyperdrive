@@ -21,6 +21,7 @@
         <version>4.8.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+    <name>Parent CONF</name>
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 

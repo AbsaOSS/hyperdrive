@@ -21,6 +21,7 @@
         <version>4.8.0</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
+    <name>Shared</name>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>shared_2.12</artifactId>
 

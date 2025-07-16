@@ -21,8 +21,8 @@
         <version>4.8.0</version>
         <relativePath>../parent-conf/pom.xml</relativePath>
     </parent>
+    <name>Hyperdrive Release Spark 3</name>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>hyperdrive-release_spark-3_2.12</artifactId>
 
     <dependencies>

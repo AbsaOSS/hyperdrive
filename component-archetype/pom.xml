@@ -23,6 +23,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Component Archetype</name>
     <artifactId>component-archetype_2.12</artifactId>
     <packaging>maven-archetype</packaging>
 
