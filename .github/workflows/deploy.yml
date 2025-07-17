@@ -86,10 +86,10 @@ jobs:
           mvn clean deploy -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-2 -Dossrh -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
           echo "DEPLOY SPARK-3 ARTIFACTS"
           cd compatibility_spark-3
-          mvn clean deploy -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn clean deploy -B -e -DskipTests -Pdeploy,scala-2.12,spark-3 -Dossrh -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
           cd ..
           cd hyperdrive-release_spark-3
-          mvn clean deploy -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn clean deploy -B -e -DskipTests -Pdeploy,scala-2.12,spark-3 -Dossrh -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
 
 
