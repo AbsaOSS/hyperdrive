@@ -27,6 +27,47 @@
     <artifactId>compatibility_spark-3_2.12</artifactId>
     <packaging>jar</packaging>
 
+    <scm>
+        <connection>scm:git:git://github.com/AbsaOSS/hyperdrive.git</connection>
+        <developerConnection>scm:git:ssh://github.com/AbsaOSS/hyperdrive.git</developerConnection>
+        <url>https://github.com/AbsaOSS/hyperdrive/tree/master</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>ABSA Group Limited</name>
+        <url>https://www.absa.africa</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>felipemmelo</id>
+            <name>Felipe Melo</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/felipemmelo</url>
+        </developer>
+        <developer>
+            <id>kevinwallimann</id>
+            <name>Kevin Wallimann</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/kevinwallimann</url>
+        </developer>
+        <developer>
+            <id>jozefbakus</id>
+            <name>Jozef Bakus</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/jozefbakus</url>
+        </developer>
+    </developers>
+
     <properties>
         <spark.version>${spark_3.version}</spark.version>
     </properties>

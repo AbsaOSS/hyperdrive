@@ -56,7 +56,7 @@
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/hyperdrive.git</developerConnection>
         <url>https://github.com/AbsaOSS/hyperdrive/tree/master</url>
       <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <licenses>
         <license>
