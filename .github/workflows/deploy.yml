@@ -31,9 +31,10 @@ jobs:
           fetch-depth: 0 # Fetch all history for all tags and branches
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
-          java-version: '1.8'
+          distribution: 'adopt'
+          java-version: 8
 
       - name: Import GPG keys
         run: |
@@ -79,17 +80,17 @@ jobs:
         run: |
           echo "DEPLOY SPARK-2 / SCALA-2.11 ARTIFACTS"
           mvn scala-cross-build:change-version -Pscala-2.11,spark-2
-          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.11,spark-2 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.11,spark-2 -Dossrh clean -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
           mvn scala-cross-build:restore-version
           git clean -f
           echo "DEPLOY SPARK-2 / SCALA-2.12 ARTIFACTS"
-          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-2 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-2 -Dossrh clean -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
           echo "DEPLOY SPARK-3 ARTIFACTS"
           cd compatibility_spark-3
-          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh clean -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
           cd ..
           cd hyperdrive-release_spark-3
-          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          mvn -B -e -DskipTests -Dmanual-release -Pdeploy,scala-2.12,spark-3 -Dossrh clean -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
 
 
